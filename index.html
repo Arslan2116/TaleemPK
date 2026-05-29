@@ -818,9 +818,35 @@
 
   /* ───── BLOG / NEWS ───── */
   .news-section { padding:64px 5%; background:var(--gray-100); }
-  .news-head { max-width:1280px; margin:0 auto 36px; }
+  .news-head {
+    max-width:1280px; margin:0 auto 36px;
+    display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap;
+  }
   .news-head h2 { font-size:clamp(1.5rem,3vw,2.2rem); font-weight:800; color:var(--navy); margin-bottom:6px; }
   .news-head p { color:var(--gray-600); font-size:0.95rem; }
+  .news-viewall {
+    background:var(--navy); color:var(--white); border:none; border-radius:40px;
+    padding:11px 22px; font-family:'Sora',sans-serif; font-size:0.85rem; font-weight:700;
+    cursor:pointer; transition:all 0.2s; white-space:nowrap;
+  }
+  .news-viewall:hover { background:var(--green); color:var(--navy); }
+  /* Blog page (all articles) — same show/hide pattern as About page */
+  #blogPage { display:none; }
+  #blogPage.active { display:block; }
+  .blog-page-body { max-width:1280px; margin:0 auto; padding:56px 5% 80px; }
+  body.blog-active .hero,
+  body.blog-active .filter-section,
+  body.blog-active .predictor-banner,
+  body.blog-active .predictor-active-bar,
+  body.blog-active #predictorModal,
+  body.blog-active .tools-bar,
+  body.blog-active .calendar-section,
+  body.blog-active #mapContainer,
+  body.blog-active .results-count,
+  body.blog-active .uni-grid,
+  body.blog-active .pagination,
+  body.blog-active .hiw,
+  body.blog-active .news-section { display:none !important; }
   .news-grid {
     max-width:1280px; margin:0 auto;
     display:grid; grid-template-columns:repeat(3,1fr); gap:24px;
@@ -1506,13 +1532,13 @@
 
 <!-- NAV -->
 <nav>
-  <a href="#" class="nav-logo" onclick="closeAboutPage();window.scrollTo({top:0,behavior:'smooth'});return false">
+  <a href="#" class="nav-logo" onclick="closeAboutPage();closeBlogPage();window.scrollTo({top:0,behavior:'smooth'});return false">
     <div class="logo-icon">🎓</div>
     Taleem<span>PK</span>
   </a>
   <ul class="nav-links">
-    <li><a href="#universities" onclick="closeMobileMenu();closeAboutPage();setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60);return false">Universities</a></li>
-    <li><a href="#" onclick="closeMobileMenu();closeAboutPage();(compareList.length>=2?openCompareModal():setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60));return false">Compare</a></li>
+    <li><a href="#universities" onclick="closeMobileMenu();closeAboutPage();closeBlogPage();setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60);return false">Universities</a></li>
+    <li><a href="#" onclick="closeMobileMenu();closeAboutPage();closeBlogPage();(compareList.length>=2?openCompareModal():setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60));return false">Compare</a></li>
 
     <!-- Tools dropdown -->
     <li class="nav-dropdown" id="navToolsDropdown">
@@ -1539,7 +1565,7 @@
       </div>
     </li>
 
-    <li><a href="#news" onclick="closeMobileMenu();closeAboutPage();setTimeout(()=>document.getElementById('news').scrollIntoView({behavior:'smooth'}),60);return false">Blog</a></li>
+    <li><a href="#" onclick="closeMobileMenu();closeAboutPage();openBlogPage();return false">Blog</a></li>
     <li><a href="#" onclick="openAboutPage();closeMobileMenu();return false">About</a></li>
   </ul>
   <a href="#universities" class="nav-cta">View Universities</a>
@@ -1763,9 +1789,22 @@
       <h2>📰 Blog &amp; News</h2>
       <p>Admission guides, scholarship updates, and career advice for Pakistani students.</p>
     </div>
+    <button class="news-viewall" id="newsViewAll" onclick="openBlogPage()">View All Articles →</button>
   </div>
   <div class="news-grid" id="newsGrid"></div>
 </section>
+
+<!-- BLOG PAGE (all articles) -->
+<div id="blogPage">
+  <div class="about-hero">
+    <button class="about-back" onclick="closeBlogPage()">← Back to Home</button>
+    <h1>📰 Blog &amp; <span>News</span></h1>
+    <p>All admission guides, scholarship updates, test-prep tips, and career advice for Pakistani students — in one place.</p>
+  </div>
+  <div class="blog-page-body">
+    <div class="news-grid" id="blogPageGrid"></div>
+  </div>
+</div>
 
 <!-- ARTICLE READER MODAL -->
 <div class="article-overlay" id="articleOverlay" onclick="closeArticle(event)">
@@ -1924,7 +1963,7 @@
       <div class="footer-links">
         <a href="#" onclick="closeAboutPage();setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),100);return false">Universities</a>
         <a href="#" onclick="closeAboutPage();setTimeout(()=>document.getElementById('how').scrollIntoView({behavior:'smooth'}),100);return false">How It Works</a>
-        <a href="#" onclick="closeAboutPage();setTimeout(()=>document.getElementById('news').scrollIntoView({behavior:'smooth'}),100);return false">Blog &amp; News</a>
+        <a href="#" onclick="closeAboutPage();openBlogPage();return false">Blog &amp; News</a>
         <a href="#" onclick="openFeeCalc();return false">Fee Calculator</a>
         <a href="#" onclick="toggleCalendar();return false">Admission Calendar</a>
         <a href="#" onclick="toggleMapView();return false">Map View</a>
@@ -2157,6 +2196,29 @@ const SITE_CONFIG = {
    ║   Newest post should be at the TOP of the list.              ║
    ╚══════════════════════════════════════════════════════════════╝ */
 const NEWS_POSTS = [
+  {
+    id: 4,
+    title: "Entry Test Preparation: A Smart Study Plan for ECAT & MDCAT",
+    category: "Test Prep",
+    icon: "📝",
+    date: "2026-05-30",
+    author: "TaleemPK Team",
+    excerpt: "Entry tests can make or break your admission. Here is a practical, week-by-week strategy to prepare for ECAT and MDCAT without burning out.",
+    body: `
+      <p>For most engineering and medical aspirants, the entry test carries the highest weightage in the final merit. A focused study plan matters more than long, unstructured hours.</p>
+      <h3>Step 1: Know the Pattern</h3>
+      <p>Download the official syllabus for <strong>ECAT</strong> (engineering) or <strong>MDCAT</strong> (medical). Both are largely based on the FSc curriculum, so your textbooks are your best resource.</p>
+      <h3>Step 2: Build a Weekly Plan</h3>
+      <ul>
+        <li><strong>Weeks 1–4:</strong> Cover the full syllabus subject by subject.</li>
+        <li><strong>Weeks 5–8:</strong> Solve past papers and topic-wise MCQs daily.</li>
+        <li><strong>Final 2 weeks:</strong> Full-length timed mock tests to build speed and accuracy.</li>
+      </ul>
+      <h3>Step 3: Review Your Mistakes</h3>
+      <p>Maintain an error log. Revising the questions you got wrong is the fastest way to improve your score.</p>
+      <p><em>Tip: Use the Admission Predictor on TaleemPK to see which universities match your expected aggregate.</em></p>
+    `
+  },
   {
     id: 1,
     title: "How to Calculate Your University Aggregate (Merit) in Pakistan",
@@ -4007,6 +4069,7 @@ function updateSlBadge() {
 
 /* ── About Page ── */
 function openAboutPage() {
+  closeBlogPage();
   document.getElementById('aboutPage').classList.add('active');
   document.body.classList.add('about-active');
   window.scrollTo({top:0, behavior:'smooth'});
@@ -4023,11 +4086,8 @@ function fmtNewsDate(d){
   try { return new Date(d+'T00:00:00').toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric'}); }
   catch(e){ return d; }
 }
-function renderNews(){
-  const grid = document.getElementById('newsGrid');
-  if(!grid) return;
-  if(!NEWS_POSTS.length){ grid.innerHTML='<p style="color:var(--gray-600)">No articles yet — check back soon.</p>'; return; }
-  grid.innerHTML = NEWS_POSTS.map(p=>`
+function newsCardHTML(p){
+  return `
     <article class="news-card" onclick="openArticle(${p.id})">
       <div class="news-card-banner">${p.icon||'📰'}</div>
       <div class="news-card-body">
@@ -4039,8 +4099,37 @@ function renderNews(){
           <span class="news-read">Read More →</span>
         </div>
       </div>
-    </article>
-  `).join('');
+    </article>`;
+}
+function renderNews(){
+  const grid = document.getElementById('newsGrid');
+  if(!grid) return;
+  if(!NEWS_POSTS.length){ grid.innerHTML='<p style="color:var(--gray-600)">No articles yet — check back soon.</p>'; return; }
+  // Homepage shows only the latest 3 articles
+  grid.innerHTML = NEWS_POSTS.slice(0,3).map(newsCardHTML).join('');
+  // Show/hide the "View all" button depending on how many posts exist
+  const va = document.getElementById('newsViewAll');
+  if(va) va.style.display = NEWS_POSTS.length > 3 ? '' : 'none';
+}
+function renderBlogPage(){
+  const grid = document.getElementById('blogPageGrid');
+  if(!grid) return;
+  grid.innerHTML = NEWS_POSTS.length
+    ? NEWS_POSTS.map(newsCardHTML).join('')
+    : '<p style="color:var(--gray-600)">No articles yet — check back soon.</p>';
+}
+function openBlogPage(){
+  closeAboutPage();
+  renderBlogPage();
+  document.getElementById('blogPage').classList.add('active');
+  document.body.classList.add('blog-active');
+  window.scrollTo({top:0, behavior:'smooth'});
+  closeNavDropdown();
+}
+function closeBlogPage(){
+  document.getElementById('blogPage').classList.remove('active');
+  document.body.classList.remove('blog-active');
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 function openArticle(id){
   const p = NEWS_POSTS.find(x=>x.id===id);
