@@ -816,6 +816,16 @@
   body.about-active .news-section,
   body.about-active footer { display:none !important; }
 
+  /* ───── DETAILED FEE TABLE (detail modal) ───── */
+  .fee-table-section { margin-bottom:24px; }
+  .fee-table { border:1px solid var(--gray-200); border-radius:12px; overflow:hidden; }
+  .fee-row { display:flex; justify-content:space-between; gap:16px; padding:11px 16px; }
+  .fee-row:nth-child(odd) { background:var(--gray-100); }
+  .fee-row-k { font-size:0.85rem; color:var(--gray-600); }
+  .fee-row-v { font-size:0.85rem; font-weight:700; color:var(--navy); text-align:right; white-space:nowrap; }
+  .fee-table-note { font-size:0.78rem; color:var(--gray-400); margin-top:10px; line-height:1.6; font-style:italic; }
+  @media(max-width:480px){ .fee-row { flex-direction:column; gap:2px; } .fee-row-v { text-align:left; } }
+
   /* ───── BLOG / NEWS ───── */
   .news-section { padding:64px 5%; background:var(--gray-100); }
   .news-head {
@@ -2433,6 +2443,18 @@ const UNIVERSITIES = [
     city:"Karachi", type:"public", icon:"💼",
     tags:["public","business"],
     fee:"Rs. 4.4–5L/sem", feeNum:470000,
+    feeYear:"2025-26 official",
+    feeDetails:[
+      {label:"Undergraduate (BBA / BS)", value:"Rs. 29,400 / credit hour"},
+      {label:"MBA", value:"Rs. 36,750 / credit hour"},
+      {label:"Executive MBA (EMBA)", value:"Rs. 4,000,000 total"},
+      {label:"MS Programs", value:"Rs. 24,800–32,550 / credit hour"},
+      {label:"Hostel (per semester)", value:"Rs. 114,840–133,584"},
+      {label:"Transport (annual)", value:"Rs. 45,000–65,000"},
+      {label:"One-time Admission Charges", value:"Rs. 115,000"},
+      {label:"Student Activity Charges", value:"Rs. 7,000"},
+    ],
+    feeNote:"Fees are charged per credit hour, so the per-semester total depends on your course load. Always confirm the latest figures on iba.edu.pk.",
     merit:"85%+ marks, IBA test",
     entry:"IBA Aptitude Test",
     programs:["BBA","MBA","BS CS","BS Economics","BS Accounting","BS Social Sciences"],
@@ -4937,6 +4959,14 @@ function openDetail(id) {
       <div class="detail-box"><div class="detail-box-title">${t('detail_scholarships')}</div><div class="detail-box-val" style="font-size:0.85rem">${u.scholarships}</div></div>
       <div class="detail-box"><div class="detail-box-title">${t('detail_hostel')}</div><div class="detail-box-val" style="font-size:0.85rem">${u.hostel}</div></div>
     </div>
+    ${u.feeDetails && u.feeDetails.length ? `
+    <div class="fee-table-section">
+      <div class="detail-box-title" style="margin-bottom:12px;">💰 Detailed Fee Structure ${u.feeYear?`<span style="font-weight:400;color:var(--gray-400);font-size:0.78rem;">(${u.feeYear})</span>`:''}</div>
+      <div class="fee-table">
+        ${u.feeDetails.map(f=>`<div class="fee-row"><div class="fee-row-k">${f.label}</div><div class="fee-row-v">${f.value}</div></div>`).join('')}
+      </div>
+      ${u.feeNote?`<p class="fee-table-note">${u.feeNote}</p>`:''}
+    </div>` : ''}
     <div style="margin-bottom:20px;">
       <div class="detail-box-title" style="margin-bottom:12px;">${t('detail_programs')}</div>
       <div class="programs-list">${u.programs.length?u.programs.map(p=>`<span class="program-pill">${p}</span>`).join(''):`<span style="color:var(--gray-400);font-size:0.85rem;">Visit the university website for a full program list.</span>`}</div>
