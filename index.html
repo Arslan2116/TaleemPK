@@ -813,7 +813,73 @@
   body.about-active .uni-grid,
   body.about-active .pagination,
   body.about-active .hiw,
+  body.about-active .news-section,
   body.about-active footer { display:none !important; }
+
+  /* ───── BLOG / NEWS ───── */
+  .news-section { padding:64px 5%; background:var(--gray-100); }
+  .news-head { max-width:1280px; margin:0 auto 36px; }
+  .news-head h2 { font-size:clamp(1.5rem,3vw,2.2rem); font-weight:800; color:var(--navy); margin-bottom:6px; }
+  .news-head p { color:var(--gray-600); font-size:0.95rem; }
+  .news-grid {
+    max-width:1280px; margin:0 auto;
+    display:grid; grid-template-columns:repeat(3,1fr); gap:24px;
+  }
+  .news-card {
+    background:var(--white); border:2px solid var(--gray-200); border-radius:16px;
+    overflow:hidden; cursor:pointer; transition:all 0.25s; display:flex; flex-direction:column;
+  }
+  .news-card:hover { border-color:var(--green); transform:translateY(-4px); box-shadow:var(--shadow-md); }
+  .news-card-banner {
+    background:linear-gradient(135deg,var(--navy),var(--navy-mid));
+    height:120px; display:flex; align-items:center; justify-content:center; font-size:3rem;
+  }
+  .news-card-body { padding:20px 22px; display:flex; flex-direction:column; flex:1; }
+  .news-cat {
+    align-self:flex-start; background:var(--green-light); color:var(--green-dark);
+    font-size:0.7rem; font-weight:700; padding:4px 10px; border-radius:20px; margin-bottom:10px;
+    text-transform:uppercase; letter-spacing:0.4px;
+  }
+  .news-card-title { font-size:1.05rem; font-weight:700; color:var(--navy); line-height:1.4; margin-bottom:8px; }
+  .news-card-excerpt { font-size:0.86rem; color:var(--gray-600); line-height:1.6; flex:1; }
+  .news-card-meta {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:14px; font-size:0.78rem; color:var(--gray-400);
+  }
+  .news-read { color:var(--green-dark); font-weight:700; }
+
+  /* Article reader modal */
+  .article-overlay {
+    display:none; position:fixed; inset:0; z-index:1200;
+    background:rgba(10,22,40,0.6); backdrop-filter:blur(4px);
+    padding:40px 20px; overflow-y:auto;
+  }
+  .article-overlay.show { display:block; }
+  .article-modal {
+    max-width:760px; margin:0 auto; background:var(--white);
+    border-radius:20px; padding:40px 44px; position:relative;
+    animation:fadeInUp 0.3s ease;
+  }
+  .article-close {
+    position:absolute; top:18px; right:18px; width:38px; height:38px;
+    border-radius:50%; border:none; background:var(--gray-100); color:var(--navy);
+    font-size:1.3rem; cursor:pointer; transition:background 0.2s;
+  }
+  .article-close:hover { background:var(--gray-200); }
+  .article-cat {
+    display:inline-block; background:var(--green-light); color:var(--green-dark);
+    font-size:0.72rem; font-weight:700; padding:4px 12px; border-radius:20px;
+    text-transform:uppercase; letter-spacing:0.4px; margin-bottom:14px;
+  }
+  .article-modal h1 { font-size:clamp(1.4rem,3vw,2rem); font-weight:800; color:var(--navy); line-height:1.3; margin-bottom:12px; }
+  .article-meta { font-size:0.82rem; color:var(--gray-400); margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--gray-200); }
+  .article-content p { font-size:0.95rem; color:var(--gray-600); line-height:1.8; margin-bottom:16px; }
+  .article-content h3 { font-size:1.15rem; font-weight:700; color:var(--navy); margin:22px 0 10px; }
+  .article-content ul { margin:0 0 16px 22px; }
+  .article-content li { font-size:0.95rem; color:var(--gray-600); line-height:1.8; margin-bottom:6px; }
+  .article-content strong { color:var(--navy); }
+  @media(max-width:900px){ .news-grid { grid-template-columns:repeat(2,1fr); } }
+  @media(max-width:600px){ .news-grid { grid-template-columns:1fr; } .article-modal { padding:30px 22px; } }
 
   /* ───── ANIMATIONS ───── */
   @keyframes fadeInDown {
@@ -1473,6 +1539,7 @@
       </div>
     </li>
 
+    <li><a href="#news" onclick="closeMobileMenu();closeAboutPage();setTimeout(()=>document.getElementById('news').scrollIntoView({behavior:'smooth'}),60);return false">Blog</a></li>
     <li><a href="#" onclick="openAboutPage();closeMobileMenu();return false">About</a></li>
   </ul>
   <a href="#universities" class="nav-cta">View Universities</a>
@@ -1689,6 +1756,22 @@
   </div>
 </section>
 
+<!-- BLOG / NEWS -->
+<section class="news-section" id="news">
+  <div class="news-head">
+    <div>
+      <h2>📰 Blog &amp; News</h2>
+      <p>Admission guides, scholarship updates, and career advice for Pakistani students.</p>
+    </div>
+  </div>
+  <div class="news-grid" id="newsGrid"></div>
+</section>
+
+<!-- ARTICLE READER MODAL -->
+<div class="article-overlay" id="articleOverlay" onclick="closeArticle(event)">
+  <div class="article-modal" id="articleModal"></div>
+</div>
+
 <!-- ABOUT PAGE -->
 <div id="aboutPage">
   <div class="about-hero">
@@ -1841,6 +1924,7 @@
       <div class="footer-links">
         <a href="#" onclick="closeAboutPage();setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),100);return false">Universities</a>
         <a href="#" onclick="closeAboutPage();setTimeout(()=>document.getElementById('how').scrollIntoView({behavior:'smooth'}),100);return false">How It Works</a>
+        <a href="#" onclick="closeAboutPage();setTimeout(()=>document.getElementById('news').scrollIntoView({behavior:'smooth'}),100);return false">Blog &amp; News</a>
         <a href="#" onclick="openFeeCalc();return false">Fee Calculator</a>
         <a href="#" onclick="toggleCalendar();return false">Admission Calendar</a>
         <a href="#" onclick="toggleMapView();return false">Map View</a>
@@ -2066,6 +2150,79 @@ const SITE_CONFIG = {
     hec:        '#',
   }
 };
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║   BLOG / NEWS POSTS — ADD OR EDIT ARTICLES HERE              ║
+   ║   To add a new post: copy one { } block and edit the fields. ║
+   ║   Newest post should be at the TOP of the list.              ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+const NEWS_POSTS = [
+  {
+    id: 1,
+    title: "How to Calculate Your University Aggregate (Merit) in Pakistan",
+    category: "Admission Guide",
+    icon: "📊",
+    date: "2026-05-28",
+    author: "TaleemPK Team",
+    excerpt: "Most universities weigh Matric, Intermediate, and the entry test differently. Learn the standard aggregate formula and how to estimate your merit before applying.",
+    // Body supports simple HTML: <p>, <h3>, <ul>/<li>, <strong>
+    body: `
+      <p>Your <strong>aggregate</strong> (also called merit percentage) decides which universities you can get into. Each university uses its own weightage, but the most common formula in Pakistan is:</p>
+      <ul>
+        <li><strong>Matric:</strong> 10%</li>
+        <li><strong>Intermediate / FSc:</strong> 40%</li>
+        <li><strong>Entry Test (e.g. ECAT, MDCAT, NTS):</strong> 50%</li>
+      </ul>
+      <h3>Example</h3>
+      <p>If a student scores 85% in Matric, 80% in FSc, and 70% in the entry test, the aggregate is roughly (8.5 + 32 + 35) = <strong>75.5%</strong>.</p>
+      <p>Always check each university's official prospectus, as weightage varies — engineering and medical universities especially rely heavily on the entry test.</p>
+    `
+  },
+  {
+    id: 2,
+    title: "Top Scholarships for Pakistani University Students in 2026",
+    category: "Scholarships",
+    icon: "🎓",
+    date: "2026-05-20",
+    author: "TaleemPK Team",
+    excerpt: "From the HEC Need-Based Scholarship to Ehsaas Undergraduate Scholarships — a quick overview of major funding options and who qualifies.",
+    body: `
+      <p>Higher education can be expensive, but several scholarships make it affordable for deserving students:</p>
+      <ul>
+        <li><strong>Ehsaas Undergraduate Scholarship:</strong> Covers tuition and a living stipend for students from low-income families.</li>
+        <li><strong>HEC Need-Based Scholarships:</strong> Offered through partner universities for financially deserving students.</li>
+        <li><strong>University Merit Scholarships:</strong> Most universities offer fee waivers for top-scoring students.</li>
+      </ul>
+      <p>Apply early and keep your documents (income certificate, transcripts) ready. Deadlines are usually announced right after admission results.</p>
+      <p><em>Tip: Use the Fee Calculator on TaleemPK to estimate your costs after a scholarship discount.</em></p>
+    `
+  },
+  {
+    id: 3,
+    title: "Public vs Private Universities: Which One Is Right for You?",
+    category: "Career Advice",
+    icon: "⚖️",
+    date: "2026-05-12",
+    author: "TaleemPK Team",
+    excerpt: "Lower fees and prestige, or modern facilities and flexibility? We break down the real trade-offs between public and private universities in Pakistan.",
+    body: `
+      <p>Choosing between a public and private university is one of the biggest decisions for students. Here's a balanced look:</p>
+      <h3>Public Universities</h3>
+      <ul>
+        <li>Much lower tuition fees</li>
+        <li>Strong reputation and large alumni networks</li>
+        <li>Higher merit requirements and more competition</li>
+      </ul>
+      <h3>Private Universities</h3>
+      <ul>
+        <li>Modern facilities and smaller class sizes</li>
+        <li>Flexible admission criteria</li>
+        <li>Higher fees (scholarships can help)</li>
+      </ul>
+      <p>Use the <strong>Compare</strong> tool on TaleemPK to put your shortlisted universities side by side before deciding.</p>
+    `
+  }
+];
 
 /* ── Apply Config on load ─────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
@@ -3861,6 +4018,50 @@ function closeAboutPage() {
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
+/* ── Blog / News ── */
+function fmtNewsDate(d){
+  try { return new Date(d+'T00:00:00').toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric'}); }
+  catch(e){ return d; }
+}
+function renderNews(){
+  const grid = document.getElementById('newsGrid');
+  if(!grid) return;
+  if(!NEWS_POSTS.length){ grid.innerHTML='<p style="color:var(--gray-600)">No articles yet — check back soon.</p>'; return; }
+  grid.innerHTML = NEWS_POSTS.map(p=>`
+    <article class="news-card" onclick="openArticle(${p.id})">
+      <div class="news-card-banner">${p.icon||'📰'}</div>
+      <div class="news-card-body">
+        <span class="news-cat">${p.category||'Article'}</span>
+        <h3 class="news-card-title">${p.title}</h3>
+        <p class="news-card-excerpt">${p.excerpt||''}</p>
+        <div class="news-card-meta">
+          <span>${fmtNewsDate(p.date)}</span>
+          <span class="news-read">Read More →</span>
+        </div>
+      </div>
+    </article>
+  `).join('');
+}
+function openArticle(id){
+  const p = NEWS_POSTS.find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById('articleModal').innerHTML = `
+    <button class="article-close" onclick="closeArticle()">×</button>
+    <span class="article-cat">${p.category||'Article'}</span>
+    <h1>${p.title}</h1>
+    <div class="article-meta">By ${p.author||'TaleemPK'} · ${fmtNewsDate(p.date)}</div>
+    <div class="article-content">${p.body||'<p>'+(p.excerpt||'')+'</p>'}</div>
+  `;
+  document.getElementById('articleOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeArticle(e){
+  if(!e || e.target.id==='articleOverlay' || e.target.classList.contains('article-close')){
+    document.getElementById('articleOverlay').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+}
+
 /* ── Nav Dropdown ── */
 function toggleNavDropdown() {
   document.getElementById('navToolsDropdown').classList.toggle('open');
@@ -4747,6 +4948,7 @@ const observer = new IntersectionObserver((entries)=>{
 },{threshold:0.1});
 
 populateCityFilter();
+renderNews();
 applyFilters();
 setTimeout(()=>{
   document.querySelectorAll('.hiw-step.fade-in').forEach(el=>observer.observe(el));
