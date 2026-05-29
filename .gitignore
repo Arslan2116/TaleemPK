@@ -1,0 +1,8 @@
+# Editor / tooling
+.claude/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Stray / scratch files (not part of the site)
+colors.html
