@@ -87,6 +87,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --green: #00C853;
@@ -875,6 +876,26 @@
   .back-to-top.show { opacity:1; visibility:visible; transform:translateY(0); }
   .back-to-top:hover { background:var(--green); color:var(--navy); }
 
+  /* ───── AUTH MODAL ───── */
+  .auth-overlay{ display:none; position:fixed; inset:0; z-index:1300; background:rgba(10,22,40,.6); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:20px; }
+  .auth-overlay.show{ display:flex; }
+  .auth-modal{ background:var(--white); border-radius:20px; padding:34px 30px; width:100%; max-width:400px; position:relative; animation:fadeInUp .3s ease; }
+  .auth-close{ position:absolute; top:16px; right:16px; width:34px; height:34px; border:none; border-radius:50%; background:var(--gray-100); font-size:1.2rem; cursor:pointer; color:var(--navy); }
+  .auth-close:hover{ background:var(--gray-200); }
+  .auth-modal h2{ font-size:1.3rem; color:var(--navy); margin-bottom:4px; }
+  .auth-sub{ color:var(--gray-600); font-size:.86rem; margin-bottom:18px; }
+  .auth-tabs{ display:flex; gap:8px; margin-bottom:18px; }
+  .auth-tab{ flex:1; padding:9px; border:2px solid var(--gray-200); background:var(--white); border-radius:10px; font-family:'Sora',sans-serif; font-weight:700; font-size:.85rem; color:var(--gray-600); cursor:pointer; }
+  .auth-tab.active{ border-color:var(--green); background:var(--green); color:var(--navy); }
+  .auth-label{ display:block; font-size:.74rem; font-weight:700; color:var(--gray-600); margin:12px 0 5px; text-transform:uppercase; letter-spacing:.4px; }
+  .auth-input{ width:100%; padding:11px 14px; border:2px solid var(--gray-200); border-radius:10px; font-family:'Sora',sans-serif; font-size:.9rem; color:var(--navy); outline:none; }
+  .auth-input:focus{ border-color:var(--green); }
+  .auth-submit{ width:100%; margin-top:18px; padding:13px; background:var(--green); color:var(--navy); border:none; border-radius:11px; font-family:'Sora',sans-serif; font-weight:800; font-size:.95rem; cursor:pointer; }
+  .auth-submit:hover{ background:var(--green-dark); color:#fff; }
+  .auth-msg{ font-size:.84rem; margin-top:12px; padding:10px 13px; border-radius:9px; display:none; }
+  .auth-msg.err{ display:block; background:#fde8ea; color:#b3263a; }
+  .auth-msg.ok{ display:block; background:var(--green-light); color:var(--green-dark); }
+
   /* ───── DETAILED FEE TABLE (detail modal) ───── */
   .fee-table-section { margin-bottom:24px; }
   .fee-table { border:1px solid var(--gray-200); border-radius:12px; overflow:hidden; }
@@ -1648,6 +1669,7 @@
 
     <li><a href="#" onclick="closeMobileMenu();closeAboutPage();openBlogPage();return false">Blog</a></li>
     <li><a href="#" onclick="openAboutPage();closeMobileMenu();return false">About</a></li>
+    <li><a href="#" id="authNavBtn" onclick="onAuthNavClick();return false">Login</a></li>
   </ul>
   <a href="#universities" class="nav-cta">View Universities</a>
   <button class="nav-hamburger" id="navHamburger" onclick="toggleMobileMenu()" aria-label="Menu">
@@ -2041,6 +2063,27 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="authOverlay" onclick="if(event.target===this)closeAuthModal()">
+  <div class="auth-modal">
+    <button class="auth-close" onclick="closeAuthModal()">×</button>
+    <h2 id="authTitle">Welcome back 👋</h2>
+    <p class="auth-sub" id="authSub">Log in to write reviews and ask questions.</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="authTabLogin" onclick="switchAuthTab('login')">Login</button>
+      <button class="auth-tab" id="authTabSignup" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+    <div id="authNameWrap" style="display:none"><label class="auth-label">Name</label>
+      <input class="auth-input" id="authName" placeholder="Your name"></div>
+    <label class="auth-label">Email</label>
+    <input class="auth-input" id="authEmail" type="email" placeholder="you@example.com" autocomplete="username">
+    <label class="auth-label">Password</label>
+    <input class="auth-input" id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAuth()">
+    <button class="auth-submit" id="authSubmitBtn" onclick="submitAuth()">Login</button>
+    <div class="auth-msg" id="authMsg"></div>
   </div>
 </div>
 
@@ -4585,9 +4628,38 @@ function renderTrendChart(uniId) {
 // ════════════════════════════════════════════════════════
 //  COMMUNITY FEATURE 6 — UNIVERSITY REVIEWS
 // ════════════════════════════════════════════════════════
-const RV_KEY = 'tpk_reviews_v1';
-function getReviews(uniId){ try{return (JSON.parse(localStorage.getItem(RV_KEY)||'{}'))[uniId]||[];}catch{return[];} }
-function saveReviews(uniId, arr){ try{const d=JSON.parse(localStorage.getItem(RV_KEY)||'{}'); d[uniId]=arr; localStorage.setItem(RV_KEY,JSON.stringify(d));}catch{} }
+const REVIEW_CACHE = {};   // uniId -> [reviews] from DB
+const RATING_AGG = {};     // uniId -> {sum,count} for card star ratings
+function getReviews(uniId){ return REVIEW_CACHE[uniId] || []; }
+
+async function loadReviews(uniId){
+  if(!sbClient) return;
+  try{
+    const { data, error } = await sbClient.from('reviews')
+      .select('id,rating,category,body,author,helpful,created_at')
+      .eq('institution_id', uniId).order('created_at',{ascending:false});
+    if(error) throw error;
+    REVIEW_CACHE[uniId] = (data||[]).map(r=>({
+      id:r.id, rating:r.rating, cat:r.category||'General', text:r.body,
+      author:r.author||'Student', helpful:r.helpful||0,
+      date:new Date(r.created_at).toLocaleDateString('en-PK',{month:'short',year:'numeric'})
+    }));
+    const sec=document.getElementById('rvSection-'+uniId);
+    if(sec) sec.innerHTML = buildReviewsHTML(uniId);
+  }catch(e){ /* keep whatever is cached */ }
+}
+
+async function loadRatingAggregates(){
+  if(!sbClient) return;
+  try{
+    const { data, error } = await sbClient.from('reviews').select('institution_id,rating');
+    if(error) throw error;
+    const agg={};
+    (data||[]).forEach(r=>{ const a=agg[r.institution_id]||(agg[r.institution_id]={sum:0,count:0}); a.sum+=r.rating; a.count++; });
+    Object.keys(RATING_AGG).forEach(k=>delete RATING_AGG[k]);
+    Object.assign(RATING_AGG, agg);
+  }catch(e){}
+}
 
 let _rvStar = 0, _rvCat = '';
 function rvPickStar(n, uniId) {
@@ -4604,28 +4676,27 @@ function toggleReviewForm(uniId) {
   const f = document.getElementById('rvForm-'+uniId);
   if(f){ f.classList.toggle('open'); _rvStar=0; _rvCat=''; }
 }
-function submitReview(uniId) {
+async function submitReview(uniId) {
+  if(!currentUser){ openAuthModal('login'); return; }
   const txt = document.getElementById('rvTxt-'+uniId).value.trim();
   if(!txt){ alert('Please write your review first.'); return; }
   if(!_rvStar){ alert('Please select a star rating.'); return; }
-  const rv = { id: Date.now(), text: txt, rating: _rvStar,
-    cat: _rvCat||'General', date: new Date().toLocaleDateString('en-PK',{month:'short',year:'numeric'}), helpful:0 };
-  const arr = getReviews(uniId);
-  arr.unshift(rv);
-  saveReviews(uniId, arr);
+  const row = { institution_id: uniId, rating: _rvStar, category: _rvCat||'General', body: txt, author: userDisplayName(currentUser) };
+  const { error } = await sbClient.from('reviews').insert(row);
+  if(error){ alert('Could not post review: '+error.message); return; }
   const uni = UNIVERSITIES.find(u=>u.id===uniId);
   notifyAdmin(`TaleemPK Review — ${uni?uni.name:('Uni #'+uniId)}`, {
     type: 'Review', university: uni?uni.full:('ID '+uniId),
-    rating: _rvStar+'/5', category: _rvCat||'General', review: txt
+    rating: _rvStar+'/5', category: _rvCat||'General', review: txt, by: userDisplayName(currentUser)
   });
+  const a = RATING_AGG[uniId] || (RATING_AGG[uniId]={sum:0,count:0}); a.sum+=_rvStar; a.count++;
   toggleReviewForm(uniId);
-  document.getElementById('rvSection-'+uniId).innerHTML = buildReviewsHTML(uniId);
+  await loadReviews(uniId);
 }
 function markHelpful(uniId, rvId) {
   const arr = getReviews(uniId);
   const r = arr.find(x=>x.id===rvId);
   if(r) r.helpful=(r.helpful||0)+1;
-  saveReviews(uniId, arr);
   const el = document.getElementById('rvHelpful-'+rvId);
   if(el) el.textContent = '👍 Helpful (' + (r?r.helpful:1) + ')';
 }
@@ -4653,7 +4724,7 @@ function buildReviewsHTML(uniId) {
       <div class="review-cat-row" id="rvCatRow-${uniId}">
         ${cats.map(c=>`<button class="review-cat" data-cat="${c}" onclick="rvPickCat('${c}',${uniId})">${c}</button>`).join('')}
       </div>
-      <textarea id="rvTxt-${uniId}" rows="3" placeholder="Apna experience share karein — campus life, faculty, hostel..."></textarea>
+      <textarea id="rvTxt-${uniId}" rows="3" placeholder="Share your experience — campus life, faculty, hostel, placements..."></textarea>
       <div style="margin-top:10px;display:flex;gap:8px;">
         <button class="review-submit-btn" onclick="submitReview(${uniId})">✓ Post Review</button>
         <button class="review-submit-btn" style="background:var(--gray-200);color:var(--navy);" onclick="toggleReviewForm(${uniId})">Cancel</button>
@@ -4665,7 +4736,7 @@ function buildReviewsHTML(uniId) {
           <div class="review-card-top">
             <span class="review-card-stars">${starsHTML(r.rating)}</span>
             <span class="review-card-cat">${r.cat}</span>
-            <span class="review-card-date">${r.date}</span>
+            <span class="review-card-date">${r.author?('👤 '+r.author+' · '):''}${r.date}</span>
           </div>
           <div class="review-card-text">${r.text}</div>
           <div class="review-helpful" id="rvHelpful-${r.id}" onclick="markHelpful(${uniId},${r.id})">👍 Helpful${r.helpful?` (${r.helpful})`:''}</div>
@@ -4834,14 +4905,14 @@ function buildQAHTML(uniId) {
 }
 
 function cardRating(uniId){
-  const reviews = (typeof getReviews==='function') ? getReviews(uniId) : [];
-  if(!reviews.length){
+  const a = RATING_AGG[uniId];
+  if(!a || !a.count){
     return `<div class="card-rating none"><span class="cr-stars">☆☆☆☆☆</span><span class="cr-count">No reviews yet</span></div>`;
   }
-  const avg = reviews.reduce((s,r)=>s+(r.rating||0),0)/reviews.length;
+  const avg = a.sum/a.count;
   const rounded = Math.round(avg);
   const stars = '★★★★★'.slice(0,rounded) + '☆☆☆☆☆'.slice(0,5-rounded);
-  return `<div class="card-rating"><span class="cr-stars filled">${stars}</span><span class="cr-num">${avg.toFixed(1)}</span><span class="cr-count">(${reviews.length})</span></div>`;
+  return `<div class="card-rating"><span class="cr-stars filled">${stars}</span><span class="cr-num">${avg.toFixed(1)}</span><span class="cr-count">(${a.count})</span></div>`;
 }
 
 function renderCards(unis) {
@@ -5316,6 +5387,7 @@ function openDetail(id) {
   `;
   document.getElementById('detailModalOverlay').classList.add('show');
   if(MERIT_TRENDS[u.id]) setTimeout(()=>renderTrendChart(u.id), 100);
+  loadReviews(u.id);   // fetch shared reviews from the database
 }
 
 function shareUniversity(id){
@@ -5410,6 +5482,65 @@ const SUPABASE = {
   key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaW9mZmtrendiZm5tcHhwd2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTc5ODksImV4cCI6MjA5NTczMzk4OX0.IUDmCzw6im094kilaTKw812GkVDC7a85AA4scs1X8YE'
 };
 
+// Supabase JS client (for auth + community writes)
+const sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE.url, SUPABASE.key) : null;
+let currentUser = null;
+function userDisplayName(u){
+  if(!u) return '';
+  return (u.user_metadata && u.user_metadata.name) || (u.email ? u.email.split('@')[0] : 'User');
+}
+
+// ─── Auth UI ───
+let _authMode = 'login';
+function onAuthNavClick(){
+  closeMobileMenu();
+  if(currentUser){ doLogout(); } else { openAuthModal('login'); }
+}
+function openAuthModal(mode){ switchAuthTab(mode||'login'); document.getElementById('authOverlay').classList.add('show'); }
+function closeAuthModal(){ document.getElementById('authOverlay').classList.remove('show'); const m=document.getElementById('authMsg'); if(m) m.className='auth-msg'; }
+function switchAuthTab(mode){
+  _authMode = mode;
+  document.getElementById('authTabLogin').classList.toggle('active', mode==='login');
+  document.getElementById('authTabSignup').classList.toggle('active', mode==='signup');
+  document.getElementById('authNameWrap').style.display = mode==='signup' ? 'block' : 'none';
+  document.getElementById('authTitle').textContent = mode==='signup' ? 'Create your account 🎓' : 'Welcome back 👋';
+  document.getElementById('authSub').textContent = mode==='signup' ? 'Join to write reviews and ask questions.' : 'Log in to write reviews and ask questions.';
+  document.getElementById('authSubmitBtn').textContent = mode==='signup' ? 'Create Account' : 'Login';
+}
+function authFlash(text, ok){ const e=document.getElementById('authMsg'); e.textContent=text; e.className='auth-msg '+(ok?'ok':'err'); }
+async function submitAuth(){
+  if(!sbClient){ authFlash('Auth unavailable right now.', false); return; }
+  const email=(document.getElementById('authEmail').value||'').trim();
+  const password=document.getElementById('authPassword').value;
+  if(!email||!password){ authFlash('Enter email and password.', false); return; }
+  if(_authMode==='signup'){
+    const name=(document.getElementById('authName').value||'').trim();
+    const { error } = await sbClient.auth.signUp({ email, password, options:{ data:{ name } } });
+    if(error){ authFlash(error.message, false); return; }
+    authFlash('✅ Account created! You can now log in.', true);
+    setTimeout(()=>switchAuthTab('login'), 1200);
+  } else {
+    const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+    if(error){ authFlash(error.message, false); return; }
+    currentUser = data.user; refreshAuthUI();
+    closeAuthModal();
+  }
+}
+async function doLogout(){ if(sbClient){ await sbClient.auth.signOut(); } currentUser=null; refreshAuthUI(); }
+function refreshAuthUI(){
+  const btn=document.getElementById('authNavBtn');
+  if(btn) btn.textContent = currentUser ? ('👤 '+userDisplayName(currentUser)+' · Logout') : 'Login';
+}
+async function initAuth(){
+  if(!sbClient) return;
+  try{
+    const { data } = await sbClient.auth.getSession();
+    currentUser = data.session ? data.session.user : null;
+    refreshAuthUI();
+    sbClient.auth.onAuthStateChange((_e, session)=>{ currentUser = session ? session.user : null; refreshAuthUI(); });
+  }catch(e){}
+}
+
 function mapInstitution(row){
   return {
     id: row.id, rank: row.rank || 0, name: row.name, full: row.full_name,
@@ -5446,7 +5577,9 @@ async function loadInstitutions(){
 }
 
 (async function initApp(){
+  initAuth();
   await loadInstitutions();
+  await loadRatingAggregates();
   populateCityFilter();
   populateProgramFilter();
   renderNews();
