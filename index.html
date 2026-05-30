@@ -5400,10 +5400,58 @@ const observer = new IntersectionObserver((entries)=>{
   entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
 },{threshold:0.1});
 
-populateCityFilter();
-populateProgramFilter();
-renderNews();
-applyFilters();
+// ═══════════════════════════════════════════════════════════════
+//  SUPABASE — load live institution data from the database
+//  (anon key is public/safe for frontend. Falls back to built-in
+//   data if the database is unreachable, so the site never breaks.)
+// ═══════════════════════════════════════════════════════════════
+const SUPABASE = {
+  url: 'https://vpioffkkzwbfnmpxpwgc.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaW9mZmtrendiZm5tcHhwd2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTc5ODksImV4cCI6MjA5NTczMzk4OX0.IUDmCzw6im094kilaTKw812GkVDC7a85AA4scs1X8YE'
+};
+
+function mapInstitution(row){
+  return {
+    id: row.id, rank: row.rank || 0, name: row.name, full: row.full_name,
+    city: row.city, province: row.province, type: row.sector, icon: row.icon,
+    tags: row.tags || [], fee: row.fee, feeNum: row.fee_num || 0,
+    feeYear: row.fee_year || undefined, feeNote: row.fee_note || undefined,
+    merit: row.merit, entry: row.entry, programs: row.programs || [],
+    seats: row.seats, established: row.established, website: row.website,
+    description: row.description, highlights: row.highlights || [],
+    scholarships: row.scholarships, hostel: row.hostel,
+    feeDetails: (row.fee_details || [])
+      .sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))
+      .map(f=>({label:f.label, value:f.value}))
+  };
+}
+
+async function loadInstitutions(){
+  try{
+    const r = await fetch(SUPABASE.url + '/rest/v1/institutions?select=*,fee_details(label,value,sort_order)&order=id.asc', {
+      headers:{ apikey: SUPABASE.key, Authorization: 'Bearer ' + SUPABASE.key }
+    });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const rows = await r.json();
+    if(!Array.isArray(rows) || !rows.length) throw new Error('empty result');
+    const mapped = rows.map(mapInstitution);
+    UNIVERSITIES.length = 0;              // replace built-in data with live DB data
+    mapped.forEach(u => UNIVERSITIES.push(u));
+    console.log('✅ Loaded ' + UNIVERSITIES.length + ' institutions from Supabase');
+    return true;
+  }catch(e){
+    console.warn('⚠️ Supabase load failed — using built-in data. (' + e.message + ')');
+    return false;
+  }
+}
+
+(async function initApp(){
+  await loadInstitutions();
+  populateCityFilter();
+  populateProgramFilter();
+  renderNews();
+  applyFilters();
+})();
 
 // Back-to-top button visibility on scroll
 window.addEventListener('scroll', function(){
