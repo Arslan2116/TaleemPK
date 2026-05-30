@@ -247,6 +247,8 @@
     animation: fadeInUp 0.7s ease 0.1s both;
   }
   .hero h1 span { color: var(--green); }
+  .hero h1 .hero-dash { color: var(--white); }
+  @media(max-width:620px){ .hero h1 .hero-dash { display: none; } }
   .hero-urdu {
     display: none;
     font-size: clamp(1.1rem, 2.5vw, 1.6rem);
@@ -1627,7 +1629,7 @@
 <!-- HERO -->
 <section class="hero">
   <div class="hero-badge" data-i18n="hero_badge">Pakistan's #1 Education Comparison Platform</div>
-  <h1 id="hero-h1">Choose the Right <span>University</span> —<br>All Info in One Place</h1>
+  <h1 id="hero-h1">Choose the Right <span>University</span> <span class="hero-dash">—</span><br>All Info in One Place</h1>
   <p class="hero-urdu" id="hero-urdu">فیس، میرٹ، پروگرام — سب کچھ ایک جگہ</p>
   <p class="hero-sub" data-i18n="hero_sub">Data on 218 HEC-recognized universities in Pakistan — fees, merit, programs. Compare side-by-side and decide your future.</p>
   <div class="hero-search">
@@ -2409,7 +2411,7 @@ const T = {
   en: {
     nav_universities:'Universities', nav_compare:'Compare', nav_how:'How It Works', nav_cta:'View Universities',
     hero_badge:"Pakistan's #1 Education Comparison Platform",
-    hero_h1:'Choose the Right <span>University</span> —<br>All Info in One Place',
+    hero_h1:'Choose the Right <span>University</span> <span class="hero-dash">—</span><br>All Info in One Place',
     hero_urdu:'فیس، میرٹ، پروگرام — سب کچھ ایک جگہ',
     hero_sub:'Data on 218 HEC-recognized universities in Pakistan — fees, merit, programs. Compare side-by-side and decide your future.',
     hero_search_placeholder:'Search university or program... (e.g. NUST, Engineering)',
