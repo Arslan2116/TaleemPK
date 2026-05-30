@@ -1630,6 +1630,9 @@
     <select id="cityFilter" class="city-filter" onchange="filterByCity(this.value)" aria-label="Filter by city">
       <option value="">📍 All Cities</option>
     </select>
+    <select id="programFilter" class="city-filter" onchange="filterByProgram(this.value)" aria-label="Filter by program">
+      <option value="">🎓 All Programs</option>
+    </select>
   </div>
 </div>
 <!-- ADMISSION PREDICTOR BANNER -->
@@ -4074,7 +4077,40 @@ function clearPredictor() {
 let compareList = [];
 let currentFilter = 'all';
 let currentCity = '';
+let currentProgram = '';
 let searchQuery = '';
+
+// Curated program categories for the Program filter dropdown.
+// Each option matches a university if any of its programs/tags contains a term.
+const PROGRAM_FILTERS = [
+  {label:'Computer Science',        terms:['computer science','bscs','bs cs','computing','cs']},
+  {label:'Software Engineering',    terms:['software','bsse']},
+  {label:'Artificial Intelligence', terms:['artificial intelligence','ai','machine learning']},
+  {label:'Data Science',            terms:['data science']},
+  {label:'Information Technology',  terms:['information technology','bsit','bs it']},
+  {label:'Electrical Engineering',  terms:['electrical','electronics']},
+  {label:'Mechanical Engineering',  terms:['mechanical','mechatronics']},
+  {label:'Civil Engineering',       terms:['civil']},
+  {label:'Chemical Engineering',    terms:['chemical']},
+  {label:'Business / BBA',          terms:['bba','business','bsba']},
+  {label:'MBA',                     terms:['mba']},
+  {label:'Accounting & Finance',    terms:['accounting','finance','bsaf']},
+  {label:'Economics',               terms:['economics']},
+  {label:'MBBS / Medicine',         terms:['mbbs','medicine','medical']},
+  {label:'Dentistry (BDS)',         terms:['bds','dental','dentistry']},
+  {label:'Pharmacy (Pharm-D)',      terms:['pharm']},
+  {label:'Nursing',                 terms:['nursing','nurse']},
+  {label:'Law (LLB)',               terms:['llb','law']},
+  {label:'Architecture',            terms:['architecture']},
+  {label:'Psychology',              terms:['psychology']},
+  {label:'English',                 terms:['english']},
+  {label:'Mathematics',             terms:['mathematics','maths']},
+  {label:'Agriculture / Vet',       terms:['agriculture','veterinary','dvm','animal']},
+  {label:'Fashion & Design',        terms:['fashion','design','textile','fine arts','bfa']},
+  {label:'Media & Journalism',      terms:['media','journalism','mass comm']},
+  {label:'Education',               terms:['education','b.ed','m.ed']},
+  {label:'Islamic Studies',         terms:['islamic']},
+];
 let currentPage = 1;
 const PAGE_SIZE = 20;
 let filteredCache = [];
@@ -4890,8 +4926,36 @@ function applyFilters() {
   if(currentCity){
     filtered = filtered.filter(u => (u.city||'').toLowerCase().includes(currentCity.toLowerCase()));
   }
+  if(currentProgram){
+    const opt = PROGRAM_FILTERS.find(p => p.label === currentProgram);
+    if(opt){
+      filtered = filtered.filter(u => {
+        const progs = (u.programs||[]).map(p=>p.toLowerCase());
+        const tags  = (u.tags||[]).map(t=>t.toLowerCase());
+        return opt.terms.some(term =>
+          progs.some(p=>p.includes(term)) || tags.some(t=>t.includes(term))
+        );
+      });
+    }
+  }
   if(_slActive){ const sl=getShortlist(); filtered=filtered.filter(u=>sl.includes(u.id)); }
   renderCards(filtered);
+}
+
+function filterByProgram(value){
+  closeOtherTools();
+  currentProgram = value || '';
+  currentPage = 1;
+  const sel = document.getElementById('programFilter');
+  if(sel) sel.setAttribute('data-active', currentProgram ? '1' : '0');
+  applyFilters();
+}
+
+function populateProgramFilter(){
+  const sel = document.getElementById('programFilter');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">All Programs</option>' +
+    PROGRAM_FILTERS.map(p=>`<option value="${p.label}">${p.label}</option>`).join('');
 }
 
 function filterByCity(value){
@@ -5085,6 +5149,7 @@ const observer = new IntersectionObserver((entries)=>{
 },{threshold:0.1});
 
 populateCityFilter();
+populateProgramFilter();
 renderNews();
 applyFilters();
 setTimeout(()=>{
