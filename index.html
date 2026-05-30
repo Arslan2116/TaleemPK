@@ -4813,48 +4813,62 @@ function buildAlumniHTML(uniId) {
 // ════════════════════════════════════════════════════════
 //  COMMUNITY FEATURE 8 — Q&A SECTION
 // ════════════════════════════════════════════════════════
-const QA_KEY = 'tpk_qa_v1';
-function getQA(uniId){ try{return (JSON.parse(localStorage.getItem(QA_KEY)||'{}'))[uniId]||[];}catch{return[];} }
-function saveQA(uniId, arr){ try{const d=JSON.parse(localStorage.getItem(QA_KEY)||'{}'); d[uniId]=arr; localStorage.setItem(QA_KEY,JSON.stringify(d));}catch{} }
+const QA_CACHE = {};   // uniId -> [questions] (each with .answers[]) from DB
+function getQA(uniId){ return QA_CACHE[uniId] || []; }
+function fmtQADate(d){ try{ return new Date(d).toLocaleDateString('en-PK',{month:'short',day:'numeric'}); }catch(e){ return ''; } }
+
+async function loadQA(uniId){
+  if(!sbClient) return;
+  try{
+    const { data, error } = await sbClient.from('questions')
+      .select('id,question,author,created_at,answers(id,body,author,votes,created_at)')
+      .eq('institution_id', uniId).order('created_at',{ascending:false});
+    if(error) throw error;
+    QA_CACHE[uniId] = (data||[]).map(q=>({
+      id:q.id, q:q.question, author:q.author||'Student', date:fmtQADate(q.created_at),
+      answers:(q.answers||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).map(a=>({
+        id:a.id, text:a.body, author:a.author||'Student', votes:a.votes||0, date:fmtQADate(a.created_at)
+      }))
+    }));
+    const sec=document.getElementById('qaSection-'+uniId);
+    if(sec) sec.innerHTML = buildQAHTML(uniId);
+  }catch(e){ /* keep cache */ }
+}
 
 function toggleQAForm(uniId) {
   const f = document.getElementById('qaAskForm-'+uniId);
   if(f) f.classList.toggle('open');
 }
-function submitQuestion(uniId) {
+async function submitQuestion(uniId) {
+  if(!currentUser){ openAuthModal('login'); return; }
   const txt = document.getElementById('qaInput-'+uniId).value.trim();
   if(!txt){ alert('Please write your question first.'); return; }
-  const q = { id:Date.now(), q:txt, date:new Date().toLocaleDateString('en-PK',{month:'short',day:'numeric'}), answers:[] };
-  const arr = getQA(uniId);
-  arr.unshift(q);
-  saveQA(uniId, arr);
+  const { error } = await sbClient.from('questions').insert({ institution_id:uniId, question:txt, author:userDisplayName(currentUser) });
+  if(error){ alert('Could not post question: '+error.message); return; }
   const uni = UNIVERSITIES.find(u=>u.id===uniId);
   notifyAdmin(`TaleemPK Q&A — ${uni?uni.name:('Uni #'+uniId)}`, {
-    type: 'Question', university: uni?uni.full:('ID '+uniId), question: txt
+    type: 'Question', university: uni?uni.full:('ID '+uniId), question: txt, by: userDisplayName(currentUser)
   });
   toggleQAForm(uniId);
-  document.getElementById('qaSection-'+uniId).innerHTML = buildQAHTML(uniId);
+  await loadQA(uniId);
 }
 function toggleQAItem(qId) {
-  document.getElementById('qaItem-'+qId).classList.toggle('open');
+  const el = document.getElementById('qaItem-'+qId);
+  if(el) el.classList.toggle('open');
 }
-function submitAnswer(uniId, qId) {
+async function submitAnswer(uniId, qId) {
+  if(!currentUser){ openAuthModal('login'); return; }
   const txt = document.getElementById('qaAnsTxt-'+qId).value.trim();
   if(!txt){ alert('Please write your answer first.'); return; }
-  const arr = getQA(uniId);
-  const q = arr.find(x=>x.id===qId);
-  if(!q) return;
-  q.answers.push({ id:Date.now(), text:txt,
-    date:new Date().toLocaleDateString('en-PK',{month:'short',day:'numeric'}), votes:0 });
-  saveQA(uniId, arr);
-  document.getElementById('qaSection-'+uniId).innerHTML = buildQAHTML(uniId);
+  const { error } = await sbClient.from('answers').insert({ question_id:qId, body:txt, author:userDisplayName(currentUser) });
+  if(error){ alert('Could not post answer: '+error.message); return; }
+  await loadQA(uniId);
+  const it=document.getElementById('qaItem-'+qId); if(it) it.classList.add('open');
 }
 function voteAnswer(uniId, qId, ansId) {
-  const arr = getQA(uniId);
-  const q = arr.find(x=>x.id===qId);
-  if(!q) return;
-  const ans = q.answers.find(a=>a.id===ansId);
-  if(ans){ ans.votes=(ans.votes||0)+1; saveQA(uniId,arr); }
+  const q = getQA(uniId).find(x=>x.id===qId);
+  const ans = q && q.answers.find(a=>a.id===ansId);
+  if(ans){ ans.votes=(ans.votes||0)+1; }
   const el = document.getElementById('qaVote-'+ansId);
   if(el) el.textContent = '▲ ' + (ans?ans.votes:1);
 }
@@ -4877,7 +4891,7 @@ function buildQAHTML(uniId) {
         <div class="qa-item" id="qaItem-${q.id}">
           <div class="qa-question" onclick="toggleQAItem(${q.id})">
             <span style="color:var(--green);font-weight:800;font-size:1rem;margin-top:1px;">Q</span>
-            <span class="qa-q-text">${q.q}</span>
+            <span class="qa-q-text">${q.q}<br><small style="color:var(--gray-400);font-weight:400;">👤 ${q.author||'Student'} · ${q.date}</small></span>
             <div class="qa-meta">
               <span class="qa-ans-count">${q.answers.length} ans</span>
               <span class="qa-expand-icon">▾</span>
@@ -4888,7 +4902,7 @@ function buildQAHTML(uniId) {
               <div class="qa-answer">
                 ${a.text}
                 <div class="qa-answer-meta">
-                  <span>${a.date}</span>
+                  <span>${a.author?('👤 '+a.author+' · '):''}${a.date}</span>
                   <button class="qa-vote-btn" id="qaVote-${a.id}" onclick="voteAnswer(${uniId},${q.id},${a.id})">▲ ${a.votes||0}</button>
                 </div>
               </div>
@@ -5388,6 +5402,7 @@ function openDetail(id) {
   document.getElementById('detailModalOverlay').classList.add('show');
   if(MERIT_TRENDS[u.id]) setTimeout(()=>renderTrendChart(u.id), 100);
   loadReviews(u.id);   // fetch shared reviews from the database
+  loadQA(u.id);        // fetch shared Q&A from the database
 }
 
 function shareUniversity(id){
