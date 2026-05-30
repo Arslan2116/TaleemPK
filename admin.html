@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>TaleemPK — Admin Panel</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --green:#00C853; --green-dark:#00A040; --green-light:#E8FFF1;
+    --navy:#0A1628; --navy-mid:#112240; --white:#fff;
+    --g100:#F5F7FA; --g200:#E8ECF2; --g400:#9BA5B5; --g600:#5A6478; --red:#FF4757;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,Arial,sans-serif;background:var(--g100);color:var(--navy);line-height:1.5;}
+  a{color:var(--green-dark);}
+  .topbar{background:var(--navy);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+  .topbar .brand{font-weight:800;font-size:1.2rem;}
+  .topbar .brand span{color:var(--green);}
+  .btn{background:var(--green);color:var(--navy);border:none;border-radius:10px;padding:11px 20px;font-weight:700;cursor:pointer;font-size:.9rem;transition:.2s;}
+  .btn:hover{background:var(--green-dark);color:#fff;}
+  .btn.ghost{background:transparent;border:1.5px solid rgba(255,255,255,.4);color:#fff;}
+  .btn.danger{background:var(--red);color:#fff;padding:6px 12px;font-size:.78rem;border-radius:7px;}
+  .wrap{max-width:880px;margin:0 auto;padding:28px 18px 80px;}
+
+  /* Login */
+  #loginView{max-width:380px;margin:80px auto;background:#fff;border-radius:18px;padding:36px 32px;box-shadow:0 18px 50px rgba(0,0,0,.12);}
+  #loginView h1{font-size:1.4rem;margin-bottom:6px;}
+  #loginView h1 span{color:var(--green);}
+  #loginView p{color:var(--g600);font-size:.88rem;margin-bottom:24px;}
+  label{display:block;font-size:.78rem;font-weight:700;color:var(--g600);margin:14px 0 5px;text-transform:uppercase;letter-spacing:.4px;}
+  input,select,textarea{width:100%;padding:10px 13px;border:2px solid var(--g200);border-radius:10px;font-family:inherit;font-size:.9rem;color:var(--navy);background:#fff;outline:none;}
+  input:focus,select:focus,textarea:focus{border-color:var(--green);}
+  textarea{resize:vertical;min-height:80px;}
+  .msg{font-size:.85rem;margin-top:12px;padding:10px 14px;border-radius:9px;display:none;}
+  .msg.err{display:block;background:#fde8ea;color:#b3263a;}
+  .msg.ok{display:block;background:var(--green-light);color:var(--green-dark);}
+
+  /* Admin */
+  #adminView{display:none;}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;}
+  .tab{background:#fff;border:1.5px solid var(--g200);border-radius:40px;padding:8px 18px;font-weight:600;font-size:.85rem;cursor:pointer;color:var(--g600);}
+  .tab.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .panel{display:none;background:#fff;border-radius:16px;padding:26px;box-shadow:0 6px 24px rgba(0,0,0,.06);}
+  .panel.active{display:block;}
+  .panel h2{font-size:1.15rem;margin-bottom:4px;}
+  .panel .hint{color:var(--g400);font-size:.82rem;margin-bottom:18px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:600px){.grid2{grid-template-columns:1fr;}}
+  .full{grid-column:1/-1;}
+  .save-row{margin-top:18px;display:flex;align-items:center;gap:14px;}
+  .recent{margin-top:26px;}
+  .recent h3{font-size:.95rem;margin-bottom:10px;color:var(--g600);}
+  .rec-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border:1px solid var(--g200);border-radius:10px;margin-bottom:8px;font-size:.86rem;}
+  .rec-item .meta{color:var(--g400);font-size:.76rem;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView">
+  <h1>Taleem<span>PK</span> Admin</h1>
+  <p>Sign in to manage the platform.</p>
+  <label>Email</label>
+  <input type="email" id="email" placeholder="you@example.com" autocomplete="username">
+  <label>Password</label>
+  <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+  <div style="margin-top:20px"><button class="btn" style="width:100%" onclick="doLogin()">Sign In</button></div>
+  <div class="msg" id="loginMsg"></div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminView">
+  <div class="topbar">
+    <div class="brand">Taleem<span>PK</span> · Admin</div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span id="who" style="font-size:.82rem;color:rgba(255,255,255,.6)"></span>
+      <a href="index.html" class="btn ghost" style="text-decoration:none">↩ Site</a>
+      <button class="btn ghost" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="tabs">
+      <button class="tab active" data-panel="inst" onclick="showPanel('inst',this)">🏛️ Institutions</button>
+      <button class="tab" data-panel="blog" onclick="showPanel('blog',this)">📰 Blog</button>
+      <button class="tab" data-panel="note" onclick="showPanel('note',this)">📒 Notes</button>
+      <button class="tab" data-panel="res"  onclick="showPanel('res',this)">📊 Results</button>
+    </div>
+
+    <!-- Institutions -->
+    <div class="panel active" id="panel-inst">
+      <h2>Add University / College</h2>
+      <div class="hint">Fill the fields and save. It appears on the site immediately.</div>
+      <div class="grid2">
+        <div><label>Type</label><select id="i_type"><option value="university">University</option><option value="college">College</option></select></div>
+        <div><label>Sector</label><select id="i_sector"><option value="public">Public</option><option value="private">Private</option><option value="military">Military</option></select></div>
+        <div><label>Short Name *</label><input id="i_name" placeholder="e.g. NUST"></div>
+        <div><label>Full Name *</label><input id="i_full" placeholder="National University of..."></div>
+        <div><label>City</label><input id="i_city" placeholder="Lahore"></div>
+        <div><label>Province</label><input id="i_province" placeholder="Punjab / Sindh / KPK..."></div>
+        <div><label>Icon (emoji)</label><input id="i_icon" placeholder="🏛️" value="🏛️"></div>
+        <div><label>Rank (0 if none)</label><input id="i_rank" type="number" value="0"></div>
+        <div><label>Fee (display text)</label><input id="i_fee" placeholder="Rs. 1–1.5L/sem"></div>
+        <div><label>Fee Number (for calculator)</label><input id="i_feenum" type="number" placeholder="120000" value="0"></div>
+        <div><label>Merit</label><input id="i_merit" placeholder="60%+ FSc, entry test"></div>
+        <div><label>Entry Test</label><input id="i_entry" placeholder="Entry Test name"></div>
+        <div class="full"><label>Tags (comma separated)</label><input id="i_tags" placeholder="public, engineering, punjab"></div>
+        <div class="full"><label>Programs (comma separated)</label><input id="i_programs" placeholder="BS CS, BBA, Civil Engg"></div>
+        <div><label>Seats</label><input id="i_seats" placeholder="~2,000/year"></div>
+        <div><label>Established (year)</label><input id="i_est" type="number" placeholder="2000"></div>
+        <div class="full"><label>Website (no https)</label><input id="i_web" placeholder="example.edu.pk"></div>
+        <div class="full"><label>Description</label><textarea id="i_desc"></textarea></div>
+        <div class="full"><label>Highlights (comma separated)</label><input id="i_high" placeholder="Top ranked, Affordable, Modern labs"></div>
+        <div><label>Scholarships</label><input id="i_schol" placeholder="Need-based available"></div>
+        <div><label>Hostel</label><input id="i_hostel" placeholder="Available"></div>
+      </div>
+      <div class="save-row"><button class="btn" onclick="saveInstitution()">Save Institution</button><span class="msg" id="instMsg"></span></div>
+      <div class="recent"><h3>Recently added</h3><div id="recentList">Loading…</div></div>
+    </div>
+
+    <!-- Blog -->
+    <div class="panel" id="panel-blog">
+      <h2>Add Blog Post</h2>
+      <div class="hint">Use the body for the full article. Basic HTML is allowed.</div>
+      <div class="grid2">
+        <div><label>Title *</label><input id="b_title"></div>
+        <div><label>Category</label><input id="b_cat" placeholder="Admission Guide"></div>
+        <div><label>Icon (emoji)</label><input id="b_icon" placeholder="📝" value="📝"></div>
+        <div><label>Author</label><input id="b_author" value="TaleemPK Team"></div>
+        <div class="full"><label>Excerpt (short summary)</label><textarea id="b_excerpt"></textarea></div>
+        <div class="full"><label>Body (HTML allowed)</label><textarea id="b_body" style="min-height:140px"></textarea></div>
+      </div>
+      <div class="save-row"><button class="btn" onclick="saveBlog()">Publish Post</button><span class="msg" id="blogMsg"></span></div>
+    </div>
+
+    <!-- Notes -->
+    <div class="panel" id="panel-note">
+      <h2>Add Note (Download)</h2>
+      <div class="hint">Paste a public file link (PDF/Drive). File-upload storage can be added later.</div>
+      <div class="grid2">
+        <div><label>Title *</label><input id="n_title"></div>
+        <div><label>Subject</label><input id="n_subject" placeholder="Physics"></div>
+        <div><label>Level</label><input id="n_level" placeholder="Intermediate / BS"></div>
+        <div><label>Institution ID (optional)</label><input id="n_inst" type="number" placeholder="leave blank if general"></div>
+        <div class="full"><label>File URL *</label><input id="n_url" placeholder="https://..."></div>
+      </div>
+      <div class="save-row"><button class="btn" onclick="saveNote()">Save Note</button><span class="msg" id="noteMsg"></span></div>
+    </div>
+
+    <!-- Results -->
+    <div class="panel" id="panel-res">
+      <h2>Add Result / Merit List</h2>
+      <div class="hint">Add a result or merit-list entry with a link.</div>
+      <div class="grid2">
+        <div><label>Title *</label><input id="r_title"></div>
+        <div><label>Year</label><input id="r_year" type="number" placeholder="2026"></div>
+        <div><label>Category</label><input id="r_cat" placeholder="Merit List / Exam Result"></div>
+        <div><label>Institution ID (optional)</label><input id="r_inst" type="number"></div>
+        <div class="full"><label>File / Link URL</label><input id="r_url" placeholder="https://..."></div>
+      </div>
+      <div class="save-row"><button class="btn" onclick="saveResult()">Save Result</button><span class="msg" id="resMsg"></span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SB_URL = 'https://vpioffkkzwbfnmpxpwgc.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaW9mZmtrendiZm5tcHhwd2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTc5ODksImV4cCI6MjA5NTczMzk4OX0.IUDmCzw6im094kilaTKw812GkVDC7a85AA4scs1X8YE';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+const $ = id => document.getElementById(id);
+const val = id => ($(id).value || '').trim();
+const arr = id => val(id) ? val(id).split(',').map(s=>s.trim()).filter(Boolean) : [];
+const numOrNull = id => val(id)==='' ? null : Number(val(id));
+function flash(id, text, ok){ const e=$(id); e.textContent=text; e.className='msg '+(ok?'ok':'err'); setTimeout(()=>{e.className='msg';}, 4000); }
+
+// ── Auth ──
+async function checkSession(){
+  const { data } = await sb.auth.getSession();
+  if(data.session){ showAdmin(data.session.user); } else { showLogin(); }
+}
+function showLogin(){ $('loginView').style.display='block'; $('adminView').style.display='none'; }
+function showAdmin(user){
+  $('loginView').style.display='none'; $('adminView').style.display='block';
+  $('who').textContent = user.email;
+  loadRecent();
+}
+async function doLogin(){
+  const email=val('email'), password=$('password').value;
+  if(!email||!password){ flash('loginMsg','Enter email and password.',false); return; }
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){ flash('loginMsg', error.message, false); return; }
+  showAdmin(data.user);
+}
+async function doLogout(){ await sb.auth.signOut(); showLogin(); }
+
+// ── Tabs ──
+function showPanel(name, btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  $('panel-'+name).classList.add('active'); btn.classList.add('active');
+}
+
+// ── Save: Institution ──
+async function saveInstitution(){
+  if(!val('i_name')||!val('i_full')){ flash('instMsg','Name and Full Name are required.',false); return; }
+  const row = {
+    type: val('i_type'), sector: val('i_sector'), name: val('i_name'), full_name: val('i_full'),
+    city: val('i_city'), province: val('i_province'), icon: val('i_icon')||'🏛️',
+    rank: numOrNull('i_rank')||0, fee: val('i_fee'), fee_num: numOrNull('i_feenum')||0,
+    merit: val('i_merit'), entry: val('i_entry'), tags: arr('i_tags'), programs: arr('i_programs'),
+    seats: val('i_seats'), established: numOrNull('i_est'), website: val('i_web'),
+    description: val('i_desc'), highlights: arr('i_high'), scholarships: val('i_schol'), hostel: val('i_hostel')
+  };
+  const { error } = await sb.from('institutions').insert(row);
+  if(error){ flash('instMsg', error.message, false); return; }
+  flash('instMsg','✅ Saved! It is now live on the site.', true);
+  ['i_name','i_full','i_city','i_province','i_fee','i_feenum','i_merit','i_entry','i_tags','i_programs','i_seats','i_est','i_web','i_desc','i_high','i_schol','i_hostel'].forEach(id=>$(id).value='');
+  $('i_rank').value='0';
+  loadRecent();
+}
+
+async function loadRecent(){
+  const { data, error } = await sb.from('institutions').select('id,name,city,type').order('created_at',{ascending:false}).limit(8);
+  if(error){ $('recentList').textContent='Could not load.'; return; }
+  $('recentList').innerHTML = (data||[]).map(u=>`<div class="rec-item"><div><strong>${u.name}</strong> <span class="meta">· ${u.city||''} · ${u.type}</span></div><button class="btn danger" onclick="delInstitution(${u.id},'${(u.name||'').replace(/'/g,"")}')">Delete</button></div>`).join('') || '<div class="meta">None yet.</div>';
+}
+async function delInstitution(id, name){
+  if(!confirm('Delete "'+name+'"? This cannot be undone.')) return;
+  const { error } = await sb.from('institutions').delete().eq('id', id);
+  if(error){ alert(error.message); return; }
+  loadRecent();
+}
+
+// ── Save: Blog ──
+async function saveBlog(){
+  if(!val('b_title')){ flash('blogMsg','Title is required.',false); return; }
+  const row={ title:val('b_title'), category:val('b_cat'), icon:val('b_icon')||'📝', author:val('b_author')||'TaleemPK Team', excerpt:val('b_excerpt'), body:val('b_body'), published:true };
+  const { error } = await sb.from('blog_posts').insert(row);
+  if(error){ flash('blogMsg', error.message, false); return; }
+  flash('blogMsg','✅ Published!', true);
+  ['b_title','b_cat','b_excerpt','b_body'].forEach(id=>$(id).value='');
+}
+
+// ── Save: Note ──
+async function saveNote(){
+  if(!val('n_title')||!val('n_url')){ flash('noteMsg','Title and File URL are required.',false); return; }
+  const row={ title:val('n_title'), subject:val('n_subject'), level:val('n_level'), file_url:val('n_url'), institution_id:numOrNull('n_inst') };
+  const { error } = await sb.from('notes').insert(row);
+  if(error){ flash('noteMsg', error.message, false); return; }
+  flash('noteMsg','✅ Saved!', true);
+  ['n_title','n_subject','n_level','n_url','n_inst'].forEach(id=>$(id).value='');
+}
+
+// ── Save: Result ──
+async function saveResult(){
+  if(!val('r_title')){ flash('resMsg','Title is required.',false); return; }
+  const row={ title:val('r_title'), year:numOrNull('r_year'), category:val('r_cat'), file_url:val('r_url'), institution_id:numOrNull('r_inst') };
+  const { error } = await sb.from('results').insert(row);
+  if(error){ flash('resMsg', error.message, false); return; }
+  flash('resMsg','✅ Saved!', true);
+  ['r_title','r_year','r_cat','r_url','r_inst'].forEach(id=>$(id).value='');
+}
+
+checkSession();
+</script>
+</body>
+</html>
