@@ -86,6 +86,7 @@
       <button class="tab" data-panel="blog" onclick="showPanel('blog',this)">📰 Blog</button>
       <button class="tab" data-panel="note" onclick="showPanel('note',this)">📒 Notes</button>
       <button class="tab" data-panel="res"  onclick="showPanel('res',this)">📊 Results</button>
+      <button class="tab" data-panel="schol" onclick="showPanel('schol',this)">🎓 Scholarships</button>
     </div>
 
     <!-- Institutions -->
@@ -160,6 +161,26 @@
         <div class="full"><label>File / Link URL</label><input id="r_url" placeholder="https://..."></div>
       </div>
       <div class="save-row"><button class="btn" onclick="saveResult()">Save Result</button><span class="msg" id="resMsg"></span></div>
+    </div>
+
+    <!-- Scholarships -->
+    <div class="panel" id="panel-schol">
+      <h2>Add Scholarship</h2>
+      <div class="hint">Appears on the Scholarships page immediately.</div>
+      <div class="grid2">
+        <div><label>Title *</label><input id="s_title" placeholder="Ehsaas Undergraduate Scholarship"></div>
+        <div><label>Provider</label><input id="s_provider" placeholder="HEC / Govt / University"></div>
+        <div><label>Type</label><select id="s_type"><option>Need-based</option><option>Merit-based</option><option>Need + Merit</option><option>Need-blind</option></select></div>
+        <div><label>Level</label><input id="s_level" placeholder="Undergraduate / Graduate / All Levels"></div>
+        <div><label>Coverage</label><input id="s_coverage" placeholder="Full tuition + stipend"></div>
+        <div><label>Deadline</label><input id="s_deadline" placeholder="e.g. Check HEC portal"></div>
+        <div class="full"><label>Eligibility</label><input id="s_elig" placeholder="Who can apply"></div>
+        <div class="full"><label>Apply URL</label><input id="s_url" placeholder="https://..."></div>
+        <div class="full"><label>Description</label><textarea id="s_desc"></textarea></div>
+        <div><label>Icon (emoji)</label><input id="s_icon" value="🎓"></div>
+        <div><label>Featured?</label><select id="s_feat"><option value="false">No</option><option value="true">Yes</option></select></div>
+      </div>
+      <div class="save-row"><button class="btn" onclick="saveScholarship()">Save Scholarship</button><span class="msg" id="scholMsg"></span></div>
     </div>
 
   </div>
@@ -262,6 +283,18 @@ async function saveResult(){
   if(error){ flash('resMsg', error.message, false); return; }
   flash('resMsg','✅ Saved!', true);
   ['r_title','r_year','r_cat','r_url','r_inst'].forEach(id=>$(id).value='');
+}
+
+// ── Save: Scholarship ──
+async function saveScholarship(){
+  if(!val('s_title')){ flash('scholMsg','Title is required.',false); return; }
+  const row={ title:val('s_title'), provider:val('s_provider'), type:val('s_type'), level:val('s_level'),
+    coverage:val('s_coverage'), deadline:val('s_deadline'), eligibility:val('s_elig'),
+    apply_url:val('s_url'), description:val('s_desc'), icon:val('s_icon')||'🎓', featured:(val('s_feat')==='true') };
+  const { error } = await sb.from('scholarships').insert(row);
+  if(error){ flash('scholMsg', error.message, false); return; }
+  flash('scholMsg','✅ Saved!', true);
+  ['s_title','s_provider','s_level','s_coverage','s_deadline','s_elig','s_url','s_desc'].forEach(id=>$(id).value='');
 }
 
 checkSession();

@@ -937,6 +937,45 @@
   body.blog-active .pagination,
   body.blog-active .hiw,
   body.blog-active .news-section { display:none !important; }
+
+  /* Scholarships page (same show/hide pattern) */
+  #scholarshipsPage{ display:none; }
+  #scholarshipsPage.active{ display:block; }
+  body.scholar-active .hero,
+  body.scholar-active .filter-section,
+  body.scholar-active .predictor-banner,
+  body.scholar-active .predictor-active-bar,
+  body.scholar-active #predictorModal,
+  body.scholar-active .tools-bar,
+  body.scholar-active .calendar-section,
+  body.scholar-active #mapContainer,
+  body.scholar-active .results-count,
+  body.scholar-active .uni-grid,
+  body.scholar-active .pagination,
+  body.scholar-active .hiw,
+  body.scholar-active .news-section { display:none !important; }
+  .schol-filter{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px; }
+  .schol-fbtn{ padding:8px 18px; border-radius:40px; border:2px solid var(--gray-200); background:var(--white); font-family:'Sora',sans-serif; font-size:.82rem; font-weight:600; color:var(--gray-600); cursor:pointer; transition:.2s; }
+  .schol-fbtn:hover{ border-color:var(--green); }
+  .schol-fbtn.active{ background:var(--navy); border-color:var(--navy); color:#fff; }
+  .schol-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+  @media(max-width:760px){ .schol-grid{ grid-template-columns:1fr; } }
+  .schol-card{ background:var(--white); border:2px solid var(--gray-200); border-radius:16px; padding:24px; display:flex; flex-direction:column; transition:.25s; }
+  .schol-card:hover{ border-color:var(--green); box-shadow:var(--shadow-md); transform:translateY(-3px); }
+  .schol-card.feat{ border-color:var(--green); }
+  .schol-top{ display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; }
+  .schol-icon{ font-size:1.9rem; line-height:1; }
+  .schol-title{ font-size:1.05rem; font-weight:800; color:var(--navy); line-height:1.35; }
+  .schol-provider{ font-size:.78rem; color:var(--gray-400); margin-top:2px; }
+  .schol-badges{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .schol-badge{ font-size:.7rem; font-weight:700; padding:3px 10px; border-radius:20px; background:var(--green-light); color:var(--green-dark); }
+  .schol-badge.lvl{ background:var(--gray-100); color:var(--gray-600); }
+  .schol-feat-tag{ font-size:.66rem; font-weight:800; padding:3px 9px; border-radius:20px; background:var(--gold); color:var(--navy); }
+  .schol-row{ font-size:.84rem; color:var(--gray-600); line-height:1.6; margin-bottom:6px; }
+  .schol-row b{ color:var(--navy); }
+  .schol-desc{ font-size:.84rem; color:var(--gray-600); line-height:1.65; margin:8px 0 14px; flex:1; }
+  .schol-apply{ align-self:flex-start; background:var(--green); color:var(--navy); text-decoration:none; padding:9px 20px; border-radius:9px; font-weight:700; font-size:.85rem; }
+  .schol-apply:hover{ background:var(--green-dark); color:#fff; }
   .news-grid {
     max-width:1280px; margin:0 auto;
     display:grid; grid-template-columns:repeat(3,1fr); gap:24px;
@@ -1634,13 +1673,13 @@
 
 <!-- NAV -->
 <nav>
-  <a href="#" class="nav-logo" onclick="closeAboutPage();closeBlogPage();window.scrollTo({top:0,behavior:'smooth'});return false">
+  <a href="#" class="nav-logo" onclick="closeAboutPage();closeBlogPage();closeScholarshipsPage();window.scrollTo({top:0,behavior:'smooth'});return false">
     <div class="logo-icon">🎓</div>
     Taleem<span>PK</span>
   </a>
   <ul class="nav-links">
-    <li><a href="#universities" onclick="closeMobileMenu();closeAboutPage();closeBlogPage();setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60);return false">Universities</a></li>
-    <li><a href="#" onclick="closeMobileMenu();closeAboutPage();closeBlogPage();(compareList.length>=2?openCompareModal():setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60));return false">Compare</a></li>
+    <li><a href="#universities" onclick="closeMobileMenu();closeAboutPage();closeBlogPage();closeScholarshipsPage();setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60);return false">Universities</a></li>
+    <li><a href="#" onclick="closeMobileMenu();closeAboutPage();closeBlogPage();closeScholarshipsPage();(compareList.length>=2?openCompareModal():setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60));return false">Compare</a></li>
 
     <!-- Tools dropdown -->
     <li class="nav-dropdown" id="navToolsDropdown">
@@ -1668,6 +1707,7 @@
     </li>
 
     <li><a href="#" onclick="closeMobileMenu();closeAboutPage();openBlogPage();return false">Blog</a></li>
+    <li><a href="#" onclick="closeMobileMenu();openScholarshipsPage();return false">Scholarships</a></li>
     <li><a href="#" onclick="openAboutPage();closeMobileMenu();return false">About</a></li>
     <li><a href="#" id="authNavBtn" onclick="onAuthNavClick();return false">Login</a></li>
   </ul>
@@ -1933,6 +1973,24 @@
   </div>
 </div>
 
+<!-- SCHOLARSHIPS PAGE -->
+<div id="scholarshipsPage">
+  <div class="about-hero">
+    <button class="about-back" onclick="closeScholarshipsPage()">← Back to Home</button>
+    <h1>🎓 Scholarships in <span>Pakistan</span></h1>
+    <p>Need-based and merit scholarships from HEC, government, and universities — eligibility, coverage, and how to apply.</p>
+  </div>
+  <div class="blog-page-body">
+    <div class="schol-filter" id="scholFilter">
+      <button class="schol-fbtn active" onclick="filterScholarships('all',this)">All</button>
+      <button class="schol-fbtn" onclick="filterScholarships('Need-based',this)">Need-based</button>
+      <button class="schol-fbtn" onclick="filterScholarships('Merit-based',this)">Merit-based</button>
+      <button class="schol-fbtn" onclick="filterScholarships('Need + Merit',this)">Need + Merit</button>
+    </div>
+    <div class="schol-grid" id="scholGrid"><p style="color:var(--gray-600)">Loading scholarships…</p></div>
+  </div>
+</div>
+
 <!-- ARTICLE READER MODAL -->
 <div class="article-overlay" id="articleOverlay" onclick="closeArticle(event)">
   <div class="article-modal" id="articleModal"></div>
@@ -2115,6 +2173,7 @@
         <a href="#" onclick="closeAboutPage();setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),100);return false">Universities</a>
         <a href="#" onclick="closeAboutPage();setTimeout(()=>document.getElementById('how').scrollIntoView({behavior:'smooth'}),100);return false">How It Works</a>
         <a href="#" onclick="closeAboutPage();openBlogPage();return false">Blog &amp; News</a>
+        <a href="#" onclick="openScholarshipsPage();return false">Scholarships</a>
         <a href="#" onclick="openFeeCalc();return false">Fee Calculator</a>
         <a href="#" onclick="toggleCalendar();return false">Admission Calendar</a>
         <a href="#" onclick="toggleMapView();return false">Map View</a>
@@ -4293,7 +4352,7 @@ function updateSlBadge() {
 
 /* ── About Page ── */
 function openAboutPage() {
-  closeBlogPage();
+  closeBlogPage(); closeScholarshipsPage();
   document.getElementById('aboutPage').classList.add('active');
   document.body.classList.add('about-active');
   window.scrollTo({top:0, behavior:'smooth'});
@@ -4343,7 +4402,7 @@ function renderBlogPage(){
     : '<p style="color:var(--gray-600)">No articles yet — check back soon.</p>';
 }
 function openBlogPage(){
-  closeAboutPage();
+  closeAboutPage(); closeScholarshipsPage();
   renderBlogPage();
   document.getElementById('blogPage').classList.add('active');
   document.body.classList.add('blog-active');
@@ -4353,6 +4412,62 @@ function openBlogPage(){
 function closeBlogPage(){
   document.getElementById('blogPage').classList.remove('active');
   document.body.classList.remove('blog-active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ── Scholarships ── */
+let SCHOLARSHIPS = [];
+let _scholFilter = 'all';
+async function loadScholarships(){
+  if(!sbClient) return;
+  try{
+    const { data, error } = await sbClient.from('scholarships').select('*').order('sort_order',{ascending:true});
+    if(error) throw error;
+    SCHOLARSHIPS = data || [];
+  }catch(e){ SCHOLARSHIPS = []; }
+  renderScholarships();
+}
+function renderScholarships(){
+  const grid = document.getElementById('scholGrid');
+  if(!grid) return;
+  const list = _scholFilter==='all' ? SCHOLARSHIPS : SCHOLARSHIPS.filter(s=>(s.type||'')===_scholFilter);
+  if(!list.length){ grid.innerHTML='<p style="color:var(--gray-600)">No scholarships found for this filter.</p>'; return; }
+  grid.innerHTML = list.map(s=>`
+    <div class="schol-card ${s.featured?'feat':''}">
+      <div class="schol-top">
+        <span class="schol-icon">${s.icon||'🎓'}</span>
+        <div><div class="schol-title">${s.title}</div><div class="schol-provider">${s.provider||''}</div></div>
+      </div>
+      <div class="schol-badges">
+        ${s.featured?'<span class="schol-feat-tag">★ Featured</span>':''}
+        ${s.type?`<span class="schol-badge">${s.type}</span>`:''}
+        ${s.level?`<span class="schol-badge lvl">${s.level}</span>`:''}
+      </div>
+      ${s.coverage?`<div class="schol-row"><b>Coverage:</b> ${s.coverage}</div>`:''}
+      ${s.eligibility?`<div class="schol-row"><b>Eligibility:</b> ${s.eligibility}</div>`:''}
+      ${s.deadline?`<div class="schol-row"><b>Deadline:</b> ${s.deadline}</div>`:''}
+      ${s.description?`<div class="schol-desc">${s.description}</div>`:''}
+      ${s.apply_url?`<a class="schol-apply" href="${s.apply_url}" target="_blank" rel="noopener">Apply / Details →</a>`:''}
+    </div>
+  `).join('');
+}
+function filterScholarships(type, btn){
+  _scholFilter = type;
+  document.querySelectorAll('.schol-fbtn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderScholarships();
+}
+function openScholarshipsPage(){
+  closeAboutPage(); closeBlogPage();
+  document.getElementById('scholarshipsPage').classList.add('active');
+  document.body.classList.add('scholar-active');
+  window.scrollTo({top:0, behavior:'smooth'});
+  closeNavDropdown();
+  loadScholarships();
+}
+function closeScholarshipsPage(){
+  document.getElementById('scholarshipsPage').classList.remove('active');
+  document.body.classList.remove('scholar-active');
   window.scrollTo({top:0, behavior:'smooth'});
 }
 function openArticle(id){
