@@ -365,6 +365,15 @@
   .city-filter[data-active="1"] {
     border-color:var(--green); background:var(--green); color:var(--navy);
   }
+  /* Mobile: dropdowns full-width in a clean 2-column grid for even alignment */
+  @media(max-width:620px){
+    .filters { gap:8px; }
+    .filter-label { width:100%; margin-bottom:2px; }
+    .city-filter { max-width:none; flex:1 1 calc(50% - 4px); width:auto; }
+  }
+  @media(max-width:380px){
+    .city-filter { flex-basis:100%; }
+  }
 
   /* ───── UNI GRID ───── */
   .uni-grid {
