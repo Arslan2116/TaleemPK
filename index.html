@@ -303,7 +303,8 @@
   }
   .sug-item:last-child { border-bottom:none; }
   .sug-item:hover { background:var(--green-light); }
-  .sug-icon { font-size:1.1rem; width:26px; text-align:center; flex-shrink:0; }
+  .sug-icon { font-size:1.1rem; width:30px; height:30px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .sug-icon img { width:30px; height:30px; object-fit:contain; border-radius:6px; background:var(--white); }
   .sug-text { flex:1; min-width:0; }
   .sug-title { font-size:0.9rem; font-weight:700; color:var(--navy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sug-sub { font-size:0.74rem; color:var(--gray-400); }
@@ -4989,8 +4990,11 @@ function renderSuggestions(value){
 
   let html = '';
   unis.forEach(u => {
+    const icon = u.website
+      ? `<img src="${logoSrc(u)}" alt="" onload="checkLogoSize(this,'${u.icon}')" onerror="handleLogoError(this,'${u.website}','${u.icon}')">`
+      : (u.icon||'🏛️');
     html += `<div class="sug-item" onmousedown="selectSuggestion('uni',${u.id})">
-      <span class="sug-icon">${u.icon||'🏛️'}</span>
+      <span class="sug-icon">${icon}</span>
       <span class="sug-text"><div class="sug-title">${u.name} — ${u.full}</div><div class="sug-sub">📍 ${u.city} · ${u.type==='public'?'Public':'Private'}</div></span>
       <span class="sug-type">University</span>
     </div>`;
