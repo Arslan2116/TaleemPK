@@ -1234,6 +1234,11 @@
   }
   .tool-btn:hover { border-color:var(--green); color:var(--green); }
   .tool-btn.active { background:var(--navy); border-color:var(--navy); color:var(--white); }
+  /* Mobile: even 2-column grid for the tools bar */
+  @media(max-width:620px){
+    .tools-bar { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .tool-btn { justify-content:center; }
+  }
   .tool-badge {
     background:var(--green); color:var(--navy);
     font-size:0.68rem; font-weight:800;
