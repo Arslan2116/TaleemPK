@@ -1028,7 +1028,7 @@
     max-height: 90vh; overflow-y: auto; padding: 32px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.25);
   }
-  .predictor-modal h2 { font-size: 1.4rem; color: var(--navy); margin: 0 0 6px; font-weight: 800; }
+  .predictor-modal h2 { font-size: 1.4rem; color: var(--navy); margin: 0 0 6px; font-weight: 800; padding-right: 44px; }
   .predictor-modal > p { color: var(--gray-500); font-size: 0.88rem; margin: 0 0 28px; }
   .predictor-close {
     position: absolute; top: 16px; right: 16px; background: var(--gray-100);
@@ -1068,7 +1068,9 @@
     background-repeat: no-repeat; background-position: right 12px center;
   }
   .pred-select-wrap select:focus { border-color: var(--green); }
-  .pred-select-wrap label { font-size: 0.78rem; font-weight: 600; color: var(--gray-500); margin-bottom: 6px; display: block; }
+  .pred-select-wrap { display: flex; flex-direction: column; }
+  .pred-select-wrap select { margin-top: auto; }
+  .pred-select-wrap label { font-size: 0.78rem; font-weight: 600; color: var(--gray-500); margin-bottom: 6px; display: block; line-height: 1.25; min-height: 2em; }
   .pred-run-btn {
     width: 100%; padding: 14px; background: var(--green); border: none;
     border-radius: 12px; color: var(--navy); font-family: 'Sora', sans-serif;
