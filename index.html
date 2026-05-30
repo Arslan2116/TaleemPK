@@ -261,13 +261,15 @@
     line-height:1.75; margin-bottom:40px;
     animation: fadeInUp 0.7s ease 0.3s both;
   }
+  .hero-search-wrap {
+    position: relative; width: 100%; max-width: 600px; margin: 0 0 48px;
+    animation: fadeInUp 0.7s ease 0.4s both;
+  }
   .hero-search {
-    display:flex; gap:0; width:100%; max-width:600px;
+    display:flex; gap:0; width:100%;
     background: var(--white); border-radius:14px;
     padding: 6px 6px 6px 20px;
     box-shadow: 0 20px 60px rgba(0,200,83,0.22), 0 4px 20px rgba(0,0,0,0.2);
-    margin-bottom: 48px;
-    animation: fadeInUp 0.7s ease 0.4s both;
   }
   .hero-search input {
     flex:1; border:none; outline:none;
@@ -282,10 +284,30 @@
   }
   .hero-search button:hover { background:#00e060; transform:scale(1.03); }
   @media(max-width:620px){
-    .hero-search { flex-direction:column; gap:8px; padding:10px; align-items:stretch; }
-    .hero-search input { padding:8px 10px; text-align:center; }
-    .hero-search button { width:100%; padding:12px; }
+    .hero-search { padding:6px 6px 6px 16px; }
+    .hero-search button { padding:11px 15px; font-size:1.05rem; }
+    .search-btn-label { display:none; }
   }
+  /* search suggestions dropdown */
+  .search-suggestions {
+    display:none; position:absolute; top:calc(100% + 8px); left:0; right:0; z-index:200;
+    background:var(--white); border-radius:14px; overflow:hidden;
+    box-shadow:0 16px 44px rgba(0,0,0,0.28); max-height:340px; overflow-y:auto;
+    text-align:left;
+  }
+  .search-suggestions.show { display:block; }
+  .sug-item {
+    display:flex; align-items:center; gap:12px; padding:12px 18px; cursor:pointer;
+    border-bottom:1px solid var(--gray-100); transition:background 0.15s;
+  }
+  .sug-item:last-child { border-bottom:none; }
+  .sug-item:hover { background:var(--green-light); }
+  .sug-icon { font-size:1.1rem; width:26px; text-align:center; flex-shrink:0; }
+  .sug-text { flex:1; min-width:0; }
+  .sug-title { font-size:0.9rem; font-weight:700; color:var(--navy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sug-sub { font-size:0.74rem; color:var(--gray-400); }
+  .sug-type { font-size:0.66rem; font-weight:700; color:var(--green-dark); background:var(--green-light); padding:3px 8px; border-radius:12px; flex-shrink:0; }
+  .sug-empty { padding:14px 18px; color:var(--gray-400); font-size:0.85rem; }
   /* hero quick-filter chips */
   .hero-chips {
     display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
@@ -1637,9 +1659,15 @@
   <h1 id="hero-h1">Choose the Right <span>University</span> <span class="hero-dash">—</span><br>All Info in One Place</h1>
   <p class="hero-urdu" id="hero-urdu">فیس، میرٹ، پروگرام — سب کچھ ایک جگہ</p>
   <p class="hero-sub" data-i18n="hero_sub">Data on 218 HEC-recognized universities in Pakistan — fees, merit, programs. Compare side-by-side and decide your future.</p>
-  <div class="hero-search">
-    <input type="text" id="heroSearch" placeholder="Search university or program…" oninput="searchHero(false)" onkeydown="if(event.key==='Enter')searchHero(true)">
-    <button onclick="searchHero(true)" data-i18n="hero_search_btn">🔍 Search</button>
+  <div class="hero-search-wrap">
+    <div class="hero-search">
+      <input type="text" id="heroSearch" placeholder="Search university or program…" autocomplete="off"
+             oninput="onSearchInput(this.value)"
+             onkeydown="if(event.key==='Enter'){hideSuggestions();searchHero(true)}"
+             onfocus="onSearchInput(this.value)">
+      <button onclick="hideSuggestions();searchHero(true)" aria-label="Search">🔍 <span class="search-btn-label">Search</span></button>
+    </div>
+    <div class="search-suggestions" id="searchSuggestions"></div>
   </div>
   <div class="hero-chips">
     <button class="hero-chip" onclick="filterUnis('engineering',document.querySelector('.filter-btn:nth-child(5)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})">⚙️ Engineering</button>
@@ -4929,6 +4957,80 @@ function searchHero(doScroll) {
   // Only scroll when button clicked or Enter pressed — NOT on every keystroke
   if(doScroll && searchQuery) document.getElementById('universities').scrollIntoView({behavior:'smooth'});
 }
+
+// ── Live search + autocomplete suggestions ──
+function onSearchInput(value){
+  searchHero(false);           // live-filter the grid
+  renderSuggestions(value);    // show matching universities + programs
+}
+
+function renderSuggestions(value){
+  const box = document.getElementById('searchSuggestions');
+  if(!box) return;
+  const q = (value||'').trim().toLowerCase();
+  if(q.length < 1){ hideSuggestions(); return; }
+
+  // Matching universities (by name / full name)
+  const unis = UNIVERSITIES
+    .filter(u => u.name.toLowerCase().includes(q) || u.full.toLowerCase().includes(q))
+    .slice(0, 6);
+
+  // Matching program categories
+  const progs = PROGRAM_FILTERS
+    .filter(p => p.label.toLowerCase().includes(q) || p.terms.some(t => t.includes(q) || q.includes(t)))
+    .slice(0, 4);
+
+  if(!unis.length && !progs.length){
+    box.innerHTML = `<div class="sug-empty">No matches for “${value}”. Press Search to see all results.</div>`;
+    box.classList.add('show');
+    return;
+  }
+
+  let html = '';
+  unis.forEach(u => {
+    html += `<div class="sug-item" onmousedown="selectSuggestion('uni',${u.id})">
+      <span class="sug-icon">${u.icon||'🏛️'}</span>
+      <span class="sug-text"><div class="sug-title">${u.name} — ${u.full}</div><div class="sug-sub">📍 ${u.city} · ${u.type==='public'?'Public':'Private'}</div></span>
+      <span class="sug-type">University</span>
+    </div>`;
+  });
+  progs.forEach(p => {
+    html += `<div class="sug-item" onmousedown="selectSuggestion('program',\`${p.label}\`)">
+      <span class="sug-icon">🎓</span>
+      <span class="sug-text"><div class="sug-title">${p.label}</div><div class="sug-sub">Browse universities offering this</div></span>
+      <span class="sug-type">Program</span>
+    </div>`;
+  });
+  box.innerHTML = html;
+  box.classList.add('show');
+}
+
+function hideSuggestions(){
+  const box = document.getElementById('searchSuggestions');
+  if(box) box.classList.remove('show');
+}
+
+function selectSuggestion(type, val){
+  hideSuggestions();
+  if(type === 'uni'){
+    openDetail(val);
+  } else if(type === 'program'){
+    // Clear text search, apply the program filter, scroll to results
+    const input = document.getElementById('heroSearch');
+    if(input) input.value = '';
+    searchQuery = '';
+    const sel = document.getElementById('programFilter');
+    if(sel){ sel.value = val; }
+    filterByProgram(val);
+    document.getElementById('universities').scrollIntoView({behavior:'smooth'});
+  }
+}
+
+// Hide suggestions when clicking outside the search
+document.addEventListener('click', function(e){
+  const wrap = document.querySelector('.hero-search-wrap');
+  if(wrap && !wrap.contains(e.target)) hideSuggestions();
+});
 
 function applyFilters() {
   let filtered = UNIVERSITIES;
