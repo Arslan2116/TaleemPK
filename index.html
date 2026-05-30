@@ -2520,7 +2520,7 @@ const UNIVERSITIES = [
     feeNote:"Undergraduate fee is official (per-credit-hour model, FY 2026-27). Graduate (MBA/EMBA) figures are approximate — confirm exact fees at lums.edu.pk. LUMS offers need-blind financial aid; around 40% of students do not pay the full fee.",
     merit:"70%+ Matric+FSc, SAT/LCAT",
     entry:"LCAT / SAT",
-    programs:["MBA","BBA","CS","Economics","Law","Social Sciences","Engineering"],
+    programs:["MBA","Executive MBA (EMBA)","BBA","CS","Economics","Law","Social Sciences","Engineering","Physics"],
     seats:"~1,200/year",
     established:1984,
     website:"lums.edu.pk",
@@ -2564,7 +2564,7 @@ const UNIVERSITIES = [
     feeNote:"Fees are charged per credit hour, so the per-semester total depends on your course load. Always confirm the latest figures on iba.edu.pk.",
     merit:"85%+ marks, IBA test",
     entry:"IBA Aptitude Test",
-    programs:["BBA","MBA","BS CS","BS Economics","BS Accounting","BS Social Sciences"],
+    programs:["BBA","MBA","Executive MBA (EMBA)","MS Computer Science","BS CS","BS Economics","BS Accounting","BS Social Sciences"],
     seats:"~800/year",
     established:1955,
     website:"iba.edu.pk",
@@ -4191,6 +4191,7 @@ const PROGRAM_FILTERS = [
   {label:'Chemical Engineering',    terms:['chemical']},
   {label:'Business / BBA',          terms:['bba','business','bsba']},
   {label:'MBA',                     terms:['mba']},
+  {label:'Executive MBA (EMBA)',    terms:['emba','executive mba']},
   {label:'Accounting & Finance',    terms:['accounting','finance','bsaf']},
   {label:'Economics',               terms:['economics']},
   {label:'MBBS / Medicine',         terms:['mbbs','medicine','medical']},
@@ -4207,6 +4208,13 @@ const PROGRAM_FILTERS = [
   {label:'Media & Journalism',      terms:['media','journalism','mass comm']},
   {label:'Education',               terms:['education','b.ed','m.ed']},
   {label:'Islamic Studies',         terms:['islamic']},
+  {label:'Physics',                 terms:['physics']},
+  {label:'Chemistry',               terms:['chemistry','biochem']},
+  {label:'Biology / Life Sciences', terms:['biology','life sciences','biosciences','biotechnology','microbiology']},
+  {label:'Statistics',              terms:['statistics','statistical']},
+  {label:'Social Sciences',         terms:['social science','social sciences','social development','sociology']},
+  {label:'Political Science / IR',  terms:['political science','international relations','politics']},
+  {label:'Environmental Science',   terms:['environmental']},
 ];
 let currentPage = 1;
 const PAGE_SIZE = 20;
@@ -4977,10 +4985,14 @@ function renderSuggestions(value){
     .filter(u => u.name.toLowerCase().includes(q) || u.full.toLowerCase().includes(q))
     .slice(0, 6);
 
-  // Matching program categories
+  // Matching program categories — a WORD in the label/terms must start with
+  // the typed query (avoids false matches like "cs" → "electroniCS"/"economiCS")
   const progs = PROGRAM_FILTERS
-    .filter(p => p.label.toLowerCase().includes(q) || p.terms.some(t => t.includes(q) || q.includes(t)))
-    .slice(0, 4);
+    .filter(p => {
+      const words = (p.label + ' ' + p.terms.join(' ')).toLowerCase().split(/[\s/()&,.-]+/);
+      return words.some(w => w && w.startsWith(q));
+    })
+    .slice(0, 5);
 
   if(!unis.length && !progs.length){
     box.innerHTML = `<div class="sug-empty">No matches for “${value}”. Press Search to see all results.</div>`;
