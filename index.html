@@ -816,6 +816,25 @@
   body.about-active .news-section,
   body.about-active footer { display:none !important; }
 
+  /* ───── CARD STAR RATING ───── */
+  .card-rating { display:flex; align-items:center; gap:6px; margin:4px 0 2px; font-size:0.8rem; }
+  .cr-stars { letter-spacing:1px; color:var(--gray-200); }
+  .cr-stars.filled { color:#FFB800; }
+  .cr-num { font-weight:700; color:var(--navy); }
+  .cr-count { color:var(--gray-400); font-size:0.72rem; }
+  .card-rating.none .cr-count { font-style:italic; }
+
+  /* ───── BACK TO TOP ───── */
+  .back-to-top {
+    position:fixed; bottom:24px; right:24px; z-index:900;
+    width:46px; height:46px; border-radius:50%; border:none;
+    background:var(--navy); color:var(--white); font-size:1.3rem; font-weight:700;
+    cursor:pointer; box-shadow:var(--shadow-md); transition:all 0.25s;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+  }
+  .back-to-top.show { opacity:1; visibility:visible; transform:translateY(0); }
+  .back-to-top:hover { background:var(--green); color:var(--navy); }
+
   /* ───── DETAILED FEE TABLE (detail modal) ───── */
   .fee-table-section { margin-bottom:24px; }
   .fee-table { border:1px solid var(--gray-200); border-radius:12px; overflow:hidden; }
@@ -1633,6 +1652,21 @@
     <select id="programFilter" class="city-filter" onchange="filterByProgram(this.value)" aria-label="Filter by program">
       <option value="">🎓 All Programs</option>
     </select>
+    <select id="scholarshipFilter" class="city-filter" onchange="filterByScholarship(this.value)" aria-label="Filter by scholarship">
+      <option value="">💰 Scholarships</option>
+      <option value="any">Any Scholarship</option>
+      <option value="need-based">Need-based Aid</option>
+      <option value="merit">Merit-based</option>
+      <option value="need-blind">Need-blind / Full Aid</option>
+    </select>
+    <select id="sortFilter" class="city-filter" onchange="sortUnis(this.value)" aria-label="Sort universities">
+      <option value="default">↕️ Sort: Default</option>
+      <option value="rank">Rank (Top first)</option>
+      <option value="fee-asc">Fee: Low → High</option>
+      <option value="fee-desc">Fee: High → Low</option>
+      <option value="merit-desc">Merit: High → Low</option>
+      <option value="name">Name: A → Z</option>
+    </select>
   </div>
 </div>
 <!-- ADMISSION PREDICTOR BANNER -->
@@ -1951,6 +1985,9 @@
 
   </div>
 </div>
+
+<!-- BACK TO TOP -->
+<button id="backToTop" class="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">↑</button>
 
 <!-- FOOTER -->
 <footer>
@@ -4078,6 +4115,8 @@ let compareList = [];
 let currentFilter = 'all';
 let currentCity = '';
 let currentProgram = '';
+let currentScholarship = '';
+let currentSort = 'default';
 let searchQuery = '';
 
 // Curated program categories for the Program filter dropdown.
@@ -4728,6 +4767,17 @@ function buildQAHTML(uniId) {
   `;
 }
 
+function cardRating(uniId){
+  const reviews = (typeof getReviews==='function') ? getReviews(uniId) : [];
+  if(!reviews.length){
+    return `<div class="card-rating none"><span class="cr-stars">☆☆☆☆☆</span><span class="cr-count">No reviews yet</span></div>`;
+  }
+  const avg = reviews.reduce((s,r)=>s+(r.rating||0),0)/reviews.length;
+  const rounded = Math.round(avg);
+  const stars = '★★★★★'.slice(0,rounded) + '☆☆☆☆☆'.slice(0,5-rounded);
+  return `<div class="card-rating"><span class="cr-stars filled">${stars}</span><span class="cr-num">${avg.toFixed(1)}</span><span class="cr-count">(${reviews.length})</span></div>`;
+}
+
 function renderCards(unis) {
   filteredCache = unis;
   const total = unis.length;
@@ -4757,6 +4807,7 @@ function renderCards(unis) {
       </div>
       <div class="uni-name">${u.name}</div>
       <div class="uni-location">${u.city}</div>
+      ${cardRating(u.id)}
       <div class="uni-tags">
         <span class="tag ${u.type}">${u.type==='public'?t('tag_public'):t('tag_private')}</span>
         ${u.tags.filter(tg=>tg!=='public'&&tg!=='private'&&!['federal','punjab','sindh','kpk','balochistan','ajk','gilgitbaltistan'].includes(tg)).map(tg=>`<span class="tag ${tg}">${tg}</span>`).join('')}
@@ -4938,8 +4989,48 @@ function applyFilters() {
       });
     }
   }
+  if(currentScholarship){
+    filtered = filtered.filter(u => {
+      const s = (u.scholarships||'').toLowerCase();
+      if(currentScholarship==='need-blind') return s.includes('need-blind') || s.includes('need blind') || s.includes('no full fee');
+      if(currentScholarship==='need-based') return s.includes('need');
+      if(currentScholarship==='merit')      return s.includes('merit');
+      if(currentScholarship==='any')        return s && !/contact|^—$/.test(s);
+      return true;
+    });
+  }
   if(_slActive){ const sl=getShortlist(); filtered=filtered.filter(u=>sl.includes(u.id)); }
+  // Sorting
+  if(currentSort && currentSort!=='default'){
+    filtered = filtered.slice().sort((a,b)=>{
+      switch(currentSort){
+        case 'fee-asc':  return (a.feeNum||Infinity) - (b.feeNum||Infinity);
+        case 'fee-desc': return (b.feeNum||0) - (a.feeNum||0);
+        case 'name':     return a.name.localeCompare(b.name);
+        case 'merit-desc': return (b.meritMin||0) - (a.meritMin||0);
+        case 'rank':     return (a.rank||9999) - (b.rank||9999);
+        default: return 0;
+      }
+    });
+  }
   renderCards(filtered);
+}
+
+function filterByScholarship(value){
+  closeOtherTools();
+  currentScholarship = value || '';
+  currentPage = 1;
+  const sel = document.getElementById('scholarshipFilter');
+  if(sel) sel.setAttribute('data-active', currentScholarship ? '1' : '0');
+  applyFilters();
+}
+
+function sortUnis(value){
+  currentSort = value || 'default';
+  currentPage = 1;
+  const sel = document.getElementById('sortFilter');
+  if(sel) sel.setAttribute('data-active', currentSort!=='default' ? '1' : '0');
+  applyFilters();
 }
 
 function filterByProgram(value){
@@ -5071,12 +5162,26 @@ function openDetail(id) {
     <div class="comm-section" id="rvSection-${u.id}">${buildReviewsHTML(u.id)}</div>
     <div class="comm-section" id="alSection-${u.id}">${buildAlumniHTML(u.id)}</div>
     <div class="comm-section" id="qaSection-${u.id}">${buildQAHTML(u.id)}</div>
-    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--gray-200);text-align:center;">
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--gray-200);text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
       ${u.website?`<a href="https://www.${u.website}" target="_blank" style="background:var(--green);color:var(--navy);padding:12px 28px;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.9rem;">${t('detail_website_btn')}</a>`:`<span style="color:var(--gray-400);font-size:0.85rem;">🔗 Website coming soon — check HEC portal for details</span>`}
+      <button onclick="shareUniversity(${u.id})" style="background:var(--navy);color:var(--white);padding:12px 22px;border:none;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">🔗 Share</button>
     </div>
   `;
   document.getElementById('detailModalOverlay').classList.add('show');
   if(MERIT_TRENDS[u.id]) setTimeout(()=>renderTrendChart(u.id), 100);
+}
+
+function shareUniversity(id){
+  const u = UNIVERSITIES.find(x=>x.id===id);
+  if(!u) return;
+  const url = window.location.origin + window.location.pathname;
+  const text = `${u.full} — fees, merit & programs on TaleemPK`;
+  if(navigator.share){
+    navigator.share({ title:u.full, text, url }).catch(()=>{});
+  } else {
+    // Fallback: open WhatsApp share
+    window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+  }
 }
 
 function closeDetailModal(e) {
@@ -5152,6 +5257,12 @@ populateCityFilter();
 populateProgramFilter();
 renderNews();
 applyFilters();
+
+// Back-to-top button visibility on scroll
+window.addEventListener('scroll', function(){
+  const btn = document.getElementById('backToTop');
+  if(btn) btn.classList.toggle('show', window.scrollY > 500);
+});
 setTimeout(()=>{
   document.querySelectorAll('.hiw-step.fade-in').forEach(el=>observer.observe(el));
 },500);
