@@ -281,6 +281,11 @@
     font-size:0.9rem; cursor:pointer; transition:all 0.2s; white-space:nowrap;
   }
   .hero-search button:hover { background:#00e060; transform:scale(1.03); }
+  @media(max-width:620px){
+    .hero-search { flex-direction:column; gap:8px; padding:10px; align-items:stretch; }
+    .hero-search input { padding:8px 10px; text-align:center; }
+    .hero-search button { width:100%; padding:12px; }
+  }
   /* hero quick-filter chips */
   .hero-chips {
     display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
@@ -1633,7 +1638,7 @@
   <p class="hero-urdu" id="hero-urdu">فیس، میرٹ، پروگرام — سب کچھ ایک جگہ</p>
   <p class="hero-sub" data-i18n="hero_sub">Data on 218 HEC-recognized universities in Pakistan — fees, merit, programs. Compare side-by-side and decide your future.</p>
   <div class="hero-search">
-    <input type="text" id="heroSearch" placeholder="Search university or program... (e.g. NUST, Engineering)" oninput="searchHero(false)" onkeydown="if(event.key==='Enter')searchHero(true)">
+    <input type="text" id="heroSearch" placeholder="Search university or program…" oninput="searchHero(false)" onkeydown="if(event.key==='Enter')searchHero(true)">
     <button onclick="searchHero(true)" data-i18n="hero_search_btn">🔍 Search</button>
   </div>
   <div class="hero-chips">
@@ -2414,7 +2419,7 @@ const T = {
     hero_h1:'Choose the Right <span>University</span> <span class="hero-dash">—</span><br>All Info in One Place',
     hero_urdu:'فیس، میرٹ، پروگرام — سب کچھ ایک جگہ',
     hero_sub:'Data on 218 HEC-recognized universities in Pakistan — fees, merit, programs. Compare side-by-side and decide your future.',
-    hero_search_placeholder:'Search university or program... (e.g. NUST, Engineering)',
+    hero_search_placeholder:'Search university or program…',
     hero_search_btn:'🔍 Search',
     stat1_label:'Top Universities', stat2_label:'Programs Listed', stat3_label:'Students Helped', stat4_label:'Cities Covered',
     filter_label:'Filter:', filter_all:'All (218)', filter_public:'🏛️ Public', filter_private:'🏢 Private',
