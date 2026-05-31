@@ -4329,6 +4329,21 @@ const PROGRAM_FILTERS = [
   {label:'Social Sciences',         terms:['social science','social sciences','social development','sociology']},
   {label:'Political Science / IR',  terms:['political science','international relations','politics']},
   {label:'Environmental Science',   terms:['environmental']},
+  {label:'Cyber Security',          terms:['cyber security','cybersecurity','cyber']},
+  {label:'Aerospace / Avionics',   terms:['aerospace','avionics','aeronautical']},
+  {label:'Computer Engineering',   terms:['computer engineering']},
+  {label:'Materials / Metallurgy',  terms:['materials','metallurgy','nanotechnology']},
+  {label:'Nuclear Engineering',    terms:['nuclear']},
+  {label:'Systems / Industrial Eng',terms:['systems engineering','industrial engineering','mechatronics']},
+  {label:'Management Sciences',    terms:['management sciences','management','industrial management']},
+  {label:'Commerce',               terms:['commerce','b.com','bcom']},
+  {label:'Tourism & Hospitality',  terms:['tourism','hospitality']},
+  {label:'Earth / Geo Sciences',   terms:['earth science','geology','geo','geoinformatics']},
+  {label:'Anthropology',           terms:['anthropology']},
+  {label:'Microbiology / Zoology', terms:['microbiology','zoology','botany']},
+  {label:'Architecture / Design',  terms:['architecture','industrial design','product design','interior']},
+  {label:'Financial Technology',   terms:['fintech','financial technology']},
+  {label:'Nursing / Allied Health', terms:['nursing','allied health','physiotherapy','dpt','radiology']},
 ];
 let currentPage = 1;
 const PAGE_SIZE = 20;
@@ -4776,6 +4791,13 @@ async function loadReviews(uniId){
   }catch(e){ /* keep whatever is cached */ }
 }
 
+let PROGRAM_INDEX = [];   // unique program names across all institutions (for search suggestions)
+function buildProgramIndex(){
+  const set = new Set();
+  UNIVERSITIES.forEach(u => (u.programs||[]).forEach(p => { if(p && p.trim().length>2) set.add(p.trim()); }));
+  PROGRAM_INDEX = [...set].sort((a,b)=>a.localeCompare(b));
+}
+
 async function loadRatingAggregates(){
   if(!sbClient) return;
   try{
@@ -5197,21 +5219,25 @@ function renderSuggestions(value){
     .filter(u => u.name.toLowerCase().includes(q) || u.full.toLowerCase().includes(q))
     .slice(0, 6);
 
-  // Matching program categories — a WORD in the label/terms must start with
-  // the typed query (avoids false matches like "cs" → "electroniCS"/"economiCS")
-  const progs = PROGRAM_FILTERS
-    .filter(p => {
-      const words = (p.label + ' ' + p.terms.join(' ')).toLowerCase().split(/[\s/()&,.-]+/);
-      return words.some(w => w && w.startsWith(q));
-    })
+  // Broad category matches (apply the program filter)
+  const cats = PROGRAM_FILTERS.filter(p => {
+    const words = (p.label + ' ' + p.terms.join(' ')).toLowerCase().split(/[\s/()&,.-]+/);
+    return words.some(w => w && w.startsWith(q));
+  }).slice(0, 3);
+  const catLabels = new Set(cats.map(c=>c.label.toLowerCase()));
+
+  // Actual program names from the data (covers every program any university lists)
+  const progNames = PROGRAM_INDEX
+    .filter(p => p.toLowerCase().includes(q) && !catLabels.has(p.toLowerCase()))
     .slice(0, 5);
 
-  if(!unis.length && !progs.length){
+  if(!unis.length && !cats.length && !progNames.length){
     box.innerHTML = `<div class="sug-empty">No matches for “${value}”. Press Search to see all results.</div>`;
     box.classList.add('show');
     return;
   }
 
+  const esc = s => String(s).replace(/`/g,"'").replace(/"/g,'&quot;');
   let html = '';
   unis.forEach(u => {
     const icon = u.website
@@ -5223,10 +5249,17 @@ function renderSuggestions(value){
       <span class="sug-type">University</span>
     </div>`;
   });
-  progs.forEach(p => {
-    html += `<div class="sug-item" onmousedown="selectSuggestion('program',\`${p.label}\`)">
+  cats.forEach(p => {
+    html += `<div class="sug-item" onmousedown="selectSuggestion('program',\`${esc(p.label)}\`)">
       <span class="sug-icon">🎓</span>
       <span class="sug-text"><div class="sug-title">${p.label}</div><div class="sug-sub">Browse universities offering this</div></span>
+      <span class="sug-type">Program</span>
+    </div>`;
+  });
+  progNames.forEach(p => {
+    html += `<div class="sug-item" onmousedown="selectSuggestion('search',\`${esc(p)}\`)">
+      <span class="sug-icon">📘</span>
+      <span class="sug-text"><div class="sug-title">${p}</div><div class="sug-sub">Search universities offering this</div></span>
       <span class="sug-type">Program</span>
     </div>`;
   });
@@ -5244,7 +5277,7 @@ function selectSuggestion(type, val){
   if(type === 'uni'){
     openDetail(val);
   } else if(type === 'program'){
-    // Clear text search, apply the program filter, scroll to results
+    // Broad category → apply the program filter
     const input = document.getElementById('heroSearch');
     if(input) input.value = '';
     searchQuery = '';
@@ -5252,6 +5285,13 @@ function selectSuggestion(type, val){
     if(sel){ sel.value = val; }
     filterByProgram(val);
     document.getElementById('universities').scrollIntoView({behavior:'smooth'});
+  } else if(type === 'search'){
+    // Specific program name → text search
+    const sel = document.getElementById('programFilter');
+    if(sel){ sel.value = ''; } currentProgram = '';
+    const input = document.getElementById('heroSearch');
+    if(input) input.value = val;
+    searchHero(true);
   }
 }
 
@@ -5741,6 +5781,7 @@ async function loadInstitutions(){
 (async function initApp(){
   initAuth();
   await loadInstitutions();
+  buildProgramIndex();
   await loadRatingAggregates();
   populateCityFilter();
   populateProgramFilter();
