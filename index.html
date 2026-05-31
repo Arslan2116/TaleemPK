@@ -202,6 +202,8 @@
     padding: 8px 20px; border-radius: 8px;
     font-weight:700; font-size:0.875rem;
     text-decoration:none; transition: background 0.2s;
+    border:none; cursor:pointer; font-family:'Sora',sans-serif;
+    white-space:nowrap;
   }
   .nav-cta:hover { background: #00e060; }
 
@@ -1669,7 +1671,7 @@
     }
     .nav-links.open .nav-dropdown.open .nav-dropdown-menu { display:block; }
     .nav-links.open .nav-dropdown-menu button { padding:12px 14px; font-size:0.95rem; }
-    .nav-cta { display:none; }   /* redundant on mobile — menu + hero already have it */
+    .nav-cta { padding:7px 12px; font-size:.78rem; }   /* compact on mobile (Login/Sign Up CTA) */
     .hero-stats { gap:28px; }
     .stat-num { font-size:1.5rem; }
     .uni-grid { grid-template-columns:1fr; }
@@ -1721,9 +1723,8 @@
     <li><a href="#" onclick="closeMobileMenu();closeAboutPage();openBlogPage();return false">Blog</a></li>
     <li><a href="#" onclick="closeMobileMenu();openScholarshipsPage();return false">Scholarships</a></li>
     <li><a href="#" onclick="openAboutPage();closeMobileMenu();return false">About</a></li>
-    <li><a href="#" id="authNavBtn" onclick="onAuthNavClick();return false">Login</a></li>
   </ul>
-  <a href="#universities" class="nav-cta">View Universities</a>
+  <button class="nav-cta" id="authNavBtn" onclick="onAuthNavClick()">Login / Sign Up</button>
   <button class="nav-hamburger" id="navHamburger" onclick="toggleMobileMenu()" aria-label="Menu">
     <span></span><span></span><span></span>
   </button>
@@ -5736,7 +5737,7 @@ async function submitAuth(){
 async function doLogout(){ if(sbClient){ await sbClient.auth.signOut(); } currentUser=null; refreshAuthUI(); }
 function refreshAuthUI(){
   const btn=document.getElementById('authNavBtn');
-  if(btn) btn.textContent = currentUser ? ('👤 '+userDisplayName(currentUser)+' · Logout') : 'Login';
+  if(btn) btn.textContent = currentUser ? ('👤 '+userDisplayName(currentUser)+' · Logout') : 'Login / Sign Up';
 }
 async function initAuth(){
   if(!sbClient) return;
