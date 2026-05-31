@@ -20,7 +20,7 @@
     --gold:#FFB800; --red:#FF4757; --shadow-md:0 8px 30px rgba(0,0,0,0.08);
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Sora',system-ui,sans-serif;color:var(--navy);background:var(--gray-100);line-height:1.6;}
+  body{font-family:'Sora',system-ui,sans-serif;color:var(--navy);background:#f3f5f9;line-height:1.6;}
   a{color:inherit;}
   /* Nav */
   nav{background:rgba(10,22,40,0.97);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;
@@ -32,29 +32,91 @@
   .nav-btn{background:transparent;border:1.5px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:8px 16px;
     font-family:'Sora',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;text-decoration:none;}
   .nav-btn.solid{background:var(--green);border-color:var(--green);color:var(--navy);font-weight:700;}
-  /* Layout */
-  .wrap{max-width:1000px;margin:0 auto;padding:28px 5% 80px;}
   .loading{text-align:center;color:var(--gray-600);padding:80px 20px;font-size:1rem;}
-  /* Hero */
-  .u-hero{background:linear-gradient(135deg,var(--navy),var(--navy-mid));color:#fff;border-radius:20px;padding:34px;display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-bottom:24px;}
-  .u-logo{width:84px;height:84px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:2.4rem;flex-shrink:0;overflow:hidden;}
-  .u-logo img{width:100%;height:100%;object-fit:contain;padding:6px;}
-  .u-hero h1{font-size:clamp(1.5rem,3.5vw,2.3rem);font-weight:800;line-height:1.2;}
-  .u-sub{color:rgba(255,255,255,.6);font-size:.95rem;margin-top:4px;}
-  .u-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
-  .u-badge{background:rgba(255,255,255,.12);padding:4px 12px;border-radius:20px;font-size:.76rem;font-weight:600;}
-  .u-badge.rank{background:var(--gold);color:var(--navy);}
-  .u-badge.green{background:var(--green);color:var(--navy);}
-  /* Info grid */
-  .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px;}
-  @media(max-width:680px){.info-grid{grid-template-columns:repeat(2,1fr);}}
-  @media(max-width:430px){.info-grid{grid-template-columns:1fr;}}
-  .info-box{background:#fff;border:1px solid var(--gray-200);border-radius:14px;padding:16px 18px;}
-  .info-k{font-size:.7rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
-  .info-v{font-size:.95rem;font-weight:700;color:var(--navy);}
-  /* Sections */
-  .sec{background:#fff;border:1px solid var(--gray-200);border-radius:16px;padding:24px;margin-bottom:20px;}
-  .sec h2{font-size:1.1rem;font-weight:800;color:var(--navy);margin-bottom:14px;}
+
+  /* ─── FULL-WIDTH NAVY HERO ─── */
+  .hero-band{
+    background:linear-gradient(135deg,var(--navy) 0%,#0d2240 55%,#143864 100%);
+    color:#fff; padding:48px 5% 110px;
+    position:relative; overflow:hidden;
+  }
+  .hero-band::before{
+    content:''; position:absolute; inset:0;
+    background-image:radial-gradient(circle at 20% 30%,rgba(0,200,83,.18) 0%,transparent 45%),
+                     radial-gradient(circle at 85% 20%,rgba(0,200,83,.08) 0%,transparent 40%);
+    pointer-events:none;
+  }
+  .hero-inner{ max-width:1200px; margin:0 auto; position:relative; z-index:1; }
+  .crumbs{ color:rgba(255,255,255,.55); font-size:.82rem; margin-bottom:24px; }
+  .crumbs a{ color:rgba(255,255,255,.7); text-decoration:none; }
+  .crumbs a:hover{ color:var(--green); }
+  .hero-row{ display:flex; gap:30px; align-items:flex-start; flex-wrap:wrap; }
+  .hero-logo{
+    width:120px; height:120px; border-radius:24px; background:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:3.2rem; flex-shrink:0; overflow:hidden;
+    box-shadow:0 18px 40px rgba(0,0,0,.35);
+  }
+  .hero-logo img{ width:100%; height:100%; object-fit:contain; padding:10px; }
+  .hero-text{ flex:1; min-width:280px; }
+  .hero-rank-tag{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--gold); color:var(--navy); padding:5px 14px;
+    border-radius:20px; font-size:.78rem; font-weight:800; margin-bottom:14px;
+  }
+  .hero-name{ font-size:clamp(1.7rem,3.5vw,2.7rem); font-weight:800; line-height:1.15; margin-bottom:8px; }
+  .hero-meta{
+    display:flex; align-items:center; gap:16px; color:rgba(255,255,255,.7);
+    font-size:.9rem; margin-bottom:18px; flex-wrap:wrap;
+  }
+  .hero-meta b{ color:#fff; font-weight:700; }
+  .hero-rating{ display:flex; align-items:center; gap:8px; font-size:.9rem; color:rgba(255,255,255,.85); }
+  .hero-rating .s{ color:var(--gold); letter-spacing:1px; font-size:1rem; }
+  .hero-badges{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .hero-badges span{
+    background:rgba(255,255,255,.12); color:#fff;
+    padding:5px 14px; border-radius:20px;
+    font-size:.76rem; font-weight:600; backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.15);
+  }
+  .hero-badges span.green{ background:var(--green); border-color:var(--green); color:var(--navy); }
+
+  /* ─── 2-COLUMN LAYOUT (sidebar overlaps hero) ─── */
+  .layout{
+    max-width:1200px; margin:-80px auto 0; padding:0 5% 80px;
+    display:grid; grid-template-columns: 1fr 340px; gap:28px;
+    position:relative; z-index:2;
+  }
+  @media(max-width:920px){ .layout{ grid-template-columns:1fr; margin-top:-70px; } }
+  .main{ min-width:0; }
+  .sidebar{ display:flex; flex-direction:column; gap:18px; }
+  @media(min-width:921px){ .sidebar > *{ position:sticky; } .side-card{ position:sticky; top:84px; } }
+
+  /* ─── SIDE CARD (key info + CTA) ─── */
+  .side-card{
+    background:#fff; border-radius:18px; padding:24px;
+    box-shadow:0 18px 50px rgba(10,22,40,.10); border:1px solid rgba(0,0,0,.04);
+  }
+  .side-card h3{ font-size:.7rem; font-weight:800; color:var(--gray-400); text-transform:uppercase; letter-spacing:.6px; margin-bottom:14px; }
+  .side-row{ display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-top:1px solid var(--gray-100); }
+  .side-row:first-of-type{ border-top:none; padding-top:0; }
+  .side-icn{ width:30px; flex-shrink:0; font-size:1.1rem; text-align:center; padding-top:1px; }
+  .side-k{ font-size:.7rem; color:var(--gray-400); font-weight:600; text-transform:uppercase; letter-spacing:.3px; margin-bottom:1px; }
+  .side-v{ font-size:.9rem; font-weight:700; color:var(--navy); line-height:1.35; }
+  .side-cta{ display:flex; flex-direction:column; gap:8px; margin-top:18px; }
+  .side-cta .btn{ width:100%; text-align:center; padding:13px 18px; font-size:.92rem; }
+
+  /* ─── SECTIONS ─── */
+  .sec{
+    background:#fff; border-radius:18px; padding:30px 32px; margin-bottom:18px;
+    box-shadow:0 8px 28px rgba(10,22,40,.06); border:1px solid rgba(0,0,0,.03);
+  }
+  @media(max-width:560px){ .sec{ padding:22px 20px; } }
+  .sec-head{ display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+  .sec-head .icn{ width:36px; height:36px; border-radius:10px; background:var(--green-light); color:var(--green-dark);
+    display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+  .sec h2{ font-size:1.1rem; font-weight:800; color:var(--navy); margin:0; }
+  .sec h2 .count{ font-size:.7rem; background:var(--gray-100); color:var(--gray-600); padding:2px 9px; border-radius:20px; margin-left:6px; font-weight:700; vertical-align:middle; }
   .fee-row{display:flex;justify-content:space-between;gap:16px;padding:10px 14px;border-radius:8px;}
   .fee-row:nth-child(odd){background:var(--gray-100);}
   .fee-row-k{font-size:.85rem;color:var(--gray-600);}
@@ -68,9 +130,11 @@
   .hl{display:flex;flex-wrap:wrap;gap:8px;}
   .hl span{background:var(--navy);color:#fff;padding:5px 14px;border-radius:20px;font-size:.8rem;font-weight:600;}
   .desc{color:var(--gray-600);font-size:.95rem;line-height:1.8;}
-  .btn{background:var(--green);color:var(--navy);border:none;border-radius:10px;padding:12px 24px;font-family:'Sora',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;text-decoration:none;display:inline-block;}
+  .btn{background:var(--green);color:var(--navy);border:none;border-radius:10px;padding:12px 24px;font-family:'Sora',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;text-decoration:none;display:inline-block;transition:all .2s;}
+  .btn:hover{background:var(--green-dark);color:#fff;transform:translateY(-1px);}
   .btn.navyb{background:var(--navy);color:#fff;}
-  .cta-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:6px 0 30px;}
+  .btn.navyb:hover{background:var(--navy-mid);}
+  .btn.ghost{background:transparent;border:1.5px solid var(--gray-200);color:var(--navy);}
   /* Reviews / QA */
   .rv{border:1px solid var(--gray-200);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
   .rv-top{display:flex;gap:8px;align-items:center;font-size:.8rem;color:var(--gray-400);margin-bottom:6px;flex-wrap:wrap;}
@@ -179,48 +243,86 @@ function render(){
   const u=UNI;
   const logo = u.website ? `<img src="https://www.google.com/s2/favicons?domain=${u.website}&sz=128" alt="" onerror="this.parentNode.textContent='${u.icon||'🏛️'}'">` : (u.icon||'🏛️');
   const fd = (u.fee_details||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-  const box = (k,v)=> v ? `<div class="info-box"><div class="info-k">${k}</div><div class="info-v">${esc(v)}</div></div>`:'';
+  const sectorLabel = u.sector==='public'?'🏛️ Public':u.sector==='military'?'⚔️ Military':'🏢 Private';
+  const cleanTags = (u.tags||[]).filter(t=>!['public','private','military','federal','punjab','sindh','kpk','balochistan','ajk','gilgitbaltistan'].includes(t)).slice(0,3);
+
+  const sideRow = (icn,k,v) => v ? `<div class="side-row"><div class="side-icn">${icn}</div><div><div class="side-k">${k}</div><div class="side-v">${esc(v)}</div></div></div>` : '';
+
   $('content').innerHTML = `
-  <div class="wrap">
-    <div class="u-hero">
-      <div class="u-logo">${logo}</div>
-      <div style="flex:1;min-width:240px;">
-        <h1>${esc(u.full_name||u.name)}</h1>
-        <div class="u-sub">📍 ${esc(u.city||'')} ${u.established?'· Est. '+u.established:''}</div>
-        <div class="u-badges">
-          ${u.rank?`<span class="u-badge rank">🏆 Rank #${u.rank}</span>`:''}
-          <span class="u-badge green">${u.sector==='public'?'Public':u.sector==='military'?'Military':'Private'}</span>
-          ${(u.tags||[]).filter(t=>!['public','private','military','federal','punjab','sindh','kpk','balochistan','ajk','gilgitbaltistan'].includes(t)).slice(0,3).map(t=>`<span class="u-badge">${esc(t)}</span>`).join('')}
+  <div class="hero-band">
+    <div class="hero-inner">
+      <div class="crumbs"><a href="index.html">Universities</a> &nbsp;›&nbsp; ${esc(u.name)}</div>
+      <div class="hero-row">
+        <div class="hero-logo">${logo}</div>
+        <div class="hero-text">
+          ${u.rank?`<div class="hero-rank-tag">🏆 Rank #${u.rank} in Pakistan</div>`:''}
+          <h1 class="hero-name">${esc(u.full_name||u.name)}</h1>
+          <div class="hero-meta">
+            <span>📍 <b>${esc(u.city||'')}</b></span>
+            ${u.established?`<span>· Est. <b>${u.established}</b></span>`:''}
+            <span id="heroRating" class="hero-rating"></span>
+          </div>
+          <div class="hero-badges">
+            <span class="green">${sectorLabel}</span>
+            ${cleanTags.map(t=>`<span>${esc(t)}</span>`).join('')}
+          </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="info-grid">
-      ${box('Fee / Semester', u.fee)}
-      ${box('Merit / Eligibility', u.merit)}
-      ${box('Entry Test', u.entry)}
-      ${box('Seats', u.seats)}
-      ${box('Scholarships', u.scholarships)}
-      ${box('Hostel', u.hostel)}
+  <div class="layout">
+    <div class="main">
+      ${u.description?`
+        <div class="sec">
+          <div class="sec-head"><div class="icn">📖</div><h2>About</h2></div>
+          <div class="desc">${esc(u.description)}</div>
+        </div>`:''}
+
+      ${fd.length?`
+        <div class="sec">
+          <div class="sec-head"><div class="icn">💰</div><h2>Detailed Fee Structure ${u.fee_year?`<span class="count">${esc(u.fee_year)}</span>`:''}</h2></div>
+          ${fd.map(f=>`<div class="fee-row"><div class="fee-row-k">${esc(f.label)}</div><div class="fee-row-v">${esc(f.value)}</div></div>`).join('')}
+          ${u.fee_note?`<div class="fee-note">${esc(u.fee_note)}</div>`:''}
+        </div>`:''}
+
+      <div class="sec">
+        <div class="sec-head"><div class="icn">📚</div><h2>Programs Offered <span class="count">${(u.programs||[]).length}</span></h2></div>
+        ${groupedPrograms(u.programs)}
+      </div>
+
+      ${(u.highlights||[]).length?`
+        <div class="sec">
+          <div class="sec-head"><div class="icn">✨</div><h2>Highlights</h2></div>
+          <div class="hl">${u.highlights.map(h=>`<span>${esc(h)}</span>`).join('')}</div>
+        </div>`:''}
+
+      <div class="sec">
+        <div class="sec-head"><div class="icn">💬</div><h2>Student Reviews</h2></div>
+        <div id="reviews"><div class="muted">Loading…</div></div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head"><div class="icn">❓</div><h2>Questions &amp; Answers</h2></div>
+        <div id="qa"><div class="muted">Loading…</div></div>
+      </div>
     </div>
 
-    ${u.description?`<div class="sec"><h2>About</h2><div class="desc">${esc(u.description)}</div></div>`:''}
-
-    ${fd.length?`<div class="sec"><h2>💰 Detailed Fee Structure ${u.fee_year?`<span class="muted" style="font-weight:400">(${esc(u.fee_year)})</span>`:''}</h2>
-      ${fd.map(f=>`<div class="fee-row"><div class="fee-row-k">${esc(f.label)}</div><div class="fee-row-v">${esc(f.value)}</div></div>`).join('')}
-      ${u.fee_note?`<div class="fee-note">${esc(u.fee_note)}</div>`:''}</div>`:''}
-
-    <div class="sec"><h2>📚 Programs Offered</h2>${groupedPrograms(u.programs)}</div>
-
-    ${(u.highlights||[]).length?`<div class="sec"><h2>✨ Highlights</h2><div class="hl">${u.highlights.map(h=>`<span>${esc(h)}</span>`).join('')}</div></div>`:''}
-
-    <div class="cta-row">
-      ${u.website?`<a class="btn" href="https://www.${esc(u.website)}" target="_blank" rel="noopener">🌐 Official Website</a>`:''}
-      <button class="btn navyb" onclick="shareUni()">🔗 Share</button>
-    </div>
-
-    <div class="sec"><h2>💬 Student Reviews</h2><div id="reviews"><div class="muted">Loading…</div></div></div>
-    <div class="sec"><h2>❓ Questions &amp; Answers</h2><div id="qa"><div class="muted">Loading…</div></div></div>
+    <aside class="sidebar">
+      <div class="side-card">
+        <h3>Quick Facts</h3>
+        ${sideRow('💰','Fee / Semester', u.fee)}
+        ${sideRow('🎯','Merit / Eligibility', u.merit)}
+        ${sideRow('📝','Entry Test', u.entry)}
+        ${sideRow('👥','Seats', u.seats)}
+        ${sideRow('🎓','Scholarships', u.scholarships)}
+        ${sideRow('🏠','Hostel', u.hostel)}
+        <div class="side-cta">
+          ${u.website?`<a class="btn" href="https://www.${esc(u.website)}" target="_blank" rel="noopener">🌐 Visit Official Site</a>`:''}
+          <button class="btn navyb" onclick="shareUni()">🔗 Share University</button>
+        </div>
+      </div>
+    </aside>
   </div>`;
 }
 
@@ -230,6 +332,8 @@ async function loadReviews(){
   const { data } = await sb.from('reviews').select('rating,category,body,author,created_at').eq('institution_id',UNI.id).order('created_at',{ascending:false});
   const rv=data||[];
   const avg=rv.length?(rv.reduce((s,r)=>s+r.rating,0)/rv.length):0;
+  const hr = $('heroRating');
+  if(hr) hr.innerHTML = rv.length ? `<span class="s">${stars(avg)}</span> <b>${avg.toFixed(1)}</b> · ${rv.length} review${rv.length!==1?'s':''}` : `<span style="color:rgba(255,255,255,.5);font-size:.85rem;">☆☆☆☆☆ No reviews yet</span>`;
   const form = currentUser
     ? `<div style="border:1px dashed var(--gray-200);border-radius:12px;padding:14px;margin-bottom:14px;">
         <div class="star-pick" id="starPick">${[1,2,3,4,5].map(n=>`<span onclick="pickStar(${n})">★</span>`).join('')}</div>
