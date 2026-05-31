@@ -24,22 +24,32 @@
   a{color:inherit;}
   /* Nav */
   nav{background:rgba(10,22,40,0.97);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;
-    display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:64px;}
-  .nav-logo{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:1.25rem;text-decoration:none;}
+    display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:64px;gap:12px;}
+  .nav-logo{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:1.25rem;text-decoration:none;white-space:nowrap;flex-shrink:0;}
   .nav-logo span{color:var(--green);}
   .nav-logo img{height:38px;width:auto;}
-  .nav-actions{display:flex;gap:10px;align-items:center;}
-  .nav-btn{background:transparent;border:1.5px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:8px 16px;
-    font-family:'Sora',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;text-decoration:none;}
+  .nav-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;}
+  .nav-btn{background:transparent;border:1.5px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:8px 14px;
+    font-family:'Sora',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;text-decoration:none;white-space:nowrap;}
   .nav-btn.solid{background:var(--green);border-color:var(--green);color:var(--navy);font-weight:700;}
+  .nav-btn .full{display:inline;}
+  .nav-btn .short{display:none;}
+  @media(max-width:600px){
+    nav{padding:0 16px;height:58px;}
+    .nav-logo{font-size:1.1rem;gap:6px;}
+    .nav-logo img{height:32px;}
+    .nav-btn{padding:7px 12px;font-size:.82rem;}
+    .nav-btn .full{display:none;} .nav-btn .short{display:inline;}
+  }
   .loading{text-align:center;color:var(--gray-600);padding:80px 20px;font-size:1rem;}
 
   /* ─── FULL-WIDTH NAVY HERO ─── */
   .hero-band{
     background:linear-gradient(135deg,var(--navy) 0%,#0d2240 55%,#143864 100%);
-    color:#fff; padding:48px 5% 110px;
+    color:#fff; padding:40px 5% 110px;
     position:relative; overflow:hidden;
   }
+  @media(max-width:600px){ .hero-band{ padding:24px 18px 90px; } .hero-logo{ width:90px;height:90px;border-radius:18px;font-size:2.5rem; } .crumbs{ margin-bottom:16px; } }
   .hero-band::before{
     content:''; position:absolute; inset:0;
     background-image:radial-gradient(circle at 20% 30%,rgba(0,200,83,.18) 0%,transparent 45%),
@@ -168,7 +178,7 @@
 <nav>
   <a href="index.html" class="nav-logo">🎓 Taleem<span>PK</span></a>
   <div class="nav-actions">
-    <a href="index.html" class="nav-btn">← All Universities</a>
+    <a href="index.html" class="nav-btn" title="All Universities"><span class="full">← All Universities</span><span class="short">←</span></a>
     <button class="nav-btn solid" id="authBtn" onclick="onAuthBtn()">Login</button>
   </div>
 </nav>
