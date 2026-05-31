@@ -206,6 +206,7 @@
     white-space:nowrap;
   }
   .nav-cta:hover { background: #00e060; }
+  .mobile-auth-item { display:none; }   /* visible only inside the mobile slide-down menu */
 
   /* ───── HERO ───── */
   .hero {
@@ -1660,6 +1661,8 @@
     }
     .nav-links.open li { width:100%; border-bottom:1px solid rgba(255,255,255,0.06); }
     .nav-links.open li:last-child { border-bottom:none; }
+    .mobile-auth-item { display:block; }
+    .mobile-auth-item a { background:var(--green); color:var(--navy) !important; border-radius:10px; margin-top:8px; text-align:center !important; font-weight:800 !important; }
     .nav-links.open a, .nav-links.open .nav-dropdown-btn {
       display:block; width:100%; padding:14px 4px; font-size:1rem; text-align:left;
     }
@@ -1671,7 +1674,7 @@
     }
     .nav-links.open .nav-dropdown.open .nav-dropdown-menu { display:block; }
     .nav-links.open .nav-dropdown-menu button { padding:12px 14px; font-size:0.95rem; }
-    .nav-cta { padding:7px 12px; font-size:.78rem; }   /* compact on mobile (Login/Sign Up CTA) */
+    .nav-cta { display:none; }   /* on mobile, login moves into the menu */
     .hero-stats { gap:28px; }
     .stat-num { font-size:1.5rem; }
     .uni-grid { grid-template-columns:1fr; }
@@ -1723,6 +1726,7 @@
     <li><a href="#" onclick="closeMobileMenu();closeAboutPage();openBlogPage();return false">Blog</a></li>
     <li><a href="#" onclick="closeMobileMenu();openScholarshipsPage();return false">Scholarships</a></li>
     <li><a href="#" onclick="openAboutPage();closeMobileMenu();return false">About</a></li>
+    <li class="mobile-auth-item"><a href="#" id="authNavBtnMobile" onclick="onAuthNavClick();return false">🔐 Login / Sign Up</a></li>
   </ul>
   <button class="nav-cta" id="authNavBtn" onclick="onAuthNavClick()">Login / Sign Up</button>
   <button class="nav-hamburger" id="navHamburger" onclick="toggleMobileMenu()" aria-label="Menu">
@@ -5737,7 +5741,10 @@ async function submitAuth(){
 async function doLogout(){ if(sbClient){ await sbClient.auth.signOut(); } currentUser=null; refreshAuthUI(); }
 function refreshAuthUI(){
   const btn=document.getElementById('authNavBtn');
-  if(btn) btn.textContent = currentUser ? ('👤 '+userDisplayName(currentUser)+' · Logout') : 'Login / Sign Up';
+  const desktopText = currentUser ? ('👤 '+userDisplayName(currentUser)+' · Logout') : 'Login / Sign Up';
+  if(btn) btn.textContent = desktopText;
+  const mBtn = document.getElementById('authNavBtnMobile');
+  if(mBtn) mBtn.textContent = currentUser ? ('👤 '+userDisplayName(currentUser)+' · Logout') : '🔐 Login / Sign Up';
 }
 async function initAuth(){
   if(!sbClient) return;
