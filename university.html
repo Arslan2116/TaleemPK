@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>University — TaleemPK</title>
+<meta name="description" id="metaDesc" content="University details, fees, merit and programs on TaleemPK.">
+<meta property="og:title" id="ogTitle" content="TaleemPK">
+<meta property="og:description" id="ogDesc" content="Compare universities in Pakistan.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="icon" type="image/png" href="logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --green:#00C853; --green-dark:#00A040; --green-light:#E8FFF1;
+    --navy:#0A1628; --navy-mid:#112240; --white:#fff;
+    --gray-100:#F5F7FA; --gray-200:#E8ECF2; --gray-400:#9BA5B5; --gray-600:#5A6478;
+    --gold:#FFB800; --red:#FF4757; --shadow-md:0 8px 30px rgba(0,0,0,0.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Sora',system-ui,sans-serif;color:var(--navy);background:var(--gray-100);line-height:1.6;}
+  a{color:inherit;}
+  /* Nav */
+  nav{background:rgba(10,22,40,0.97);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:64px;}
+  .nav-logo{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:1.25rem;text-decoration:none;}
+  .nav-logo span{color:var(--green);}
+  .nav-logo img{height:38px;width:auto;}
+  .nav-actions{display:flex;gap:10px;align-items:center;}
+  .nav-btn{background:transparent;border:1.5px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:8px 16px;
+    font-family:'Sora',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;text-decoration:none;}
+  .nav-btn.solid{background:var(--green);border-color:var(--green);color:var(--navy);font-weight:700;}
+  /* Layout */
+  .wrap{max-width:1000px;margin:0 auto;padding:28px 5% 80px;}
+  .loading{text-align:center;color:var(--gray-600);padding:80px 20px;font-size:1rem;}
+  /* Hero */
+  .u-hero{background:linear-gradient(135deg,var(--navy),var(--navy-mid));color:#fff;border-radius:20px;padding:34px;display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-bottom:24px;}
+  .u-logo{width:84px;height:84px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:2.4rem;flex-shrink:0;overflow:hidden;}
+  .u-logo img{width:100%;height:100%;object-fit:contain;padding:6px;}
+  .u-hero h1{font-size:clamp(1.5rem,3.5vw,2.3rem);font-weight:800;line-height:1.2;}
+  .u-sub{color:rgba(255,255,255,.6);font-size:.95rem;margin-top:4px;}
+  .u-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+  .u-badge{background:rgba(255,255,255,.12);padding:4px 12px;border-radius:20px;font-size:.76rem;font-weight:600;}
+  .u-badge.rank{background:var(--gold);color:var(--navy);}
+  .u-badge.green{background:var(--green);color:var(--navy);}
+  /* Info grid */
+  .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px;}
+  @media(max-width:680px){.info-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:430px){.info-grid{grid-template-columns:1fr;}}
+  .info-box{background:#fff;border:1px solid var(--gray-200);border-radius:14px;padding:16px 18px;}
+  .info-k{font-size:.7rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+  .info-v{font-size:.95rem;font-weight:700;color:var(--navy);}
+  /* Sections */
+  .sec{background:#fff;border:1px solid var(--gray-200);border-radius:16px;padding:24px;margin-bottom:20px;}
+  .sec h2{font-size:1.1rem;font-weight:800;color:var(--navy);margin-bottom:14px;}
+  .fee-row{display:flex;justify-content:space-between;gap:16px;padding:10px 14px;border-radius:8px;}
+  .fee-row:nth-child(odd){background:var(--gray-100);}
+  .fee-row-k{font-size:.85rem;color:var(--gray-600);}
+  .fee-row-v{font-size:.85rem;font-weight:700;color:var(--navy);white-space:nowrap;}
+  .fee-note{font-size:.78rem;color:var(--gray-400);font-style:italic;margin-top:10px;}
+  .prog-group{margin-bottom:16px;}
+  .prog-group-title{font-size:.78rem;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;}
+  .prog-count{background:var(--gray-200);color:var(--gray-600);border-radius:20px;padding:1px 8px;font-size:.7rem;margin-left:4px;}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;}
+  .pill{background:var(--green-light);border:1px solid rgba(0,200,83,.2);color:var(--green-dark);padding:5px 14px;border-radius:20px;font-size:.82rem;font-weight:600;}
+  .hl{display:flex;flex-wrap:wrap;gap:8px;}
+  .hl span{background:var(--navy);color:#fff;padding:5px 14px;border-radius:20px;font-size:.8rem;font-weight:600;}
+  .desc{color:var(--gray-600);font-size:.95rem;line-height:1.8;}
+  .btn{background:var(--green);color:var(--navy);border:none;border-radius:10px;padding:12px 24px;font-family:'Sora',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;text-decoration:none;display:inline-block;}
+  .btn.navyb{background:var(--navy);color:#fff;}
+  .cta-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:6px 0 30px;}
+  /* Reviews / QA */
+  .rv{border:1px solid var(--gray-200);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+  .rv-top{display:flex;gap:8px;align-items:center;font-size:.8rem;color:var(--gray-400);margin-bottom:6px;flex-wrap:wrap;}
+  .rv-stars{color:var(--gold);letter-spacing:1px;}
+  .rv-text{font-size:.9rem;color:var(--navy);}
+  .avg{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .avg-num{font-size:1.6rem;font-weight:800;color:var(--navy);}
+  textarea,input,select{width:100%;padding:10px 13px;border:2px solid var(--gray-200);border-radius:10px;font-family:'Sora',sans-serif;font-size:.9rem;color:var(--navy);outline:none;}
+  textarea:focus,input:focus{border-color:var(--green);}
+  .star-pick span{font-size:1.5rem;cursor:pointer;filter:grayscale(1);opacity:.5;}
+  .star-pick span.on{filter:none;opacity:1;}
+  .muted{color:var(--gray-400);font-size:.85rem;}
+  .qa-item{border:1px solid var(--gray-200);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+  .qa-q{font-weight:700;color:var(--navy);font-size:.92rem;}
+  .qa-ans{background:var(--gray-100);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:.86rem;color:var(--gray-600);}
+  /* Auth modal */
+  .ov{display:none;position:fixed;inset:0;z-index:1300;background:rgba(10,22,40,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
+  .ov.show{display:flex;}
+  .auth{background:#fff;border-radius:18px;padding:30px;max-width:380px;width:100%;position:relative;}
+  .auth h3{font-size:1.2rem;margin-bottom:4px;}
+  .auth .x{position:absolute;top:14px;right:14px;border:none;background:var(--gray-100);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1.1rem;}
+  .auth label{display:block;font-size:.74rem;font-weight:700;color:var(--gray-600);text-transform:uppercase;margin:12px 0 5px;}
+  .amsg{font-size:.84rem;margin-top:10px;padding:9px 12px;border-radius:8px;display:none;}
+  .amsg.err{display:block;background:#fde8ea;color:#b3263a;} .amsg.ok{display:block;background:var(--green-light);color:var(--green-dark);}
+  footer{background:var(--navy);color:rgba(255,255,255,.55);text-align:center;padding:24px;font-size:.82rem;}
+  footer a{color:var(--green);text-decoration:none;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">🎓 Taleem<span>PK</span></a>
+  <div class="nav-actions">
+    <a href="index.html" class="nav-btn">← All Universities</a>
+    <button class="nav-btn solid" id="authBtn" onclick="onAuthBtn()">Login</button>
+  </div>
+</nav>
+
+<div id="content"><div class="loading">Loading university…</div></div>
+
+<footer>© <span id="yr"></span> TaleemPK · <a href="index.html">Compare Universities in Pakistan</a></footer>
+
+<!-- Auth modal -->
+<div class="ov" id="authOv" onclick="if(event.target===this)closeAuth()">
+  <div class="auth">
+    <button class="x" onclick="closeAuth()">×</button>
+    <h3 id="aTitle">Welcome back 👋</h3>
+    <p class="muted" id="aSub">Log in to write a review or ask a question.</p>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn" style="flex:1;background:var(--navy);color:#fff" id="tabL" onclick="aTab('login')">Login</button>
+      <button class="btn" style="flex:1;background:var(--gray-200);color:var(--navy)" id="tabS" onclick="aTab('signup')">Sign Up</button>
+    </div>
+    <div id="nameWrap" style="display:none"><label>Name</label><input id="aName" placeholder="Your name"></div>
+    <label>Email</label><input id="aEmail" type="email" autocomplete="username">
+    <label>Password</label><input id="aPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAuth()">
+    <button class="btn" style="width:100%;margin-top:16px" id="aBtn" onclick="submitAuth()">Login</button>
+    <div class="amsg" id="aMsg"></div>
+  </div>
+</div>
+
+<script>
+const SB_URL='https://vpioffkkzwbfnmpxpwgc.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaW9mZmtrendiZm5tcHhwd2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTc5ODksImV4cCI6MjA5NTczMzk4OX0.IUDmCzw6im094kilaTKw812GkVDC7a85AA4scs1X8YE';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+const $ = id => document.getElementById(id);
+let UNI=null, currentUser=null;
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+function getId(){
+  const p = new URLSearchParams(location.search);
+  if(p.get('id')) return parseInt(p.get('id'));
+  const m = (location.hash||'').match(/uni-(\d+)/); if(m) return parseInt(m[1]);
+  return null;
+}
+function stars(n){ n=Math.round(n||0); return '★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n); }
+function progGroup(p){ const s=(p||'').trim(); if(/^phd\b/i.test(s))return 'phd'; if(/^(ms|mba|mphil|ma|msc|master|m\.s|m\.phil)\b/i.test(s)||/^mphil\/phd/i.test(s))return 'grad'; return 'ug'; }
+function groupedPrograms(programs){
+  if(!programs||!programs.length) return '<span class="muted">Program list coming soon.</span>';
+  const g={ug:[],grad:[],phd:[]}; programs.forEach(p=>g[progGroup(p)].push(p));
+  const sec=(t,a)=>a.length?`<div class="prog-group"><div class="prog-group-title">${t}<span class="prog-count">${a.length}</span></div><div class="pills">${a.map(p=>`<span class="pill">${esc(p)}</span>`).join('')}</div></div>`:'';
+  return sec('Undergraduate',g.ug)+sec('Graduate (MS / MBA)',g.grad)+sec('PhD',g.phd);
+}
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function load(){
+  const id = getId();
+  if(!id){ $('content').innerHTML='<div class="loading">University not found. <a href="index.html">Go back</a></div>'; return; }
+  const { data, error } = await sb.from('institutions').select('*,fee_details(label,value,sort_order)').eq('id',id).single();
+  if(error || !data){ $('content').innerHTML='<div class="loading">University not found. <a href="index.html">Go back</a></div>'; return; }
+  UNI = data;
+  render();
+  setSEO();
+  loadReviews(); loadQA();
+}
+
+function setSEO(){
+  const u=UNI;
+  document.title = `${u.full_name||u.name} — Fees, Merit & Programs | TaleemPK`;
+  const d = `${u.full_name||u.name} (${u.city||''}) — fees ${u.fee||''}, merit, ${ (u.programs||[]).length } programs. Compare on TaleemPK.`;
+  $('metaDesc').setAttribute('content', d);
+  $('ogTitle').setAttribute('content', `${u.full_name||u.name} | TaleemPK`);
+  $('ogDesc').setAttribute('content', d);
+}
+
+function render(){
+  const u=UNI;
+  const logo = u.website ? `<img src="https://www.google.com/s2/favicons?domain=${u.website}&sz=128" alt="" onerror="this.parentNode.textContent='${u.icon||'🏛️'}'">` : (u.icon||'🏛️');
+  const fd = (u.fee_details||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const box = (k,v)=> v ? `<div class="info-box"><div class="info-k">${k}</div><div class="info-v">${esc(v)}</div></div>`:'';
+  $('content').innerHTML = `
+  <div class="wrap">
+    <div class="u-hero">
+      <div class="u-logo">${logo}</div>
+      <div style="flex:1;min-width:240px;">
+        <h1>${esc(u.full_name||u.name)}</h1>
+        <div class="u-sub">📍 ${esc(u.city||'')} ${u.established?'· Est. '+u.established:''}</div>
+        <div class="u-badges">
+          ${u.rank?`<span class="u-badge rank">🏆 Rank #${u.rank}</span>`:''}
+          <span class="u-badge green">${u.sector==='public'?'Public':u.sector==='military'?'Military':'Private'}</span>
+          ${(u.tags||[]).filter(t=>!['public','private','military','federal','punjab','sindh','kpk','balochistan','ajk','gilgitbaltistan'].includes(t)).slice(0,3).map(t=>`<span class="u-badge">${esc(t)}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      ${box('Fee / Semester', u.fee)}
+      ${box('Merit / Eligibility', u.merit)}
+      ${box('Entry Test', u.entry)}
+      ${box('Seats', u.seats)}
+      ${box('Scholarships', u.scholarships)}
+      ${box('Hostel', u.hostel)}
+    </div>
+
+    ${u.description?`<div class="sec"><h2>About</h2><div class="desc">${esc(u.description)}</div></div>`:''}
+
+    ${fd.length?`<div class="sec"><h2>💰 Detailed Fee Structure ${u.fee_year?`<span class="muted" style="font-weight:400">(${esc(u.fee_year)})</span>`:''}</h2>
+      ${fd.map(f=>`<div class="fee-row"><div class="fee-row-k">${esc(f.label)}</div><div class="fee-row-v">${esc(f.value)}</div></div>`).join('')}
+      ${u.fee_note?`<div class="fee-note">${esc(u.fee_note)}</div>`:''}</div>`:''}
+
+    <div class="sec"><h2>📚 Programs Offered</h2>${groupedPrograms(u.programs)}</div>
+
+    ${(u.highlights||[]).length?`<div class="sec"><h2>✨ Highlights</h2><div class="hl">${u.highlights.map(h=>`<span>${esc(h)}</span>`).join('')}</div></div>`:''}
+
+    <div class="cta-row">
+      ${u.website?`<a class="btn" href="https://www.${esc(u.website)}" target="_blank" rel="noopener">🌐 Official Website</a>`:''}
+      <button class="btn navyb" onclick="shareUni()">🔗 Share</button>
+    </div>
+
+    <div class="sec"><h2>💬 Student Reviews</h2><div id="reviews"><div class="muted">Loading…</div></div></div>
+    <div class="sec"><h2>❓ Questions &amp; Answers</h2><div id="qa"><div class="muted">Loading…</div></div></div>
+  </div>`;
+}
+
+/* Reviews */
+let _star=0;
+async function loadReviews(){
+  const { data } = await sb.from('reviews').select('rating,category,body,author,created_at').eq('institution_id',UNI.id).order('created_at',{ascending:false});
+  const rv=data||[];
+  const avg=rv.length?(rv.reduce((s,r)=>s+r.rating,0)/rv.length):0;
+  const form = currentUser
+    ? `<div style="border:1px dashed var(--gray-200);border-radius:12px;padding:14px;margin-bottom:14px;">
+        <div class="star-pick" id="starPick">${[1,2,3,4,5].map(n=>`<span onclick="pickStar(${n})">★</span>`).join('')}</div>
+        <textarea id="rvText" rows="3" placeholder="Share your experience…" style="margin:8px 0;"></textarea>
+        <button class="btn" onclick="postReview()">Post Review</button></div>`
+    : `<p class="muted" style="margin-bottom:12px;">👉 <a href="#" onclick="openAuth();return false" style="color:var(--green-dark);font-weight:700;">Log in</a> to write a review.</p>`;
+  $('reviews').innerHTML = `
+    ${rv.length?`<div class="avg"><span class="rv-stars" style="font-size:1.3rem">${stars(avg)}</span><span class="avg-num">${avg.toFixed(1)}</span><span class="muted">/ 5 · ${rv.length} review${rv.length!==1?'s':''}</span></div>`:''}
+    ${form}
+    ${rv.length?rv.map(r=>`<div class="rv"><div class="rv-top"><span class="rv-stars">${stars(r.rating)}</span> · ${esc(r.category||'General')} · 👤 ${esc(r.author||'Student')}</div><div class="rv-text">${esc(r.body)}</div></div>`).join(''):'<p class="muted">No reviews yet — be the first!</p>'}`;
+}
+function pickStar(n){ _star=n; document.querySelectorAll('#starPick span').forEach((s,i)=>s.classList.toggle('on',i<n)); }
+async function postReview(){
+  if(!currentUser){ openAuth(); return; }
+  const t=$('rvText').value.trim(); if(!t){ alert('Please write your review.'); return; } if(!_star){ alert('Pick a star rating.'); return; }
+  const { error } = await sb.from('reviews').insert({ institution_id:UNI.id, rating:_star, category:'General', body:t, author:userName() });
+  if(error){ alert(error.message); return; }
+  _star=0; loadReviews();
+}
+
+/* Q&A */
+async function loadQA(){
+  const { data } = await sb.from('questions').select('id,question,author,created_at,answers(body,author,created_at)').eq('institution_id',UNI.id).order('created_at',{ascending:false});
+  const qs=data||[];
+  const ask = currentUser
+    ? `<div style="display:flex;gap:8px;margin-bottom:14px;"><input id="qText" placeholder="Ask a question…"><button class="btn" onclick="postQ()">Ask</button></div>`
+    : `<p class="muted" style="margin-bottom:12px;">👉 <a href="#" onclick="openAuth();return false" style="color:var(--green-dark);font-weight:700;">Log in</a> to ask a question.</p>`;
+  $('qa').innerHTML = ask + (qs.length?qs.map(q=>`
+    <div class="qa-item"><div class="qa-q">Q: ${esc(q.question)}</div>
+      <div class="muted" style="font-size:.76rem;">👤 ${esc(q.author||'Student')}</div>
+      ${(q.answers||[]).map(a=>`<div class="qa-ans">${esc(a.body)} <span class="muted">— ${esc(a.author||'Student')}</span></div>`).join('')}
+      ${currentUser?`<div style="display:flex;gap:8px;margin-top:8px;"><input id="ans-${q.id}" placeholder="Write an answer…"><button class="btn" onclick="postA(${q.id})">Answer</button></div>`:''}
+    </div>`).join(''):'<p class="muted">No questions yet — be the first to ask!</p>');
+}
+async function postQ(){
+  if(!currentUser){ openAuth(); return; }
+  const t=$('qText').value.trim(); if(!t){ alert('Please write your question.'); return; }
+  const { error } = await sb.from('questions').insert({ institution_id:UNI.id, question:t, author:userName() });
+  if(error){ alert(error.message); return; } loadQA();
+}
+async function postA(qid){
+  const t=$('ans-'+qid).value.trim(); if(!t){ alert('Please write your answer.'); return; }
+  const { error } = await sb.from('answers').insert({ question_id:qid, body:t, author:userName() });
+  if(error){ alert(error.message); return; } loadQA();
+}
+
+/* Share */
+function shareUni(){
+  const url=location.origin+location.pathname+'?id='+UNI.id;
+  const text=`${UNI.full_name||UNI.name} — fees, merit & programs on TaleemPK`;
+  if(navigator.share){ navigator.share({title:UNI.full_name,text,url}).catch(()=>{}); }
+  else { navigator.clipboard?.writeText(url); window.open(`https://wa.me/?text=${encodeURIComponent(text+' '+url)}`,'_blank'); }
+}
+
+/* Auth */
+let _mode='login';
+function userName(){ return (currentUser?.user_metadata?.name) || (currentUser?.email||'User').split('@')[0]; }
+function onAuthBtn(){ if(currentUser){ sb.auth.signOut().then(()=>{currentUser=null;refreshAuth();loadReviews();loadQA();}); } else openAuth(); }
+function openAuth(){ aTab('login'); $('authOv').classList.add('show'); }
+function closeAuth(){ $('authOv').classList.remove('show'); }
+function aTab(m){ _mode=m; $('tabL').style.background=m==='login'?'var(--navy)':'var(--gray-200)'; $('tabL').style.color=m==='login'?'#fff':'var(--navy)';
+  $('tabS').style.background=m==='signup'?'var(--navy)':'var(--gray-200)'; $('tabS').style.color=m==='signup'?'#fff':'var(--navy)';
+  $('nameWrap').style.display=m==='signup'?'block':'none'; $('aTitle').textContent=m==='signup'?'Create your account 🎓':'Welcome back 👋'; $('aBtn').textContent=m==='signup'?'Create Account':'Login'; }
+function aFlash(t,ok){ const e=$('aMsg'); e.textContent=t; e.className='amsg '+(ok?'ok':'err'); }
+async function submitAuth(){
+  const email=$('aEmail').value.trim(), pass=$('aPass').value;
+  if(!email||!pass){ aFlash('Enter email and password.',false); return; }
+  if(_mode==='signup'){
+    const { error } = await sb.auth.signUp({ email, password:pass, options:{ data:{ name:$('aName').value.trim() } } });
+    if(error){ aFlash(error.message,false); return; } aFlash('✅ Account created! You can log in now.',true); setTimeout(()=>aTab('login'),1200);
+  } else {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password:pass });
+    if(error){ aFlash(error.message,false); return; } currentUser=data.user; refreshAuth(); closeAuth(); loadReviews(); loadQA();
+  }
+}
+function refreshAuth(){ $('authBtn').textContent = currentUser ? ('👤 '+userName()+' · Logout') : 'Login'; }
+async function initAuth(){ const { data } = await sb.auth.getSession(); currentUser=data.session?data.session.user:null; refreshAuth(); }
+
+initAuth();
+load();
+</script>
+</body>
+</html>

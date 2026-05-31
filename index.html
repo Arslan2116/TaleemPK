@@ -5528,6 +5528,10 @@ function groupedProgramsHTML(programs){
 }
 
 function openDetail(id) {
+  // Canonical detail view is now the dedicated university page.
+  window.location.href = 'university.html?id=' + id;
+  return;
+  /* ---- legacy modal (kept for reference, no longer used) ---- */
   const u = UNIVERSITIES.find(u=>u.id===id);
   const modal = document.getElementById('detailModal');
   modal.innerHTML = `
