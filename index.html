@@ -633,6 +633,18 @@
     color:var(--green-dark); padding:5px 14px;
     border-radius:20px; font-size:0.82rem; font-weight:600;
   }
+  .prog-group { margin-bottom:16px; }
+  .prog-group:last-child { margin-bottom:0; }
+  .prog-group-title { font-size:0.8rem; font-weight:700; color:var(--gray-600); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.4px; }
+  .prog-count { background:var(--gray-200); color:var(--gray-600); border-radius:20px; padding:1px 8px; font-size:0.7rem; margin-left:4px; }
+
+  /* University detail as a full page (not a cramped popup) */
+  #detailModalOverlay { padding:0; background:rgba(10,22,40,0.45); }
+  #detailModalOverlay .modal {
+    max-width:980px; min-height:100vh; max-height:none; border-radius:0;
+    padding:40px 6%; transform:none;
+  }
+  @media(max-width:600px){ #detailModalOverlay .modal { padding:24px 18px; } }
 
   /* ───── HOW IT WORKS ───── */
   .hiw { background:var(--navy); }
@@ -5457,6 +5469,24 @@ function removeFromCompare(id) {
   applyFilters();
 }
 
+function progGroup(p){
+  const s = (p||'').trim();
+  if(/^phd\b/i.test(s)) return 'phd';
+  if(/^(ms|mba|mphil|ma|msc|master|m\.s|m\.phil)\b/i.test(s) || /^mphil\/phd/i.test(s)) return 'grad';
+  return 'ug';
+}
+function groupedProgramsHTML(programs){
+  if(!programs || !programs.length)
+    return `<span style="color:var(--gray-400);font-size:0.85rem;">Visit the university website for a full program list.</span>`;
+  const g = {ug:[], grad:[], phd:[]};
+  programs.forEach(p => g[progGroup(p)].push(p));
+  const sec = (title, arr) => arr.length
+    ? `<div class="prog-group"><div class="prog-group-title">${title} <span class="prog-count">${arr.length}</span></div>
+        <div class="programs-list">${arr.map(p=>`<span class="program-pill">${p}</span>`).join('')}</div></div>`
+    : '';
+  return sec('Undergraduate', g.ug) + sec('Graduate (MS / MBA)', g.grad) + sec('PhD', g.phd);
+}
+
 function openDetail(id) {
   const u = UNIVERSITIES.find(u=>u.id===id);
   const modal = document.getElementById('detailModal');
@@ -5489,7 +5519,7 @@ function openDetail(id) {
     </div>` : ''}
     <div style="margin-bottom:20px;">
       <div class="detail-box-title" style="margin-bottom:12px;">${t('detail_programs')}</div>
-      <div class="programs-list">${u.programs.length?u.programs.map(p=>`<span class="program-pill">${p}</span>`).join(''):`<span style="color:var(--gray-400);font-size:0.85rem;">Visit the university website for a full program list.</span>`}</div>
+      ${groupedProgramsHTML(u.programs)}
     </div>
     <div>
       <div class="detail-box-title" style="margin-bottom:12px;">${t('detail_highlights')}</div>
@@ -5518,12 +5548,13 @@ function openDetail(id) {
   if(MERIT_TRENDS[u.id]) setTimeout(()=>renderTrendChart(u.id), 100);
   loadReviews(u.id);   // fetch shared reviews from the database
   loadQA(u.id);        // fetch shared Q&A from the database
+  try{ history.replaceState(null,'','#uni-'+id); }catch(e){}   // shareable URL
 }
 
 function shareUniversity(id){
   const u = UNIVERSITIES.find(x=>x.id===id);
   if(!u) return;
-  const url = window.location.origin + window.location.pathname;
+  const url = window.location.origin + window.location.pathname + '#uni-' + id;
   const text = `${u.full} — fees, merit & programs on TaleemPK`;
   if(navigator.share){
     navigator.share({ title:u.full, text, url }).catch(()=>{});
@@ -5536,6 +5567,7 @@ function shareUniversity(id){
 function closeDetailModal(e) {
   if(!e || e.target.id==='detailModalOverlay' || e.target.classList.contains('modal-close')) {
     document.getElementById('detailModalOverlay').classList.remove('show');
+    try{ history.replaceState(null,'',location.pathname+location.search); }catch(err){}
   }
 }
 
@@ -5714,6 +5746,9 @@ async function loadInstitutions(){
   populateProgramFilter();
   renderNews();
   applyFilters();
+  // Deep link: open a university directly if URL has #uni-<id>
+  const m = (location.hash||'').match(/^#uni-(\d+)/);
+  if(m){ const uid=parseInt(m[1]); if(UNIVERSITIES.some(u=>u.id===uid)) setTimeout(()=>openDetail(uid),200); }
 })();
 
 // Back-to-top button visibility on scroll
