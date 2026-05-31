@@ -7,3 +7,6 @@ Thumbs.db
 # Stray / scratch files (not part of the site)
 colors.html
 migrate.sql
+
+# Data agent (local dev tool — keep keys & output out of the repo/site)
+agent/
