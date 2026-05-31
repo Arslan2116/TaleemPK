@@ -3802,6 +3802,7 @@ const LOGO_OVERRIDES = {
 };
 
 function logoSrc(u) {
+  if (u.logoUrl) return u.logoUrl;              // custom logo from DB (preferred)
   if (!u.website) return '';
   return LOGO_OVERRIDES[u.website] || `https://logo.clearbit.com/${u.website}?size=200`;
 }
@@ -5755,6 +5756,7 @@ function mapInstitution(row){
     feeYear: row.fee_year || undefined, feeNote: row.fee_note || undefined,
     merit: row.merit, entry: row.entry, programs: row.programs || [],
     seats: row.seats, established: row.established, website: row.website,
+    logoUrl: row.logo_url || '',
     description: row.description, highlights: row.highlights || [],
     scholarships: row.scholarships, hostel: row.hostel,
     feeDetails: (row.fee_details || [])

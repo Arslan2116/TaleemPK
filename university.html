@@ -251,7 +251,9 @@ function setSEO(){
 
 function render(){
   const u=UNI;
-  const logo = u.website ? `<img src="https://www.google.com/s2/favicons?domain=${u.website}&sz=128" alt="" onerror="this.parentNode.textContent='${u.icon||'🏛️'}'">` : (u.icon||'🏛️');
+  const logo = u.logo_url
+    ? `<img src="${esc(u.logo_url)}" alt="" onerror="this.parentNode.textContent='${u.icon||'🏛️'}'">`
+    : (u.website ? `<img src="https://www.google.com/s2/favicons?domain=${u.website}&sz=128" alt="" onerror="this.parentNode.textContent='${u.icon||'🏛️'}'">` : (u.icon||'🏛️'));
   const fd = (u.fee_details||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
   const sectorLabel = u.sector==='public'?'🏛️ Public':u.sector==='military'?'⚔️ Military':'🏢 Private';
   const cleanTags = (u.tags||[]).filter(t=>!['public','private','military','federal','punjab','sindh','kpk','balochistan','ajk','gilgitbaltistan'].includes(t)).slice(0,3);
