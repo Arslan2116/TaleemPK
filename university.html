@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" href="logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   :root{
     --green:#00C853; --green-dark:#00A040; --green-light:#E8FFF1;
@@ -127,6 +128,11 @@
     display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
   .sec h2{ font-size:1.1rem; font-weight:800; color:var(--navy); margin:0; }
   .sec h2 .count{ font-size:.7rem; background:var(--gray-100); color:var(--gray-600); padding:2px 9px; border-radius:20px; margin-left:6px; font-weight:700; vertical-align:middle; }
+  .merit-chart-wrap{ position:relative; height:200px; background:var(--gray-100); border-radius:12px; padding:14px; }
+  .merit-empty{ display:flex; gap:14px; align-items:center; background:var(--gray-100); border:1px dashed var(--gray-200); border-radius:12px; padding:18px; }
+  .merit-empty-icn{ font-size:1.6rem; }
+  .merit-empty-txt{ flex:1; font-size:.88rem; color:var(--gray-600); }
+  .merit-submit-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
   .fee-row{display:flex;justify-content:space-between;gap:16px;padding:10px 14px;border-radius:8px;}
   .fee-row:nth-child(odd){background:var(--gray-100);}
   .fee-row-k{font-size:.85rem;color:var(--gray-600);}
@@ -206,6 +212,25 @@
 </div>
 
 <script>
+/* Merit trend data (year vs closing aggregate %) — same as the main site */
+const MERIT_TRENDS = {
+  1:{y:['2022','2023','2024'],m:[83,84,85]}, 2:{y:['2022','2023','2024'],m:[81,82,84]},
+  3:{y:['2022','2023','2024'],m:[73,74,75]}, 4:{y:['2022','2023','2024'],m:[81,83,82]},
+  5:{y:['2022','2023','2024'],m:[73,74,75]}, 6:{y:['2022','2023','2024'],m:[63,64,65]},
+  7:{y:['2022','2023','2024'],m:[58,59,60]}, 8:{y:['2022','2023','2024'],m:[80,81,82]},
+  9:{y:['2022','2023','2024'],m:[86,86,87]},10:{y:['2022','2023','2024'],m:[70,71,72]},
+  12:{y:['2022','2023','2024'],m:[85,86,87]},13:{y:['2022','2023','2024'],m:[73,74,75]},
+  14:{y:['2022','2023','2024'],m:[63,64,65]},16:{y:['2022','2023','2024'],m:[70,71,72]},
+  22:{y:['2022','2023','2024'],m:[68,69,70]},24:{y:['2022','2023','2024'],m:[70,71,72]},
+  32:{y:['2022','2023','2024'],m:[43,44,45]},33:{y:['2022','2023','2024'],m:[43,44,45]},
+  47:{y:['2022','2023','2024'],m:[80,81,82]},48:{y:['2022','2023','2024'],m:[82,83,84]},
+  51:{y:['2022','2023','2024'],m:[60,61,62]},71:{y:['2022','2023','2024'],m:[75,76,77]},
+  72:{y:['2022','2023','2024'],m:[80,81,82]},97:{y:['2022','2023','2024'],m:[65,66,67]},
+  115:{y:['2022','2023','2024'],m:[60,61,62]},118:{y:['2022','2023','2024'],m:[78,79,80]},
+  160:{y:['2022','2023','2024'],m:[63,64,65]},200:{y:['2022','2023','2024'],m:[53,54,55]},
+};
+const MERIT_WA_NUMBER = '923353303999';   // admin WhatsApp for merit data submissions
+
 const SB_URL='https://vpioffkkzwbfnmpxpwgc.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaW9mZmtrendiZm5tcHhwd2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTc5ODksImV4cCI6MjA5NTczMzk4OX0.IUDmCzw6im094kilaTKw812GkVDC7a85AA4scs1X8YE';
 const sb = supabase.createClient(SB_URL, SB_KEY);
@@ -237,7 +262,40 @@ async function load(){
   UNI = data;
   render();
   setSEO();
+  setTimeout(drawMeritChart, 100);
   loadReviews(); loadQA();
+}
+
+function drawMeritChart(){
+  if(!UNI || !MERIT_TRENDS[UNI.id] || typeof Chart==='undefined') return;
+  const el = document.getElementById('meritChart'); if(!el) return;
+  const t = MERIT_TRENDS[UNI.id];
+  new Chart(el.getContext('2d'), {
+    type:'line',
+    data:{
+      labels:t.y,
+      datasets:[{
+        label:'Closing Merit %', data:t.m,
+        borderColor:'#00C853', backgroundColor:'rgba(0,200,83,0.12)',
+        borderWidth:3, tension:0.35, fill:true,
+        pointBackgroundColor:'#00C853', pointBorderColor:'#fff', pointBorderWidth:2, pointRadius:5
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>c.parsed.y+'%' } } },
+      scales:{
+        y:{ beginAtZero:false, ticks:{ callback:v=>v+'%', color:'#5A6478' }, grid:{ color:'rgba(0,0,0,.05)' } },
+        x:{ ticks:{ color:'#5A6478' }, grid:{ display:false } }
+      }
+    }
+  });
+}
+
+function submitMerit(){
+  if(!UNI) return;
+  const msg = `Hi! I want to submit closing-merit data for ${UNI.full_name||UNI.name} on TaleemPK.\n\nProgram:\nClosing Merit %:\nAvailable Seats:\nYear:\nProof (link/screenshot):`;
+  window.open(`https://wa.me/${MERIT_WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 function setSEO(){
@@ -297,6 +355,17 @@ function render(){
           ${fd.map(f=>`<div class="fee-row"><div class="fee-row-k">${esc(f.label)}</div><div class="fee-row-v">${esc(f.value)}</div></div>`).join('')}
           ${u.fee_note?`<div class="fee-note">${esc(u.fee_note)}</div>`:''}
         </div>`:''}
+
+      <div class="sec">
+        <div class="sec-head"><div class="icn">📈</div><h2>Merit Trend <span class="count">Last 3 Years</span></h2></div>
+        ${MERIT_TRENDS[u.id]
+          ? `<div class="merit-chart-wrap"><canvas id="meritChart"></canvas></div>`
+          : `<div class="merit-empty"><div class="merit-empty-icn">📭</div><div class="merit-empty-txt">No merit data yet for ${esc(u.name)} — be the first to share last year's closing merit list.</div></div>`}
+        <div class="merit-submit-row">
+          <button class="btn navyb" onclick="submitMerit()">+ Submit Merit / Closing Data</button>
+          <span class="muted" style="align-self:center;font-size:.8rem;">Helps every future applicant 🙏</span>
+        </div>
+      </div>
 
       <div class="sec">
         <div class="sec-head"><div class="icn">📚</div><h2>Programs Offered <span class="count">${(u.programs||[]).length}</span></h2></div>
