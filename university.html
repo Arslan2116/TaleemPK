@@ -98,6 +98,12 @@
     background:rgba(0,200,83,.18); color:#7CFFB0; padding:5px 12px;
     border-radius:20px; font-size:.72rem; font-weight:700; margin-bottom:14px;
   }
+  .updated-tag{
+    display:inline-flex; align-items:center; gap:6px; margin-left:8px;
+    background:rgba(255,255,255,.08); color:rgba(255,255,255,.7); padding:5px 12px;
+    border-radius:20px; font-size:.72rem; font-weight:600; margin-bottom:14px;
+    border:1px solid rgba(255,255,255,.12);
+  }
   .hero-name{ font-size:clamp(1.7rem,3.5vw,2.7rem); font-weight:800; line-height:1.15; margin-bottom:8px; }
   .hero-meta{
     display:flex; align-items:center; gap:16px; color:rgba(255,255,255,.7);
@@ -326,6 +332,17 @@ function expandProgs(key, list){
   el.innerHTML = list.map(p=>`<span class="pill">${esc(p)}</span>`).join('');
 }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function timeAgo(iso){
+  const t = new Date(iso).getTime(); if(!t) return '';
+  const s = Math.floor((Date.now()-t)/1000);
+  if(s<60) return 'just now';
+  if(s<3600) return Math.floor(s/60)+' min ago';
+  if(s<86400) return Math.floor(s/3600)+' hr ago';
+  const d = Math.floor(s/86400);
+  if(d<30) return d+' day'+(d!==1?'s':'')+' ago';
+  if(d<365) return Math.floor(d/30)+' month'+(d>=60?'s':'')+' ago';
+  return Math.floor(d/365)+' year'+(d>=730?'s':'')+' ago';
+}
 
 // ── Nav search across institutions ──
 let ALL_UNIS_CACHE = [];
@@ -501,6 +518,7 @@ function render(){
         <div class="hero-text">
           ${u.rank?`<div class="hero-rank-tag">🏆 Rank #${u.rank} in Pakistan</div>`:''}
           ${u.fee_year?`<div class="verified-tag">✓ Verified data · ${esc(u.fee_year)}</div>`:''}
+          ${u.data_updated?`<div class="updated-tag" title="${new Date(u.data_updated).toLocaleString()}">🕘 Updated ${timeAgo(u.data_updated)}</div>`:''}
           <h1 class="hero-name">${esc(u.full_name||u.name)}</h1>
           <div class="hero-meta">
             <span>📍 <b>${esc(u.city||'')}</b></span>
