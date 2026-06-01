@@ -364,16 +364,20 @@
     text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;
   }
   .section-title {
-    font-size:clamp(1.6rem, 3vw, 2.4rem); font-weight:800;
-    color:var(--navy); line-height:1.25; margin-bottom:8px;
+    font-size:clamp(1.8rem, 3.5vw, 2.7rem); font-weight:800;
+    color:var(--navy); line-height:1.2; margin-bottom:10px; letter-spacing:-0.02em;
   }
-  .section-sub { color:var(--gray-600); font-size:0.95rem; line-height:1.7; max-width:540px; }
+  .section-sub { color:var(--gray-600); font-size:1rem; line-height:1.75; max-width:580px; }
   .section-header { margin-bottom:48px; }
+  /* Optional eyebrow label */
+  .section-label{ display:inline-block; font-size:.74rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--green-dark); margin-bottom:10px; }
 
   /* ───── FILTER BAR ───── */
   .filter-section {
     background: var(--gray-100);
     padding: 32px 5%;
+    border-top: 1px solid var(--gray-200);
+    border-bottom: 1px solid var(--gray-200);
   }
   .filters {
     display:flex; gap:12px; flex-wrap:wrap; align-items:center;
@@ -488,10 +492,14 @@
     font-size:0.75rem; font-weight:700; color:var(--gray-400);
     background:var(--gray-100); padding:4px 10px; border-radius:20px;
   }
-  .uni-rank.top3 { background:#FFF3CD; color:#8B6914; }
+  .uni-rank.top3 { background:linear-gradient(135deg,#FFD56B,#FFB800); color:#5b3d00; box-shadow:0 2px 8px rgba(255,184,0,.35); }
+  /* Top-3 cards get a subtle gold tint and gradient border */
+  .uni-card.is-top3 { border-color:transparent; background-image:linear-gradient(#fff,#fff),linear-gradient(135deg,#FFD56B 0%,#FFB800 50%,#FFD56B 100%); background-origin:border-box; background-clip:padding-box,border-box; border:2px solid transparent; position:relative; }
+  .uni-card.is-top3::after{ content:''; position:absolute; inset:0; border-radius:var(--radius); pointer-events:none; box-shadow:inset 0 0 0 1px rgba(255,184,0,.18); }
+  .uni-card.is-top3:hover { transform:translateY(-4px); box-shadow:0 10px 30px rgba(255,184,0,.22); }
   .uni-name {
-    font-size:1.05rem; font-weight:700; color:var(--navy);
-    margin-bottom:4px; line-height:1.3;
+    font-size:1.1rem; font-weight:800; color:var(--navy);
+    margin-bottom:4px; line-height:1.3; letter-spacing:-0.01em;
   }
   .uni-location {
     font-size:0.8rem; color:var(--gray-400); margin-bottom:14px;
@@ -1576,7 +1584,13 @@
   .review-card-text { font-size:0.82rem; color:var(--gray-600); line-height:1.5; }
   .review-helpful { margin-top:7px; font-size:0.72rem; color:var(--gray-400); cursor:pointer; }
   .review-helpful:hover { color:var(--green); }
-  .review-empty { color:var(--gray-400); font-size:0.82rem; text-align:center; padding:16px 0; }
+  .review-empty, .qa-empty, .empty-state {
+    text-align:center; padding:28px 18px; background:var(--gray-100); border:1.5px dashed var(--gray-200);
+    border-radius:14px; color:var(--gray-600);
+  }
+  .empty-icon { font-size:2rem; margin-bottom:8px; display:block; }
+  .empty-title { font-size:.95rem; font-weight:700; color:var(--navy); margin-bottom:4px; }
+  .empty-sub { font-size:.82rem; color:var(--gray-400); }
 
   /* — Alumni — */
   .alumni-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; }
@@ -1793,10 +1807,10 @@
     <button class="hero-chip" onclick="filterUnis('private',document.querySelector('.filter-btn:nth-child(4)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})">🏢 Private</button>
   </div>
   <div class="hero-stats">
-    <div class="stat"><div class="stat-icon">🏫</div><div class="stat-num">218+</div><div class="stat-label" data-i18n="stat1_label">Top Universities</div></div>
-    <div class="stat"><div class="stat-icon">📚</div><div class="stat-num">500+</div><div class="stat-label" data-i18n="stat2_label">Programs Listed</div></div>
-    <div class="stat"><div class="stat-icon">🎓</div><div class="stat-num">10K+</div><div class="stat-label" data-i18n="stat3_label">Students Helped</div></div>
-    <div class="stat"><div class="stat-icon">📍</div><div class="stat-num">50+</div><div class="stat-label" data-i18n="stat4_label">Cities Covered</div></div>
+    <div class="stat"><div class="stat-icon">🏫</div><div class="stat-num" id="statUnis">218</div><div class="stat-label">HEC Universities</div></div>
+    <div class="stat"><div class="stat-icon">📚</div><div class="stat-num" id="statProgs">260+</div><div class="stat-label">Programs Listed</div></div>
+    <div class="stat"><div class="stat-icon">🆓</div><div class="stat-num">100%</div><div class="stat-label">Free to Use</div></div>
+    <div class="stat"><div class="stat-icon">📍</div><div class="stat-num" id="statCities">70+</div><div class="stat-label">Cities Covered</div></div>
   </div>
   <a class="hero-scroll" href="#universities"><span>↓</span>Explore Universities</a>
 </section>
@@ -2070,10 +2084,10 @@
         <p>Our goal is simple: <strong>No more guessing. No more confusion.</strong></p>
       </div>
       <div class="about-mission-visual">
-        <div class="about-stat-box"><div class="num">218+</div><div class="lbl">Universities Listed</div></div>
-        <div class="about-stat-box"><div class="num">500+</div><div class="lbl">Programs Covered</div></div>
-        <div class="about-stat-box"><div class="num">10K+</div><div class="lbl">Students Helped</div></div>
-        <div class="about-stat-box"><div class="num">50+</div><div class="lbl">Cities Covered</div></div>
+        <div class="about-stat-box"><div class="num">218</div><div class="lbl">HEC Universities</div></div>
+        <div class="about-stat-box"><div class="num">260+</div><div class="lbl">Programs Covered</div></div>
+        <div class="about-stat-box"><div class="num">100%</div><div class="lbl">Free Forever</div></div>
+        <div class="about-stat-box"><div class="num">70+</div><div class="lbl">Cities Covered</div></div>
       </div>
     </div>
 
@@ -4933,7 +4947,7 @@ function buildReviewsHTML(uniId) {
           <div class="review-card-text">${r.text}</div>
           <div class="review-helpful" id="rvHelpful-${r.id}" onclick="markHelpful(${uniId},${r.id})">👍 Helpful${r.helpful?` (${r.helpful})`:''}</div>
         </div>
-      `).join('') : `<div class="review-empty">📝 No reviews yet — be the first to share your experience!</div>`}
+      `).join('') : `<div class="review-empty"><span class="empty-icon">💬</span><div class="empty-title">No reviews yet</div><div class="empty-sub">Help future applicants — share your honest experience.</div></div>`}
     </div>
   `;
 }
@@ -5105,7 +5119,7 @@ function buildQAHTML(uniId) {
             </div>
           </div>
         </div>
-      `).join('') : `<div class="qa-empty">🙋 No questions yet — be the first to ask!</div>`}
+      `).join('') : `<div class="qa-empty"><span class="empty-icon">🙋</span><div class="empty-title">No questions yet</div><div class="empty-sub">Ask anything — admissions, hostels, campus life.</div></div>`}
     </div>
   `;
 }
@@ -5134,6 +5148,17 @@ function renderCards(unis) {
   const count = document.getElementById('resultsCount');
   count.innerHTML = `Showing <span>${total}</span> universities`;
 
+  if(total===0){
+    grid.innerHTML = `<div class="grid-error">
+      <div style="font-size:2.4rem;margin-bottom:10px;">🔍</div>
+      <h3>No universities match your filters</h3>
+      <p>Try a different combination, or clear the filters to see all 218 universities.</p>
+      <button onclick="clearAllFilters()">Clear Filters</button>
+    </div>`;
+    document.getElementById('pagination').innerHTML='';
+    return;
+  }
+
   grid.innerHTML = pageUnis.map(u => {
     const matchBadge = (() => {
       if(!assessMode || !assessData) return '';
@@ -5142,7 +5167,7 @@ function renderCards(unis) {
       return `<div class="match-badge ${m.cls}">${m.label}</div>`;
     })();
     return `
-    <div class="uni-card fade-in ${compareList.find(c=>c.id===u.id)?'selected':''}" id="card-${u.id}" style="position:relative">
+    <div class="uni-card fade-in ${u.rank && u.rank<=3 ? 'is-top3':''} ${compareList.find(c=>c.id===u.id)?'selected':''}" id="card-${u.id}" style="position:relative">
       ${matchBadge}
       <div class="uni-card-top" style="${assessMode?'margin-top:28px':''}">
         <div class="uni-icon">${u.website ? `<img src="${logoSrc(u)}" alt="${u.name}" onload="checkLogoSize(this,'${u.icon}')" onerror="handleLogoError(this,'${u.website}','${u.icon}')">` : u.icon}</div>
@@ -5852,6 +5877,17 @@ function renderSkeletons(n){
   grid.innerHTML = html;
 }
 
+function updateHeroStats(){
+  const u = document.getElementById('statUnis'); if(u) u.textContent = UNIVERSITIES.length;
+  const p = document.getElementById('statProgs'); if(p) p.textContent = (PROGRAM_INDEX?PROGRAM_INDEX.length:260)+'+';
+  // city count: split / and dedupe
+  const set = new Set();
+  UNIVERSITIES.forEach(u=>(u.city||'').split(/[\/,]|\+/).forEach(c=>{
+    const n=c.trim(); if(n && n!=='Online' && !/\d|cities|others|campus|multiple/i.test(n)) set.add(n);
+  }));
+  const c = document.getElementById('statCities'); if(c) c.textContent = set.size+'+';
+}
+
 function renderRecentlyViewed(){
   const el = document.getElementById('recentStrip'); if(!el) return;
   let ids=[]; try{ ids = JSON.parse(localStorage.getItem('tpk_recent_v1')||'[]'); }catch(e){}
@@ -5906,6 +5942,7 @@ async function loadInstitutions(){
   populateProgramFilter();
   renderNews();
   applyFilters();
+  updateHeroStats();
   renderRecentlyViewed();
   // Deep link: open a university directly if URL has #uni-<id>
   const m = (location.hash||'').match(/^#uni-(\d+)/);
