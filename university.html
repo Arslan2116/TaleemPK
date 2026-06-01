@@ -70,11 +70,10 @@
   }
   @media(max-width:600px){
     .hero-band{ padding:24px 18px 90px !important; }
-    .hero-row{ gap:14px !important; flex-wrap:nowrap !important; align-items:flex-start !important; }
+    .hero-top{ gap:12px !important; margin-bottom:14px !important; }
     .hero-logo{ width:74px !important; height:74px !important; border-radius:14px !important; font-size:2rem !important; box-shadow:0 8px 18px rgba(0,0,0,.30) !important; }
-    .hero-text{ min-width:0 !important; flex:1 !important; }
-    .hero-name{ font-size:1.35rem !important; line-height:1.2 !important; }
-    .hero-rank-tag, .verified-tag, .updated-tag{ font-size:.66rem !important; padding:4px 9px !important; margin-bottom:6px !important; margin-left:0 !important; margin-right:6px !important; }
+    .hero-name{ font-size:1.55rem !important; line-height:1.2 !important; }
+    .hero-rank-tag, .verified-tag, .updated-tag{ font-size:.7rem !important; padding:4px 10px !important; margin:0 !important; }
     .crumbs{ margin-bottom:14px !important; font-size:.72rem !important; }
   }
   .hero-band::before{
@@ -88,6 +87,10 @@
   .crumbs a{ color:rgba(255,255,255,.7); text-decoration:none; }
   .crumbs a:hover{ color:var(--green); }
   .hero-row{ display:flex; gap:30px; align-items:flex-start; flex-wrap:wrap; }
+  /* Top row: logo on the left, tags stacked on the right */
+  .hero-top{ display:flex; gap:18px; align-items:flex-start; margin-bottom:16px; }
+  .hero-tags{ display:flex; flex-direction:column; align-items:flex-start; gap:6px; flex:1; min-width:0; }
+  .hero-tags > div{ margin:0 !important; }
   .hero-logo{
     width:120px; height:120px; border-radius:24px; background:#fff;
     display:flex; align-items:center; justify-content:center;
@@ -521,23 +524,23 @@ function render(){
   <div class="hero-band">
     <div class="hero-inner">
       <div class="crumbs"><a href="index.html">Universities</a> &nbsp;›&nbsp; ${esc(u.name)}</div>
-      <div class="hero-row">
+      <div class="hero-top">
         <div class="hero-logo">${logo}</div>
-        <div class="hero-text">
+        <div class="hero-tags">
           ${u.rank?`<div class="hero-rank-tag">🏆 Rank #${u.rank} in Pakistan</div>`:''}
           ${u.fee_year?`<div class="verified-tag">✓ Verified data · ${esc(u.fee_year)}</div>`:''}
           ${u.data_updated?`<div class="updated-tag" title="${new Date(u.data_updated).toLocaleString()}">🕘 Updated ${timeAgo(u.data_updated)}</div>`:''}
-          <h1 class="hero-name">${esc(u.full_name||u.name)}</h1>
-          <div class="hero-meta">
-            <span>📍 <b>${esc(u.city||'')}</b></span>
-            ${u.established?`<span>· Est. <b>${u.established}</b></span>`:''}
-            <span id="heroRating" class="hero-rating"></span>
-          </div>
-          <div class="hero-badges">
-            <span class="green">${sectorLabel}</span>
-            ${cleanTags.map(t=>`<span>${esc(t)}</span>`).join('')}
-          </div>
         </div>
+      </div>
+      <h1 class="hero-name">${esc(u.full_name||u.name)}</h1>
+      <div class="hero-meta">
+        <span>📍 <b>${esc(u.city||'')}</b></span>
+        ${u.established?`<span>· Est. <b>${u.established}</b></span>`:''}
+        <span id="heroRating" class="hero-rating"></span>
+      </div>
+      <div class="hero-badges">
+        <span class="green">${sectorLabel}</span>
+        ${cleanTags.map(t=>`<span>${esc(t)}</span>`).join('')}
       </div>
     </div>
   </div>
