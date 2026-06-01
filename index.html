@@ -434,6 +434,7 @@
     cursor:pointer;
     position:relative;
     overflow:hidden;
+    display:flex; flex-direction:column;       /* equal heights when grid stretches */
   }
   .uni-card::before {
     content:''; position:absolute; top:0; left:0; right:0; height:4px;
@@ -485,10 +486,17 @@
   .uni-info {
     display:grid; grid-template-columns:1fr 1fr; gap:10px;
     padding-top:16px; border-top:1px solid var(--gray-200);
+    margin-top:auto;                          /* push info+footer to the bottom */
   }
-  .info-item { }
+  .info-item { min-width:0; }
   .info-key { font-size:0.72rem; color:var(--gray-400); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
-  .info-val { font-size:0.92rem; font-weight:700; color:var(--navy); margin-top:2px; }
+  .info-val {
+    font-size:0.92rem; font-weight:700; color:var(--navy); margin-top:2px;
+    /* Clamp to 2 lines so cards stay even when uni has long merit/entry text */
+    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+    overflow:hidden; line-height:1.35; min-height:2.6em;
+    word-break:break-word;
+  }
   .info-val.green { color:var(--green-dark); }
   .uni-card-footer {
     display:flex; gap:8px; margin-top:16px;
