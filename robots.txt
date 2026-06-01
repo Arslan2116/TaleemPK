@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+
+Sitemap: https://eclectic-bonbon-f7478f.netlify.app/sitemap.xml

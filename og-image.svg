@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0A1628"/>
+      <stop offset="60%" stop-color="#112240"/>
+      <stop offset="100%" stop-color="#143864"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.2" cy="0.3" r="0.5">
+      <stop offset="0%" stop-color="#00C853" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#00C853" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <!-- decorative dots -->
+  <g fill="#00C853" opacity="0.15">
+    <circle cx="1050" cy="100" r="3"/><circle cx="1100" cy="180" r="4"/><circle cx="980" cy="60" r="2"/>
+    <circle cx="1130" cy="520" r="3"/><circle cx="1050" cy="560" r="4"/><circle cx="950" cy="540" r="2"/>
+  </g>
+  <!-- Logo mark (rounded square + T) -->
+  <g transform="translate(100,170)">
+    <rect width="120" height="120" rx="26" fill="#fff"/>
+    <text x="60" y="92" text-anchor="middle" font-family="Sora, sans-serif" font-weight="800" font-size="92" fill="#0A1628">T</text>
+  </g>
+  <!-- Brand wordmark -->
+  <g transform="translate(260,240)" font-family="Sora, sans-serif" font-weight="800">
+    <text x="0" y="0" font-size="64" fill="#fff">Taleem<tspan fill="#00C853">PK</tspan></text>
+    <text x="0" y="42" font-size="22" font-weight="600" fill="rgba(255,255,255,0.65)">Pakistan's #1 University Comparison Platform</text>
+  </g>
+  <!-- Hero headline -->
+  <g transform="translate(100,400)" font-family="Sora, sans-serif" fill="#fff">
+    <text font-size="56" font-weight="800">Compare 218 Universities</text>
+    <text y="68" font-size="56" font-weight="800">Fees · Merit · <tspan fill="#00C853">Programs</tspan></text>
+  </g>
+  <!-- Footer URL -->
+  <text x="100" y="585" font-family="Sora, sans-serif" font-size="20" fill="rgba(255,255,255,0.5)">taleempk.com  •  Free • HEC-recognized data</text>
+</svg>

@@ -8,6 +8,12 @@
 <meta property="og:title" id="ogTitle" content="TaleemPK">
 <meta property="og:description" id="ogDesc" content="Compare universities in Pakistan.">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://eclectic-bonbon-f7478f.netlify.app/og-image.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://eclectic-bonbon-f7478f.netlify.app/og-image.svg">
+<link rel="canonical" id="canonicalUrl" href="">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="icon" type="image/png" href="logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -404,6 +410,27 @@ function setSEO(){
   $('metaDesc').setAttribute('content', d);
   $('ogTitle').setAttribute('content', `${u.full_name||u.name} | TaleemPK`);
   $('ogDesc').setAttribute('content', d);
+  const canon = location.origin + location.pathname + '?id=' + u.id;
+  const cl = $('canonicalUrl'); if(cl) cl.setAttribute('href', canon);
+  // EducationalOrganization JSON-LD for Google rich results
+  const sameAs = u.website ? ['https://www.' + u.website] : [];
+  const ld = {
+    "@context":"https://schema.org",
+    "@type":"CollegeOrUniversity",
+    "name": u.full_name || u.name,
+    "alternateName": u.name,
+    "url": canon,
+    "logo": u.logo_url || (u.website ? 'https://www.google.com/s2/favicons?domain='+u.website+'&sz=256' : undefined),
+    "description": u.description || d,
+    "address": u.city ? {"@type":"PostalAddress","addressLocality":u.city.split('/')[0].trim(),"addressRegion":u.province||'','addressCountry':'PK'} : undefined,
+    "foundingDate": u.established ? String(u.established) : undefined,
+    "sameAs": sameAs
+  };
+  // strip undefineds
+  Object.keys(ld).forEach(k=>{ if(ld[k]===undefined) delete ld[k]; });
+  let s = document.getElementById('ldjson-uni');
+  if(!s){ s = document.createElement('script'); s.id='ldjson-uni'; s.type='application/ld+json'; document.head.appendChild(s); }
+  s.textContent = JSON.stringify(ld);
 }
 
 function render(){
