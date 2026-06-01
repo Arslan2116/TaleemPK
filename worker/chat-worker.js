@@ -150,7 +150,7 @@ async function sb(path, env) {
 
 // ── Gemini call ──
 async function askGemini(messages, context, env) {
-  const model = 'gemini-2.0-flash';
+  const model = 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`;
 
   const ctxBlock = context.length

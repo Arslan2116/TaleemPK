@@ -4,9 +4,8 @@
    Worker (set CHAT_API below to your Worker URL).
    ─────────────────────────────────────────────────────────────── */
 (function(){
-  // ⚠️ AFTER you deploy the Worker, set this to its URL:
   const CHAT_API = (window.TPK_CONFIG && window.TPK_CONFIG.CHAT_API)
-    || 'https://REPLACE_ME.workers.dev/';   // ← paste your Worker URL here
+    || 'https://taleempk-chat.agondal121.workers.dev/';
 
   const STORAGE_KEY = 'tpk_chat_msgs';
   let messages = [];
