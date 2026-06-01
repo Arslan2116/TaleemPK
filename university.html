@@ -17,6 +17,7 @@
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="icon" type="image/png" href="logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script defer data-domain="eclectic-bonbon-f7478f.netlify.app" src="https://plausible.io/js/script.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -91,6 +92,11 @@
     display:inline-flex; align-items:center; gap:6px;
     background:var(--gold); color:var(--navy); padding:5px 14px;
     border-radius:20px; font-size:.78rem; font-weight:800; margin-bottom:14px;
+  }
+  .verified-tag{
+    display:inline-flex; align-items:center; gap:6px; margin-left:8px;
+    background:rgba(0,200,83,.18); color:#7CFFB0; padding:5px 12px;
+    border-radius:20px; font-size:.72rem; font-weight:700; margin-bottom:14px;
   }
   .hero-name{ font-size:clamp(1.7rem,3.5vw,2.7rem); font-weight:800; line-height:1.15; margin-bottom:8px; }
   .hero-meta{
@@ -171,6 +177,8 @@
   .prog-count{background:var(--gray-200);color:var(--gray-600);border-radius:20px;padding:1px 8px;font-size:.7rem;margin-left:4px;}
   .pills{display:flex;flex-wrap:wrap;gap:8px;}
   .pill{background:var(--green-light);border:1px solid rgba(0,200,83,.2);color:var(--green-dark);padding:5px 14px;border-radius:20px;font-size:.82rem;font-weight:600;}
+  .pill.more{background:var(--navy);color:#fff;border-color:var(--navy);cursor:pointer;font-family:'Sora',sans-serif;}
+  .pill.more:hover{background:var(--green);color:var(--navy);border-color:var(--green);}
   .hl{display:flex;flex-wrap:wrap;gap:8px;}
   .hl span{background:var(--navy);color:#fff;padding:5px 14px;border-radius:20px;font-size:.8rem;font-weight:600;}
   .desc{color:var(--gray-600);font-size:.95rem;line-height:1.8;}
@@ -194,6 +202,8 @@
   .qa-item{border:1px solid var(--gray-200);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
   .qa-q{font-weight:700;color:var(--navy);font-size:.92rem;}
   .qa-ans{background:var(--gray-100);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:.86rem;color:var(--gray-600);}
+  .admin-del{ background:#fde8ea; color:#b3263a; border:1px solid #f3b8c0; border-radius:6px; padding:2px 9px; font-size:.7rem; font-weight:700; cursor:pointer; margin-left:6px; }
+  .admin-del:hover{ background:#f3b8c0; }
   /* Auth modal */
   .ov{display:none;position:fixed;inset:0;z-index:1300;background:rgba(10,22,40,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
   .ov.show{display:flex;}
@@ -203,6 +213,12 @@
   .auth label{display:block;font-size:.74rem;font-weight:700;color:var(--gray-600);text-transform:uppercase;margin:12px 0 5px;}
   .amsg{font-size:.84rem;margin-top:10px;padding:9px 12px;border-radius:8px;display:none;}
   .amsg.err{display:block;background:#fde8ea;color:#b3263a;} .amsg.ok{display:block;background:var(--green-light);color:var(--green-dark);}
+  /* Mobile sticky action bar */
+  .mobile-sticky{ position:fixed; bottom:0; left:0; right:0; z-index:90;
+    background:#fff; border-top:1px solid var(--gray-200); padding:10px 14px;
+    display:flex; gap:8px; box-shadow:0 -8px 24px rgba(0,0,0,.10); }
+  .mobile-sticky .btn{ padding:11px 14px; font-size:.86rem; text-align:center; white-space:nowrap; }
+  @media(max-width:780px){ #mobileSticky.show{ display:flex !important; } body.has-sticky{ padding-bottom:64px; } }
   footer{background:var(--navy);color:rgba(255,255,255,.55);text-align:center;padding:24px;font-size:.82rem;}
   footer a{color:var(--green);text-decoration:none;}
 </style>
@@ -222,6 +238,12 @@
 </nav>
 
 <div id="content"><div class="loading">Loading university…</div></div>
+
+<!-- Mobile sticky action bar -->
+<div id="mobileSticky" class="mobile-sticky" style="display:none;">
+  <a id="msVisit" class="btn" href="#" target="_blank" rel="noopener" style="flex:1;">🌐 Visit Site</a>
+  <button class="btn navyb" onclick="shareUni()" style="flex:1;">🔗 Share</button>
+</div>
 
 <footer>© <span id="yr"></span> TaleemPK · <a href="index.html">Compare Universities in Pakistan</a></footer>
 
@@ -268,6 +290,10 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const sb = supabase.createClient(SB_URL, SB_KEY);
 const $ = id => document.getElementById(id);
 let UNI=null, currentUser=null;
+const ADMIN_EMAIL='agondal121@gmail.com';
+function isAdmin(){ return currentUser && currentUser.email === ADMIN_EMAIL; }
+async function adminDeleteReview(id){ if(!isAdmin()) return; if(!confirm('Delete this review?')) return; await sb.from('reviews').delete().eq('id',id); loadReviews(); }
+async function adminDeleteQuestion(id){ if(!isAdmin()) return; if(!confirm('Delete this question and its answers?')) return; await sb.from('questions').delete().eq('id',id); loadQA(); }
 document.getElementById('yr').textContent = new Date().getFullYear();
 
 function getId(){
@@ -281,8 +307,23 @@ function progGroup(p){ const s=(p||'').trim(); if(/^phd\b/i.test(s))return 'phd'
 function groupedPrograms(programs){
   if(!programs||!programs.length) return '<span class="muted">Program list coming soon.</span>';
   const g={ug:[],grad:[],phd:[]}; programs.forEach(p=>g[progGroup(p)].push(p));
-  const sec=(t,a)=>a.length?`<div class="prog-group"><div class="prog-group-title">${t}<span class="prog-count">${a.length}</span></div><div class="pills">${a.map(p=>`<span class="pill">${esc(p)}</span>`).join('')}</div></div>`:'';
-  return sec('Undergraduate',g.ug)+sec('Graduate (MS / MBA)',g.grad)+sec('PhD',g.phd);
+  const PREVIEW = 8;
+  const sec=(t,a,key)=>{
+    if(!a.length) return '';
+    const overflow = a.length > PREVIEW;
+    const visible = overflow ? a.slice(0,PREVIEW) : a;
+    return `<div class="prog-group">
+      <div class="prog-group-title">${t}<span class="prog-count">${a.length}</span></div>
+      <div class="pills" id="pg-${key}">${visible.map(p=>`<span class="pill">${esc(p)}</span>`).join('')}
+        ${overflow ? `<button class="pill more" onclick="expandProgs('${key}',${JSON.stringify(a).replace(/"/g,'&quot;')})">+ ${a.length-PREVIEW} more</button>` : ''}
+      </div>
+    </div>`;
+  };
+  return sec('Undergraduate',g.ug,'ug')+sec('Graduate (MS / MBA)',g.grad,'grad')+sec('PhD',g.phd,'phd');
+}
+function expandProgs(key, list){
+  const el = document.getElementById('pg-'+key); if(!el) return;
+  el.innerHTML = list.map(p=>`<span class="pill">${esc(p)}</span>`).join('');
 }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -363,6 +404,13 @@ async function load(){
   setTimeout(drawMeritChart, 100);
   loadReviews(); loadQA();
   loadSimilar();
+  // Mobile sticky action bar
+  if(window.matchMedia('(max-width:780px)').matches){
+    const ms = document.getElementById('mobileSticky');
+    const visit = document.getElementById('msVisit');
+    if(visit && UNI.website){ visit.href = 'https://www.'+UNI.website; } else if(visit){ visit.style.display='none'; }
+    if(ms){ ms.classList.add('show'); document.body.classList.add('has-sticky'); }
+  }
   preloadUnis().then(()=>{
     const ns=document.getElementById('navSearch');
     if(ns){ ns.addEventListener('input', navSearchInput);
@@ -452,6 +500,7 @@ function render(){
         <div class="hero-logo">${logo}</div>
         <div class="hero-text">
           ${u.rank?`<div class="hero-rank-tag">🏆 Rank #${u.rank} in Pakistan</div>`:''}
+          ${u.fee_year?`<div class="verified-tag">✓ Verified data · ${esc(u.fee_year)}</div>`:''}
           <h1 class="hero-name">${esc(u.full_name||u.name)}</h1>
           <div class="hero-meta">
             <span>📍 <b>${esc(u.city||'')}</b></span>
@@ -552,7 +601,7 @@ async function loadReviews(){
   $('reviews').innerHTML = `
     ${rv.length?`<div class="avg"><span class="rv-stars" style="font-size:1.3rem">${stars(avg)}</span><span class="avg-num">${avg.toFixed(1)}</span><span class="muted">/ 5 · ${rv.length} review${rv.length!==1?'s':''}</span></div>`:''}
     ${form}
-    ${rv.length?rv.map(r=>`<div class="rv"><div class="rv-top"><span class="rv-stars">${stars(r.rating)}</span> · ${esc(r.category||'General')} · 👤 ${esc(r.author||'Student')}</div><div class="rv-text">${esc(r.body)}</div></div>`).join(''):'<p class="muted">No reviews yet — be the first!</p>'}`;
+    ${rv.length?rv.map(r=>`<div class="rv"><div class="rv-top"><span class="rv-stars">${stars(r.rating)}</span> · ${esc(r.category||'General')} · 👤 ${esc(r.author||'Student')}${isAdmin()?` <button class="admin-del" onclick="adminDeleteReview(${r.id})">Delete</button>`:''}</div><div class="rv-text">${esc(r.body)}</div></div>`).join(''):'<p class="muted">No reviews yet — be the first!</p>'}`;
 }
 function pickStar(n){ _star=n; document.querySelectorAll('#starPick span').forEach((s,i)=>s.classList.toggle('on',i<n)); }
 async function postReview(){
@@ -571,7 +620,7 @@ async function loadQA(){
     ? `<div style="display:flex;gap:8px;margin-bottom:14px;"><input id="qText" placeholder="Ask a question…"><button class="btn" onclick="postQ()">Ask</button></div>`
     : `<p class="muted" style="margin-bottom:12px;">👉 <a href="#" onclick="openAuth();return false" style="color:var(--green-dark);font-weight:700;">Log in</a> to ask a question.</p>`;
   $('qa').innerHTML = ask + (qs.length?qs.map(q=>`
-    <div class="qa-item"><div class="qa-q">Q: ${esc(q.question)}</div>
+    <div class="qa-item"><div class="qa-q">Q: ${esc(q.question)}${isAdmin()?` <button class="admin-del" onclick="adminDeleteQuestion(${q.id})">Delete</button>`:''}</div>
       <div class="muted" style="font-size:.76rem;">👤 ${esc(q.author||'Student')}</div>
       ${(q.answers||[]).map(a=>`<div class="qa-ans">${esc(a.body)} <span class="muted">— ${esc(a.author||'Student')}</span></div>`).join('')}
       ${currentUser?`<div style="display:flex;gap:8px;margin-top:8px;"><input id="ans-${q.id}" placeholder="Write an answer…"><button class="btn" onclick="postA(${q.id})">Answer</button></div>`:''}
@@ -612,7 +661,7 @@ async function submitAuth(){
   if(!email||!pass){ aFlash('Enter email and password.',false); return; }
   if(_mode==='signup'){
     const { error } = await sb.auth.signUp({ email, password:pass, options:{ data:{ name:$('aName').value.trim() } } });
-    if(error){ aFlash(error.message,false); return; } aFlash('✅ Account created! You can log in now.',true); setTimeout(()=>aTab('login'),1200);
+    if(error){ aFlash(error.message,false); return; } aFlash('✅ Account created! Check your inbox (and spam) for a confirmation email — click the link, then come back here to log in.',true); setTimeout(()=>aTab('login'),3500);
   } else {
     const { data, error } = await sb.auth.signInWithPassword({ email, password:pass });
     if(error){ aFlash(error.message,false); return; } currentUser=data.user; refreshAuth(); closeAuth(); loadReviews(); loadQA();

@@ -61,9 +61,12 @@
 }
 </script>
 
-<!-- ═══ GOOGLE ANALYTICS ═══ -->
-<!-- Replace G-XXXXXXXXXX with your real GA4 Measurement ID -->
-<!-- Get it from: analytics.google.com → Admin → Data Streams -->
+<!-- ═══ ANALYTICS — privacy-friendly Plausible (no cookie banner required) ═══ -->
+<!-- Replace data-domain with your real domain when you connect taleempk.com -->
+<!-- Sign up free at https://plausible.io and add this site, OR comment this out and use GA4 below -->
+<script defer data-domain="eclectic-bonbon-f7478f.netlify.app" src="https://plausible.io/js/script.js"></script>
+
+<!-- Alternative: Google Analytics 4 (uncomment and paste your G- ID) -->
 <!--
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
@@ -5811,8 +5814,8 @@ async function submitAuth(){
     const name=(document.getElementById('authName').value||'').trim();
     const { error } = await sbClient.auth.signUp({ email, password, options:{ data:{ name } } });
     if(error){ authFlash(error.message, false); return; }
-    authFlash('✅ Account created! You can now log in.', true);
-    setTimeout(()=>switchAuthTab('login'), 1200);
+    authFlash('✅ Account created! Please check your inbox (and spam folder) for a confirmation email — click the link to activate your account, then come back here and log in.', true);
+    setTimeout(()=>switchAuthTab('login'), 3500);
   } else {
     const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
     if(error){ authFlash(error.message, false); return; }
