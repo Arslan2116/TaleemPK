@@ -400,6 +400,13 @@
   .city-filter[data-active="1"] {
     border-color:var(--green); background:var(--green); color:var(--navy);
   }
+  .clear-filters{
+    background:transparent; border:2px dashed var(--gray-200); color:var(--gray-600);
+    padding:8px 16px; border-radius:40px; font-family:'Sora',sans-serif;
+    font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.2s;
+  }
+  .clear-filters:hover{ border-color:var(--red); color:var(--red); }
+  .clear-filters.show{ background:#fff5f5; border-color:var(--red); color:var(--red); border-style:solid; }
   /* Mobile: dropdowns full-width in a clean 2-column grid for even alignment */
   @media(max-width:620px){
     .filters { gap:8px; }
@@ -444,6 +451,24 @@
   .uni-card:hover { border-color:var(--green); box-shadow:var(--shadow-md); transform:translateY(-4px); }
   .uni-card:hover::before { transform:scaleX(1); }
   .uni-card.selected { border-color:var(--green); background:var(--green-light); box-shadow:var(--shadow-md); }
+  /* Skeleton loader */
+  .skel-card{ background:#fff; border:2px solid var(--gray-200); border-radius:var(--radius); padding:20px; min-height:340px; }
+  .skel{ background:linear-gradient(90deg,#eef0f3 0%,#f7f8fa 50%,#eef0f3 100%); background-size:200% 100%; border-radius:8px; animation:skel-shine 1.4s ease-in-out infinite; }
+  @keyframes skel-shine{ 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+  .skel-line{ height:14px; margin:8px 0; }
+  .skel-circle{ width:46px; height:46px; border-radius:10px; }
+  .grid-error{ padding:50px 20px; text-align:center; color:var(--gray-600); grid-column:1/-1; }
+  .grid-error h3{ font-size:1.1rem; color:var(--navy); margin-bottom:8px; }
+  .grid-error button{ margin-top:14px; background:var(--green); color:var(--navy); border:none; padding:9px 22px; border-radius:9px; font-weight:700; cursor:pointer; font-family:'Sora',sans-serif; }
+  /* Recently viewed strip */
+  .recent-strip{ margin:0 5% 14px; padding:14px 18px; background:#fff; border:1px solid var(--gray-200); border-radius:12px; }
+  .recent-strip h4{ font-size:0.78rem; text-transform:uppercase; letter-spacing:0.5px; color:var(--gray-600); font-weight:700; margin-bottom:10px; }
+  .recent-strip .rec-row{ display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+  .rec-chip{ display:inline-flex; align-items:center; gap:8px; background:var(--gray-100); border:1px solid var(--gray-200); border-radius:30px; padding:6px 14px 6px 8px; cursor:pointer; flex-shrink:0; transition:all 0.2s; }
+  .rec-chip:hover{ border-color:var(--green); background:#fff; }
+  .rec-chip img{ width:24px; height:24px; border-radius:50%; object-fit:contain; background:#fff; }
+  .rec-chip-name{ font-size:0.82rem; font-weight:700; color:var(--navy); white-space:nowrap; }
+  .rec-clear{ background:none; border:none; color:var(--gray-400); cursor:pointer; font-size:0.78rem; margin-left:6px; }
   .uni-card-top {
     display:flex; align-items:flex-start; justify-content:space-between;
     margin-bottom:16px;
@@ -1086,6 +1111,8 @@
     display: flex; align-items: center; justify-content: center;
     gap: 8px; padding: 32px 5% 16px; flex-wrap: wrap;
   }
+  .page-btn.loadmore { min-width:200px; padding:0 28px; height:44px; background:var(--navy); color:#fff; border-color:var(--navy); font-weight:800; }
+  .page-btn.loadmore:hover{ background:var(--green); color:var(--navy); border-color:var(--green); }
   .page-btn {
     min-width: 40px; height: 40px; padding: 0 12px;
     border-radius: 10px; border: 2px solid var(--gray-200);
@@ -1812,6 +1839,7 @@
       <option value="merit-desc">Merit: High → Low</option>
       <option value="name">Name: A → Z</option>
     </select>
+    <button class="clear-filters" id="clearFiltersBtn" onclick="clearAllFilters()" title="Reset all filters">✕ Clear</button>
   </div>
 </div>
 <!-- ADMISSION PREDICTOR BANNER -->
@@ -1931,6 +1959,7 @@
 <!-- MAP CONTAINER -->
 <div id="mapContainer"></div>
 
+<div class="recent-strip" id="recentStrip" style="display:none;"></div>
 <div class="results-count" id="resultsCount">Showing <span>218</span> universities</div>
 
 <!-- UNI GRID -->
@@ -5097,8 +5126,9 @@ function renderCards(unis) {
   const total = unis.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   if(currentPage > totalPages) currentPage = totalPages;
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const pageUnis = unis.slice(start, start + PAGE_SIZE);
+  // "Load More" model: render cumulative 1..currentPage*PAGE_SIZE
+  const end = currentPage * PAGE_SIZE;
+  const pageUnis = unis.slice(0, end);
 
   const grid = document.getElementById('uniGrid');
   const count = document.getElementById('resultsCount');
@@ -5156,35 +5186,23 @@ function renderCards(unis) {
 }
 
 function renderPagination(totalPages) {
+  // "Load More" button replaces page-numbers pagination
   const pg = document.getElementById('pagination');
-  if(totalPages <= 1){ pg.innerHTML=''; return; }
-
-  let html = '';
-  // Prev button
-  html += `<button class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹ Prev</button>`;
-
-  // Page numbers with ellipsis
-  const pages = [];
-  if(totalPages <= 7) {
-    for(let i=1;i<=totalPages;i++) pages.push(i);
-  } else {
-    pages.push(1);
-    if(currentPage > 3) pages.push('…');
-    for(let i=Math.max(2,currentPage-1); i<=Math.min(totalPages-1,currentPage+1); i++) pages.push(i);
-    if(currentPage < totalPages-2) pages.push('…');
-    pages.push(totalPages);
+  if(!pg) return;
+  const shown = Math.min(currentPage*PAGE_SIZE, filteredCache.length);
+  const total = filteredCache.length;
+  if(shown >= total){
+    pg.innerHTML = total ? `<span class="page-info">Showing all ${total} universities</span>` : '';
+    return;
   }
-
-  pages.forEach(p => {
-    if(p==='…') html += `<span class="page-ellipsis">…</span>`;
-    else html += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goToPage(${p})">${p}</button>`;
-  });
-
-  // Next button
-  html += `<button class="page-btn" onclick="goToPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>Next ›</button>`;
-  html += `<span class="page-info">Page ${currentPage} of ${totalPages}</span>`;
-
-  pg.innerHTML = html;
+  const remaining = total - shown;
+  pg.innerHTML = `
+    <button class="page-btn loadmore" onclick="loadMore()">Load ${Math.min(PAGE_SIZE, remaining)} More</button>
+    <span class="page-info">Showing ${shown} of ${total}</span>`;
+}
+function loadMore(){
+  currentPage++;
+  renderCards(filteredCache);
 }
 
 function goToPage(n) {
@@ -5427,6 +5445,7 @@ function applyFilters() {
     });
   }
   renderCards(filtered);
+  if(typeof updateClearBtn==='function') updateClearBtn();
 }
 
 function filterByScholarship(value){
@@ -5460,6 +5479,27 @@ function populateProgramFilter(){
   if(!sel) return;
   sel.innerHTML = '<option value="">All Programs</option>' +
     PROGRAM_FILTERS.map(p=>`<option value="${p.label}">${p.label}</option>`).join('');
+}
+
+function clearAllFilters(){
+  closeOtherTools();
+  currentFilter='all'; currentCity=''; currentProgram=''; currentScholarship=''; currentSort='default'; searchQuery='';
+  const heroSearch=document.getElementById('heroSearch'); if(heroSearch) heroSearch.value='';
+  ['cityFilter','programFilter','scholarshipFilter','sortFilter'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(sel){ sel.value = (id==='sortFilter')?'default':''; sel.setAttribute('data-active','0'); }
+  });
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  const firstBtn=document.querySelector('.filter-btn'); if(firstBtn) firstBtn.classList.add('active');
+  currentPage=1;
+  applyFilters();
+  updateClearBtn();
+  hideSuggestions();
+}
+function updateClearBtn(){
+  const active = currentFilter!=='all' || currentCity || currentProgram || currentScholarship || currentSort!=='default' || searchQuery;
+  const btn=document.getElementById('clearFiltersBtn');
+  if(btn) btn.classList.toggle('show', !!active);
 }
 
 function filterByCity(value){
@@ -5542,7 +5582,14 @@ function groupedProgramsHTML(programs){
 }
 
 function openDetail(id) {
-  // Canonical detail view is now the dedicated university page.
+  // Track recently viewed (kept locally, max 8 entries, deduped)
+  try{
+    const k='tpk_recent_v1';
+    let list = JSON.parse(localStorage.getItem(k)||'[]');
+    list = [id, ...list.filter(x=>x!==id)].slice(0,8);
+    localStorage.setItem(k, JSON.stringify(list));
+  }catch(e){}
+  // Canonical detail view is the dedicated university page.
   window.location.href = 'university.html?id=' + id;
   return;
   /* ---- legacy modal (kept for reference, no longer used) ---- */
@@ -5781,7 +5828,56 @@ function mapInstitution(row){
   };
 }
 
+function renderSkeletons(n){
+  const grid = document.getElementById('uniGrid'); if(!grid) return;
+  let html=''; for(let i=0;i<n;i++) html += `
+    <div class="skel-card">
+      <div style="display:flex;justify-content:space-between;margin-bottom:14px;">
+        <div class="skel skel-circle"></div>
+        <div class="skel" style="width:50px;height:18px;border-radius:20px;"></div>
+      </div>
+      <div class="skel skel-line" style="width:60%;height:18px;"></div>
+      <div class="skel skel-line" style="width:40%;"></div>
+      <div style="display:flex;gap:6px;margin:14px 0;">
+        <div class="skel" style="width:60px;height:22px;border-radius:20px;"></div>
+        <div class="skel" style="width:70px;height:22px;border-radius:20px;"></div>
+      </div>
+      <div class="skel skel-line"></div>
+      <div class="skel skel-line" style="width:80%;"></div>
+      <div style="display:flex;gap:8px;margin-top:16px;">
+        <div class="skel" style="flex:1;height:36px;"></div>
+        <div class="skel" style="flex:1;height:36px;"></div>
+      </div>
+    </div>`;
+  grid.innerHTML = html;
+}
+
+function renderRecentlyViewed(){
+  const el = document.getElementById('recentStrip'); if(!el) return;
+  let ids=[]; try{ ids = JSON.parse(localStorage.getItem('tpk_recent_v1')||'[]'); }catch(e){}
+  const items = ids.map(id=>UNIVERSITIES.find(u=>u.id===id)).filter(Boolean).slice(0,8);
+  if(!items.length){ el.style.display='none'; return; }
+  el.style.display='block';
+  el.innerHTML = `<h4>🕘 Recently Viewed <button class="rec-clear" onclick="clearRecent()">Clear</button></h4>
+    <div class="rec-row">${items.map(u=>{
+      const ic = u.logoUrl ? `<img src="${u.logoUrl}" alt="">` : (u.website? `<img src="https://www.google.com/s2/favicons?domain=${u.website}&sz=64" alt="">` : `<span>${u.icon||'🏛️'}</span>`);
+      return `<div class="rec-chip" onclick="openDetail(${u.id})">${ic}<span class="rec-chip-name">${u.name}</span></div>`;
+    }).join('')}</div>`;
+}
+function clearRecent(){ try{ localStorage.removeItem('tpk_recent_v1'); }catch(e){} renderRecentlyViewed(); }
+
+function renderGridError(msg){
+  const grid = document.getElementById('uniGrid'); if(!grid) return;
+  grid.innerHTML = `<div class="grid-error">
+    <div style="font-size:2.4rem;margin-bottom:10px;">⚠️</div>
+    <h3>Could not load universities</h3>
+    <p>${msg||'Please check your connection and try again.'}</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>`;
+}
+
 async function loadInstitutions(){
+  renderSkeletons(8);   // show shimmer while fetching
   try{
     const r = await fetch(SUPABASE.url + '/rest/v1/institutions?select=*,fee_details(label,value,sort_order)&order=id.asc', {
       headers:{ apikey: SUPABASE.key, Authorization: 'Bearer ' + SUPABASE.key }
@@ -5796,6 +5892,7 @@ async function loadInstitutions(){
     return true;
   }catch(e){
     console.warn('⚠️ Supabase load failed — using built-in data. (' + e.message + ')');
+    if(!UNIVERSITIES.length){ renderGridError(e.message); return false; }
     return false;
   }
 }
@@ -5809,6 +5906,7 @@ async function loadInstitutions(){
   populateProgramFilter();
   renderNews();
   applyFilters();
+  renderRecentlyViewed();
   // Deep link: open a university directly if URL has #uni-<id>
   const m = (location.hash||'').match(/^#uni-(\d+)/);
   if(m){ const uid=parseInt(m[1]); if(UNIVERSITIES.some(u=>u.id===uid)) setTimeout(()=>openDetail(uid),200); }

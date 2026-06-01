@@ -29,6 +29,17 @@
   .nav-logo{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:1.25rem;text-decoration:none;white-space:nowrap;flex-shrink:0;}
   .nav-logo span{color:var(--green);}
   .nav-logo img{height:38px;width:auto;}
+  .nav-search-wrap{flex:1;max-width:420px;position:relative;}
+  .nav-search-wrap input{width:100%;padding:9px 14px;border-radius:9px;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-family:'Sora',sans-serif;font-size:.88rem;outline:none;}
+  .nav-search-wrap input::placeholder{color:rgba(255,255,255,.55);}
+  .nav-search-wrap input:focus{background:#fff;color:var(--navy);}
+  .nav-search-wrap input:focus::placeholder{color:var(--gray-400);}
+  .nav-sug{display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,.25);max-height:320px;overflow-y:auto;z-index:200;}
+  .nav-sug.show{display:block;}
+  .nav-sug a{display:flex;align-items:center;gap:10px;padding:9px 14px;color:var(--navy);text-decoration:none;border-bottom:1px solid var(--gray-100);font-size:.85rem;}
+  .nav-sug a:hover{background:var(--green-light);}
+  .nav-sug img{width:24px;height:24px;object-fit:contain;border-radius:5px;background:#fff;}
+  @media(max-width:780px){ .nav-search-wrap{display:none;} }
   .nav-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;}
   .nav-btn{background:transparent;border:1.5px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:8px 14px;
     font-family:'Sora',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;text-decoration:none;white-space:nowrap;}
@@ -133,6 +144,17 @@
   .merit-empty-icn{ font-size:1.6rem; }
   .merit-empty-txt{ flex:1; font-size:.88rem; color:var(--gray-600); }
   .merit-submit-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+  /* Similar universities */
+  .similar-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  @media(max-width:780px){.similar-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:430px){.similar-grid{grid-template-columns:1fr;}}
+  .sim-card{display:block;background:#fff;border:1.5px solid var(--gray-200);border-radius:14px;padding:16px;text-decoration:none;color:var(--navy);transition:all .2s;text-align:center;}
+  .sim-card:hover{border-color:var(--green);transform:translateY(-3px);box-shadow:var(--shadow-md);}
+  .sim-logo{width:50px;height:50px;border-radius:10px;background:var(--gray-100);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;overflow:hidden;}
+  .sim-logo img{width:100%;height:100%;object-fit:contain;padding:4px;}
+  .sim-name{font-weight:800;font-size:.92rem;margin-bottom:3px;}
+  .sim-meta{font-size:.74rem;color:var(--gray-400);margin-bottom:8px;}
+  .sim-badge{display:inline-block;font-size:.7rem;font-weight:700;background:var(--gray-100);color:var(--gray-600);padding:3px 10px;border-radius:20px;}
   .fee-row{display:flex;justify-content:space-between;gap:16px;padding:10px 14px;border-radius:8px;}
   .fee-row:nth-child(odd){background:var(--gray-100);}
   .fee-row-k{font-size:.85rem;color:var(--gray-600);}
@@ -183,8 +205,12 @@
 
 <nav>
   <a href="index.html" class="nav-logo">🎓 Taleem<span>PK</span></a>
+  <div class="nav-search-wrap">
+    <input type="search" id="navSearch" placeholder="🔍 Search university…" autocomplete="off" onkeydown="if(event.key==='Enter')doNavSearch()">
+    <div class="nav-sug" id="navSug"></div>
+  </div>
   <div class="nav-actions">
-    <a href="index.html" class="nav-btn" title="All Universities"><span class="full">← All Universities</span><span class="short">←</span></a>
+    <a href="index.html" class="nav-btn" title="All Universities"><span class="full">← All</span><span class="short">←</span></a>
     <button class="nav-btn solid" id="authBtn" onclick="onAuthBtn()">Login</button>
   </div>
 </nav>
@@ -254,6 +280,72 @@ function groupedPrograms(programs){
 }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+// ── Nav search across institutions ──
+let ALL_UNIS_CACHE = [];
+async function preloadUnis(){
+  if(ALL_UNIS_CACHE.length) return;
+  try{
+    const { data } = await sb.from('institutions').select('id,name,full_name,city,sector,website,logo_url,tags,type,programs').order('rank',{ascending:true});
+    ALL_UNIS_CACHE = data || [];
+  }catch(e){}
+}
+function doNavSearch(){
+  const q = document.getElementById('navSearch').value.trim();
+  if(!q) return;
+  // Try exact match first
+  const m = ALL_UNIS_CACHE.find(u => u.name.toLowerCase()===q.toLowerCase() || (u.full_name||'').toLowerCase()===q.toLowerCase());
+  if(m){ location.href = 'university.html?id=' + m.id; return; }
+  // Otherwise redirect to homepage with the query
+  location.href = 'index.html#search=' + encodeURIComponent(q);
+}
+function navSearchInput(){
+  const q = (document.getElementById('navSearch').value||'').trim().toLowerCase();
+  const box = document.getElementById('navSug');
+  if(q.length<1){ box.classList.remove('show'); return; }
+  const matches = ALL_UNIS_CACHE
+    .filter(u => u.name.toLowerCase().includes(q) || (u.full_name||'').toLowerCase().includes(q))
+    .slice(0,6);
+  if(!matches.length){ box.classList.remove('show'); return; }
+  box.innerHTML = matches.map(u=>{
+    const ic = u.logo_url ? `<img src="${u.logo_url}" alt="">` : (u.website? `<img src="https://www.google.com/s2/favicons?domain=${u.website}&sz=64" alt="">` : '🏛️');
+    return `<a href="university.html?id=${u.id}">${ic}<div><div style="font-weight:700">${u.name}</div><div style="font-size:.74rem;color:var(--gray-400)">📍 ${u.city||''}</div></div></a>`;
+  }).join('');
+  box.classList.add('show');
+}
+
+// ── Similar Universities (same type & overlapping tags/city) ──
+async function loadSimilar(){
+  if(!UNI) return;
+  await preloadUnis();
+  const tags = new Set((UNI.tags||[]).filter(t=>!['public','private','military','federal','punjab','sindh','kpk','balochistan','ajk','gilgitbaltistan'].includes(t)));
+  const scored = ALL_UNIS_CACHE
+    .filter(u => u.id !== UNI.id)
+    .map(u=>{
+      const utags = (u.tags||[]);
+      const overlap = utags.filter(t => tags.has(t)).length;
+      const sameCity = (u.city||'').split('/')[0].trim() === (UNI.city||'').split('/')[0].trim() ? 1 : 0;
+      const sameSector = u.sector === UNI.sector ? 1 : 0;
+      return { u, score: overlap*3 + sameCity*2 + sameSector };
+    })
+    .sort((a,b)=>b.score-a.score)
+    .filter(x=>x.score>0)
+    .slice(0,4);
+  const box = document.getElementById('similar'); if(!box) return;
+  if(!scored.length){ box.style.display='none'; return; }
+  box.innerHTML = `
+    <div class="sec-head"><div class="icn">🔍</div><h2>Similar Universities</h2></div>
+    <div class="similar-grid">${scored.map(({u})=>{
+      const ic = u.logo_url ? `<img src="${u.logo_url}" alt="">` : (u.website?`<img src="https://www.google.com/s2/favicons?domain=${u.website}&sz=128" alt="">`:`<span>${u.icon||'🏛️'}</span>`);
+      const sector = u.sector==='public'?'🏛️ Public':u.sector==='military'?'⚔️ Military':'🏢 Private';
+      return `<a class="sim-card" href="university.html?id=${u.id}">
+        <div class="sim-logo">${ic}</div>
+        <div class="sim-name">${u.name}</div>
+        <div class="sim-meta">📍 ${u.city?u.city.split('/')[0].trim():''}</div>
+        <div class="sim-badge">${sector}</div>
+      </a>`;
+    }).join('')}</div>`;
+}
+
 async function load(){
   const id = getId();
   if(!id){ $('content').innerHTML='<div class="loading">University not found. <a href="index.html">Go back</a></div>'; return; }
@@ -264,6 +356,13 @@ async function load(){
   setSEO();
   setTimeout(drawMeritChart, 100);
   loadReviews(); loadQA();
+  loadSimilar();
+  preloadUnis().then(()=>{
+    const ns=document.getElementById('navSearch');
+    if(ns){ ns.addEventListener('input', navSearchInput);
+      document.addEventListener('click', e=>{ const w=document.querySelector('.nav-search-wrap'); if(w && !w.contains(e.target)) document.getElementById('navSug').classList.remove('show'); });
+    }
+  });
 }
 
 function drawMeritChart(){
@@ -387,6 +486,8 @@ function render(){
         <div class="sec-head"><div class="icn">❓</div><h2>Questions &amp; Answers</h2></div>
         <div id="qa"><div class="muted">Loading…</div></div>
       </div>
+
+      <div class="sec" id="similar"></div>
     </div>
 
     <aside class="sidebar">
