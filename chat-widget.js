@@ -5,7 +5,7 @@
    ─────────────────────────────────────────────────────────────── */
 (function(){
   const CHAT_API = (window.TPK_CONFIG && window.TPK_CONFIG.CHAT_API)
-    || 'https://taleempk-chat.agondal121.workers.dev/';
+    || 'https://api.taleempk.pk/';
 
   const STORAGE_KEY = 'tpk_chat_msgs';
   let messages = [];
