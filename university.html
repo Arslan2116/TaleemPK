@@ -339,7 +339,13 @@ async function adminDeleteReview(id){ if(!isAdmin()) return; if(!confirm('Delete
 async function adminDeleteQuestion(id){ if(!isAdmin()) return; if(!confirm('Delete this question and its answers?')) return; await sb.from('questions').delete().eq('id',id); loadQA(); }
 document.getElementById('yr').textContent = new Date().getFullYear();
 
+function toSlug(name){
+  return (name||'').toLowerCase().replace(/[()]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
 function getId(){
+  // Slug-based URL: /university/nust
+  const pathMatch = location.pathname.match(/\/university\/([^/?#]+)/);
+  if(pathMatch) return pathMatch[1]; // returns slug string
   const p = new URLSearchParams(location.search);
   if(p.get('id')) return parseInt(p.get('id'));
   const m = (location.hash||'').match(/uni-(\d+)/); if(m) return parseInt(m[1]);
@@ -395,7 +401,7 @@ function doNavSearch(){
   if(!q) return;
   // Try exact match first
   const m = ALL_UNIS_CACHE.find(u => u.name.toLowerCase()===q.toLowerCase() || (u.full_name||'').toLowerCase()===q.toLowerCase());
-  if(m){ location.href = 'university.html?id=' + m.id; return; }
+  if(m){ location.href = '/university/' + toSlug(m.name); return; }
   // Otherwise redirect to homepage with the query
   location.href = 'index.html#search=' + encodeURIComponent(q);
 }
@@ -409,7 +415,7 @@ function navSearchInput(){
   if(!matches.length){ box.classList.remove('show'); return; }
   box.innerHTML = matches.map(u=>{
     const ic = u.logo_url ? `<img src="${u.logo_url}" alt="">` : (u.website? `<img src="https://www.google.com/s2/favicons?domain=${u.website}&sz=64" alt="">` : '🏛️');
-    return `<a href="university.html?id=${u.id}">${ic}<div><div style="font-weight:700">${u.name}</div><div style="font-size:.74rem;color:var(--gray-400)">📍 ${u.city||''}</div></div></a>`;
+    return `<a href="/university/${toSlug(u.name)}">${ic}<div><div style="font-weight:700">${u.name}</div><div style="font-size:.74rem;color:var(--gray-400)">📍 ${u.city||''}</div></div></a>`;
   }).join('');
   box.classList.add('show');
 }
@@ -438,7 +444,7 @@ async function loadSimilar(){
     <div class="similar-grid">${scored.map(({u})=>{
       const ic = u.logo_url ? `<img src="${u.logo_url}" alt="">` : (u.website?`<img src="https://www.google.com/s2/favicons?domain=${u.website}&sz=128" alt="">`:`<span>${u.icon||'🏛️'}</span>`);
       const sector = u.sector==='public'?'🏛️ Public':u.sector==='military'?'⚔️ Military':'🏢 Private';
-      return `<a class="sim-card" href="university.html?id=${u.id}">
+      return `<a class="sim-card" href="/university/${toSlug(u.name)}">
         <div class="sim-logo">${ic}</div>
         <div class="sim-name">${u.name}</div>
         <div class="sim-meta">📍 ${u.city?u.city.split('/')[0].trim():''}</div>
@@ -448,8 +454,15 @@ async function loadSimilar(){
 }
 
 async function load(){
-  const id = getId();
+  let id = getId();
   if(!id){ $('content').innerHTML='<div class="loading">University not found. <a href="index.html">Go back</a></div>'; return; }
+  // Slug-based lookup
+  if(typeof id === 'string' && isNaN(id)){
+    await preloadUnis();
+    const match = ALL_UNIS_CACHE.find(u => toSlug(u.name)===id || toSlug(u.full_name||'')===id);
+    if(!match){ $('content').innerHTML='<div class="loading">University not found. <a href="index.html">Go back</a></div>'; return; }
+    id = match.id;
+  }
   const { data, error } = await sb.from('institutions').select('*,fee_details(label,value,sort_order)').eq('id',id).single();
   if(error || !data){ $('content').innerHTML='<div class="loading">University not found. <a href="index.html">Go back</a></div>'; return; }
   UNI = data;
@@ -514,8 +527,11 @@ function setSEO(){
   $('metaDesc').setAttribute('content', d);
   $('ogTitle').setAttribute('content', `${u.full_name||u.name} | TaleemPK`);
   $('ogDesc').setAttribute('content', d);
-  const canon = location.origin + location.pathname + '?id=' + u.id;
+  const slug = toSlug(u.name);
+  const canon = `https://taleempk.pk/university/${slug}`;
   const cl = $('canonicalUrl'); if(cl) cl.setAttribute('href', canon);
+  // Update browser URL to canonical slug form (if coming from ?id= link)
+  if(!location.pathname.includes('/university/')) history.replaceState(null,'',`/university/${slug}`);
   // EducationalOrganization JSON-LD for Google rich results
   const sameAs = u.website ? ['https://www.' + u.website] : [];
   const ld = {

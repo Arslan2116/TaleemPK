@@ -4487,7 +4487,8 @@ function autoLinkUniversities(text){
       if(n.length < 4) return;
       const escaped = n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
       const re = new RegExp(`(?<!<[^>]*)(${escaped})(?![^<]*>)`, 'g');
-      result = result.replace(re, `<a href="university.html?id=${u.id}" style="color:var(--green);text-decoration:underline;font-weight:600">$1</a>`);
+      const _slug = (u.name||'').toLowerCase().replace(/[()]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+      result = result.replace(re, `<a href="/university/${_slug}" style="color:var(--green);text-decoration:underline;font-weight:600">$1</a>`);
     });
   });
   return result;
@@ -5660,7 +5661,8 @@ function openDetail(id) {
     localStorage.setItem(k, JSON.stringify(list));
   }catch(e){}
   // Canonical detail view is the dedicated university page.
-  window.location.href = 'university.html?id=' + id;
+  const _u = (window.INSTITUTIONS||[]).find(x=>x.id===id);
+  window.location.href = _u ? '/university/'+(_u.name||'').toLowerCase().replace(/[()]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') : 'university.html?id='+id;
   return;
   /* ---- legacy modal (kept for reference, no longer used) ---- */
   const u = UNIVERSITIES.find(u=>u.id===id);
