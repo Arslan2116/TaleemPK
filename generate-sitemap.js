@@ -38,11 +38,15 @@ async function generate() {
     { loc: 'https://taleempk.pk/', priority: '1.0', changefreq: 'weekly' },
   ];
 
-  const uniPages = unis.map(u => ({
-    loc: `https://taleempk.pk/university/${toSlug(u.name)}`,
-    priority: '0.9',
-    changefreq: 'weekly'
-  }));
+  // Deduplicate slugs (two universities may produce same slug)
+  const seenSlugs = new Set();
+  const uniPages = unis.reduce((acc, u) => {
+    let slug = toSlug(u.name);
+    if(seenSlugs.has(slug)) slug = slug + '-' + u.id;
+    seenSlugs.add(slug);
+    acc.push({ loc: `https://taleempk.pk/university/${slug}`, priority: '0.9', changefreq: 'weekly' });
+    return acc;
+  }, []);
 
   const allPages = [...staticPages, ...uniPages];
 
