@@ -4475,6 +4475,24 @@ function newsCardHTML(p){
       </div>
     </article>`;
 }
+// Auto-link university names in text to their detail pages
+function autoLinkUniversities(text){
+  if(!text || !window.INSTITUTIONS || !INSTITUTIONS.length) return text;
+  // Build sorted list (longer names first to avoid partial matches)
+  const unis = INSTITUTIONS.slice().sort((a,b)=>(b.name||'').length-(a.name||'').length);
+  let result = text;
+  unis.forEach(u=>{
+    const names = [u.full_name, u.name].filter(Boolean);
+    names.forEach(n=>{
+      if(n.length < 4) return;
+      const escaped = n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      const re = new RegExp(`(?<!<[^>]*)(${escaped})(?![^<]*>)`, 'g');
+      result = result.replace(re, `<a href="university.html?id=${u.id}" style="color:var(--green);text-decoration:underline;font-weight:600">$1</a>`);
+    });
+  });
+  return result;
+}
+
 function renderNews(){
   const grid = document.getElementById('newsGrid');
   if(!grid) return;
@@ -4537,7 +4555,7 @@ function renderScholarships(){
       ${s.coverage?`<div class="schol-row"><b>Coverage:</b> ${s.coverage}</div>`:''}
       ${s.eligibility?`<div class="schol-row"><b>Eligibility:</b> ${s.eligibility}</div>`:''}
       ${s.deadline?`<div class="schol-row"><b>Deadline:</b> ${s.deadline}</div>`:''}
-      ${s.description?`<div class="schol-desc">${s.description}</div>`:''}
+      ${s.description?`<div class="schol-desc">${autoLinkUniversities(s.description)}</div>`:''}
       ${s.apply_url?`<a class="schol-apply" href="${s.apply_url}" target="_blank" rel="noopener">Apply / Details →</a>`:''}
     </div>
   `).join('');
@@ -4569,7 +4587,7 @@ function openArticle(id){
     <span class="article-cat">${p.category||'Article'}</span>
     <h1>${p.title}</h1>
     <div class="article-meta">By ${p.author||'TaleemPK'} · ${fmtNewsDate(p.date)}</div>
-    <div class="article-content">${p.body||'<p>'+(p.excerpt||'')+'</p>'}</div>
+    <div class="article-content">${autoLinkUniversities(p.body||'<p>'+(p.excerpt||'')+'</p>')}</div>
   `;
   document.getElementById('articleOverlay').classList.add('show');
   document.body.style.overflow = 'hidden';
