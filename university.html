@@ -507,8 +507,10 @@ function submitMerit(){
 
 function setSEO(){
   const u=UNI;
-  document.title = `${u.full_name||u.name} — Fees, Merit & Programs | TaleemPK`;
-  const d = `${u.full_name||u.name} (${u.city||''}) — fees ${u.fee||''}, merit, ${ (u.programs||[]).length } programs. Compare on TaleemPK.`;
+  const city = u.city ? u.city.split('/')[0].trim() : '';
+  document.title = `${u.full_name||u.name}${city?' — '+city:''} — Fee Structure, Merit List 2025 | TaleemPK`;
+  const progCount = (u.programs||[]).length;
+  const d = `${u.full_name||u.name}${city?' ('+city+')':''} 2025 admissions: fee structure${u.fee?' ('+u.fee+')':''}, merit list, entry test${progCount?', '+progCount+'+ programs':''}. Compare Pakistan universities on TaleemPK.`;
   $('metaDesc').setAttribute('content', d);
   $('ogTitle').setAttribute('content', `${u.full_name||u.name} | TaleemPK`);
   $('ogDesc').setAttribute('content', d);
