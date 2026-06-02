@@ -92,10 +92,12 @@
     </div>
     <div class="tpk-chat-body" id="tpkBody"></div>
     <div class="tpk-suggest" id="tpkSuggest">
-      <button>Best engineering universities?</button>
-      <button>MBBS admission requirements?</button>
-      <button>Affordable BBA programs</button>
-      <button>NUST fees</button>
+      <button>I have 75% in FSc — best CS unis?</button>
+      <button>MDCAT prep plan</button>
+      <button>CS vs Software Engineering</button>
+      <button>Scholarships for MBBS</button>
+      <button>Career after BBA</button>
+      <button>NUST vs GIKI</button>
     </div>
     <div class="tpk-chat-input">
       <textarea id="tpkInput" placeholder="Ask anything about Pakistani universities…" rows="1"></textarea>
@@ -131,7 +133,7 @@
   function renderAll(){
     body.innerHTML = '';
     if(!messages.length){
-      body.innerHTML = `<div class="tpk-msg bot">Salam! 👋 I'm <b>TaleemPK Assistant</b>. Ask me about any of the 218 Pakistani universities — fees, merit, programs, admissions. <br><br>Try one of the suggestions below or type your own question.</div>`;
+      body.innerHTML = `<div class="tpk-msg bot">Salam! 👋 I'm <b>TaleemPK Assistant</b> — your education advisor for Pakistan.<br><br>I can help with:<br>🏫 University choice & fees<br>📝 Entry tests (ECAT, MDCAT, NET, NTS…)<br>🎓 Field & career advice<br>💰 Scholarships<br>📊 Comparisons & shortlists<br><br>Try a suggestion below or ask me anything.</div>`;
       return;
     }
     messages.forEach(m=>{
