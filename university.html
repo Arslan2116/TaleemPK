@@ -535,6 +535,42 @@ function setSEO(){
   let s = document.getElementById('ldjson-uni');
   if(!s){ s = document.createElement('script'); s.id='ldjson-uni'; s.type='application/ld+json'; document.head.appendChild(s); }
   s.textContent = JSON.stringify(ld);
+
+  // FAQPage JSON-LD for Google rich results
+  const faqs = [];
+  if(u.fee) faqs.push({
+    "@type":"Question",
+    "name":`What is the fee structure of ${u.full_name||u.name}?`,
+    "acceptedAnswer":{"@type":"Answer","text":`The fee at ${u.full_name||u.name} is approximately ${u.fee}${u.fee_note?' ('+u.fee_note+')':''}.`}
+  });
+  if(u.merit) faqs.push({
+    "@type":"Question",
+    "name":`What is the merit for admission at ${u.full_name||u.name}?`,
+    "acceptedAnswer":{"@type":"Answer","text":`The closing merit at ${u.full_name||u.name} is around ${u.merit}%. Check TaleemPK for latest merit trends.`}
+  });
+  if(u.scholarships) faqs.push({
+    "@type":"Question",
+    "name":`Does ${u.full_name||u.name} offer scholarships?`,
+    "acceptedAnswer":{"@type":"Answer","text":`Yes, ${u.full_name||u.name} offers scholarships. ${u.scholarships}`}
+  });
+  faqs.push({
+    "@type":"Question",
+    "name":`Does ${u.full_name||u.name} have hostel facilities?`,
+    "acceptedAnswer":{"@type":"Answer","text":u.hostel?`Yes, ${u.full_name||u.name} provides hostel facilities for students.`:`Hostel availability at ${u.full_name||u.name} — please check the official website for current information.`}
+  });
+  if((u.programs||[]).length){
+    faqs.push({
+      "@type":"Question",
+      "name":`What programs are offered at ${u.full_name||u.name}?`,
+      "acceptedAnswer":{"@type":"Answer","text":`${u.full_name||u.name} offers ${u.programs.length} programs including ${u.programs.slice(0,5).join(', ')}${u.programs.length>5?' and more':''}.`}
+    });
+  }
+  if(faqs.length){
+    const faqLd = {"@context":"https://schema.org","@type":"FAQPage","mainEntity":faqs};
+    let fs = document.getElementById('ldjson-faq');
+    if(!fs){ fs = document.createElement('script'); fs.id='ldjson-faq'; fs.type='application/ld+json'; document.head.appendChild(fs); }
+    fs.textContent = JSON.stringify(faqLd);
+  }
 }
 
 function render(){
