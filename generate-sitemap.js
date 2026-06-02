@@ -36,9 +36,6 @@ async function generate() {
   const today = new Date().toISOString().split('T')[0];
   const staticPages = [
     { loc: 'https://taleempk.pk/', priority: '1.0', changefreq: 'weekly' },
-    { loc: 'https://taleempk.pk/#scholarships', priority: '0.8', changefreq: 'weekly' },
-    { loc: 'https://taleempk.pk/#news', priority: '0.7', changefreq: 'weekly' },
-    { loc: 'https://taleempk.pk/#how', priority: '0.5', changefreq: 'monthly' },
   ];
 
   const uniPages = unis.map(u => ({
