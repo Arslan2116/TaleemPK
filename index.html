@@ -87,12 +87,16 @@
 <meta name="msapplication-TileColor" content="#0A1628">
 <meta name="apple-mobile-web-app-title" content="TaleemPK">
 
+<!-- Preconnect for faster font loading -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Font Awesome: load non-blocking -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
+<!-- Leaflet: load only when map is opened -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script defer src="config.js"></script>
 <script defer src="chat-widget.js"></script>
 <style>
@@ -4825,7 +4829,12 @@ function toggleMapView() {
 function initMap() {
   const container = document.getElementById('mapContainer');
   if(typeof L==='undefined'){
-    container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#9BA5B5;font-size:0.9rem;">🗺️ Map unavailable — check internet connection</div>';
+    // Lazy load Leaflet JS on first map open
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    s.onload = () => initMap();
+    s.onerror = () => { container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#9BA5B5;font-size:0.9rem;">🗺️ Map unavailable — check internet connection</div>'; };
+    document.head.appendChild(s);
     return;
   }
   _mapInstance = L.map('mapContainer',{zoomControl:true}).setView([30.3753,69.3451],6);
@@ -5216,7 +5225,7 @@ function renderCards(unis) {
     <div class="uni-card fade-in ${u.rank && u.rank<=3 ? 'is-top3':''} ${compareList.find(c=>c.id===u.id)?'selected':''}" id="card-${u.id}" style="position:relative">
       ${matchBadge}
       <div class="uni-card-top" style="${assessMode?'margin-top:28px':''}">
-        <div class="uni-icon">${u.website ? `<img src="${logoSrc(u)}" alt="${u.name}" onload="checkLogoSize(this,'${u.icon}')" onerror="handleLogoError(this,'${u.website}','${u.icon}')">` : u.icon}</div>
+        <div class="uni-icon">${u.website ? `<img src="${logoSrc(u)}" alt="${u.name}" loading="lazy" onload="checkLogoSize(this,'${u.icon}')" onerror="handleLogoError(this,'${u.website}','${u.icon}')">` : u.icon}</div>
         ${u.basic&&!DATA_UPDATES[u.id]?`<div class="uni-rank" style="background:rgba(0,200,83,0.12);color:var(--green);font-size:0.6rem;padding:3px 7px;">HEC ✓</div>`:
         u.rank?`<div class="uni-rank ${u.rank<=3?'top3':''}">${u.rank<=3?'🏆 ':''} #${u.rank}</div>`:''}
       </div>
@@ -5344,7 +5353,7 @@ function renderSuggestions(value){
   let html = '';
   unis.forEach(u => {
     const icon = u.website
-      ? `<img src="${logoSrc(u)}" alt="" onload="checkLogoSize(this,'${u.icon}')" onerror="handleLogoError(this,'${u.website}','${u.icon}')">`
+      ? `<img src="${logoSrc(u)}" alt="" loading="lazy" onload="checkLogoSize(this,'${u.icon}')" onerror="handleLogoError(this,'${u.website}','${u.icon}')">`
       : (u.icon||'🏛️');
     html += `<div class="sug-item" onmousedown="selectSuggestion('uni',${u.id})">
       <span class="sug-icon">${icon}</span>
