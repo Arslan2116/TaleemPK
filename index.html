@@ -4573,11 +4573,31 @@ function openArticle(id){
   `;
   document.getElementById('articleOverlay').classList.add('show');
   document.body.style.overflow = 'hidden';
+  // Update URL hash for shareability and crawlability
+  const slug = p.title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  history.replaceState(null,'','#blog-'+slug);
+  // Article JSON-LD
+  const artLd = {
+    "@context":"https://schema.org",
+    "@type":"Article",
+    "headline": p.title,
+    "description": p.excerpt || p.title,
+    "author":{"@type":"Organization","name": p.author||'TaleemPK'},
+    "publisher":{"@type":"Organization","name":"TaleemPK","url":"https://taleempk.pk"},
+    "datePublished": p.date || p.created_at,
+    "dateModified": p.updated_at || p.date || p.created_at,
+    "url": "https://taleempk.pk/#blog-"+slug,
+    "mainEntityOfPage":{"@type":"WebPage","@id":"https://taleempk.pk/#blog-"+slug}
+  };
+  let as = document.getElementById('ldjson-article');
+  if(!as){ as = document.createElement('script'); as.id='ldjson-article'; as.type='application/ld+json'; document.head.appendChild(as); }
+  as.textContent = JSON.stringify(artLd);
 }
 function closeArticle(e){
   if(!e || e.target.id==='articleOverlay' || e.target.classList.contains('article-close')){
     document.getElementById('articleOverlay').classList.remove('show');
     document.body.style.overflow = '';
+    history.replaceState(null,'',location.pathname);
   }
 }
 
