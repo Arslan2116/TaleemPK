@@ -4464,9 +4464,10 @@ function fmtNewsDate(d){
   try { return new Date(d+'T00:00:00').toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric'}); }
   catch(e){ return d; }
 }
+function blogSlug(title){ return (title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
 function newsCardHTML(p){
   return `
-    <article class="news-card" onclick="openArticle(${p.id})">
+    <a href="/blog/${blogSlug(p.title)}" class="news-card" style="display:block;text-decoration:none;color:inherit;">
       <div class="news-card-banner">${p.icon||'📰'}</div>
       <div class="news-card-body">
         <span class="news-cat">${p.category||'Article'}</span>
@@ -4477,7 +4478,7 @@ function newsCardHTML(p){
           <span class="news-read">Read More →</span>
         </div>
       </div>
-    </article>`;
+    </a>`;
 }
 // Auto-link university names in text to their detail pages
 function autoLinkUniversities(text){

@@ -34,8 +34,17 @@ async function generate() {
   console.log(`Found ${unis.length} universities`);
 
   const today = new Date().toISOString().split('T')[0];
+  // Blog posts
+  const blogPosts = [
+    { title: "Entry Test Preparation: A Smart Study Plan for ECAT & MDCAT" },
+    { title: "How to Calculate Your University Aggregate (Merit) in Pakistan" },
+    { title: "Top Scholarships for Pakistani University Students in 2026" },
+    { title: "Public vs Private Universities in Pakistan: Which Is Right for You?" }
+  ];
+
   const staticPages = [
     { loc: 'https://taleempk.pk/', priority: '1.0', changefreq: 'weekly' },
+    ...blogPosts.map(b => ({ loc: `https://taleempk.pk/blog/${toSlug(b.title)}`, priority: '0.8', changefreq: 'monthly' }))
   ];
 
   // Deduplicate slugs (two universities may produce same slug)
