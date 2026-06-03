@@ -98,9 +98,1653 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script defer src="config.js"></script>
-<script defer src="data.js"></script>
 <script defer src="chat-widget.js"></script>
-<link rel="stylesheet" href="styles.css">
+<style>
+  :root {
+    --green: #00C853;
+    --green-dark: #00A040;
+    --green-light: #E8FFF1;
+    --navy: #0A1628;
+    --navy-mid: #112240;
+    --white: #FFFFFF;
+    --gray-100: #F5F7FA;
+    --gray-200: #E8ECF2;
+    --gray-400: #9BA5B5;
+    --gray-600: #5A6478;
+    --gold: #FFB800;
+    --red: #FF4757;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 8px 32px rgba(0,0,0,0.12);
+    --shadow-lg: 0 24px 64px rgba(0,0,0,0.18);
+    --radius: 16px;
+    --radius-sm: 8px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--white);
+    color: var(--navy);
+    overflow-x: hidden;
+  }
+
+  /* ───── NAV ───── */
+  nav {
+    position: fixed; top:0; left:0; right:0; z-index:100;
+    background: rgba(10,22,40,0.96);
+    backdrop-filter: blur(12px);
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 0 5%;
+    height: 68px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .nav-logo {
+    display:flex; align-items:center; gap:10px;
+    font-size:1.35rem; font-weight:800; color:var(--white);
+    text-decoration:none;
+  }
+  .nav-logo span { color: var(--green); }
+  .nav-logo .logo-icon {
+    width:36px; height:36px; background:var(--green);
+    border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:1rem;
+  }
+  .nav-links { display:flex; gap:32px; list-style:none; align-items:center; }
+  .nav-links a {
+    color: rgba(255,255,255,0.7); text-decoration:none;
+    font-size:0.875rem; font-weight:500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color:var(--green); }
+
+  /* ── Dropdown ── */
+  .nav-dropdown { position:relative; }
+  .nav-dropdown-btn {
+    display:flex; align-items:center; gap:5px;
+    color:rgba(255,255,255,0.7); background:none; border:none;
+    font-family:'Sora',sans-serif; font-size:0.875rem; font-weight:500;
+    cursor:pointer; padding:0; transition:color 0.2s;
+  }
+  .nav-dropdown-btn:hover,
+  .nav-dropdown.open .nav-dropdown-btn { color:var(--green); }
+  .nav-dropdown-btn .chevron {
+    font-size:0.6rem; transition:transform 0.25s; display:inline-block;
+  }
+  .nav-dropdown.open .chevron { transform:rotate(180deg); }
+  .nav-dropdown-menu {
+    position:absolute; top:calc(100% + 14px); left:50%;
+    transform:translateX(-50%) translateY(-6px);
+    background:rgba(10,22,40,0.98); backdrop-filter:blur(16px);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:14px; padding:8px;
+    min-width:210px;
+    opacity:0; pointer-events:none;
+    transition:opacity 0.2s, transform 0.2s;
+    z-index:200;
+  }
+  .nav-dropdown.open .nav-dropdown-menu {
+    opacity:1; pointer-events:all;
+    transform:translateX(-50%) translateY(0);
+  }
+  .nav-dropdown-menu a,
+  .nav-dropdown-menu button {
+    display:flex; align-items:center; gap:10px;
+    width:100%; padding:10px 14px; border-radius:9px;
+    color:rgba(255,255,255,0.75); text-decoration:none;
+    font-family:'Sora',sans-serif; font-size:0.83rem; font-weight:500;
+    background:none; border:none; cursor:pointer;
+    transition:background 0.15s, color 0.15s; text-align:left;
+  }
+  .nav-dropdown-menu a:hover,
+  .nav-dropdown-menu button:hover {
+    background:rgba(0,200,83,0.1); color:var(--green);
+  }
+  .nav-dropdown-menu .ndm-icon {
+    width:28px; height:28px; border-radius:7px;
+    background:rgba(255,255,255,0.06);
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.9rem; flex-shrink:0;
+  }
+  .nav-dropdown-divider {
+    height:1px; background:rgba(255,255,255,0.07); margin:6px 8px;
+  }
+  .nav-cta {
+    background: var(--green); color: var(--navy);
+    padding: 8px 20px; border-radius: 8px;
+    font-weight:700; font-size:0.875rem;
+    text-decoration:none; transition: background 0.2s;
+    border:none; cursor:pointer; font-family:'Sora',sans-serif;
+    white-space:nowrap;
+  }
+  .nav-cta:hover { background: #00e060; }
+  .mobile-auth-item { display:none; }   /* visible only inside the mobile slide-down menu */
+
+  /* ───── HERO ───── */
+  .hero {
+    min-height: 100vh;
+    background: var(--navy);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    padding: 120px 5% 0;
+    position: relative;
+    overflow: hidden;
+  }
+  /* large glow */
+  .hero::before {
+    content:'';
+    position:absolute; top:-120px; left:50%; transform:translateX(-50%);
+    width:900px; height:900px;
+    background: radial-gradient(ellipse at center, rgba(0,200,83,0.14) 0%, transparent 68%);
+    pointer-events:none; z-index:0;
+  }
+  /* grid dots pattern */
+  .hero::after {
+    content:'';
+    position:absolute; inset:0;
+    background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events:none; z-index:0;
+  }
+  .hero > * { position:relative; z-index:1; }
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background: rgba(0,200,83,0.1); border: 1px solid rgba(0,200,83,0.3);
+    color: var(--green); padding:6px 18px; border-radius:40px;
+    font-size:0.8rem; font-weight:600; margin-bottom:28px;
+    animation: fadeInDown 0.6s ease both;
+    letter-spacing:0.3px;
+  }
+  .hero-badge::before { content:'🎓'; font-size:0.9rem; }
+  .hero h1 {
+    font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+    font-weight:800; color: var(--white); line-height:1.12;
+    margin-bottom:16px;
+    animation: fadeInUp 0.7s ease 0.1s both;
+  }
+  .hero h1 span { color: var(--green); }
+  .hero h1 .hero-dash { color: var(--white); }
+  @media(max-width:620px){ .hero h1 .hero-dash { display: none; } }
+  .hero-urdu {
+    display: none;
+    font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+    color: rgba(255,255,255,0.65);
+    margin-bottom:24px; direction:rtl;
+    animation: fadeInUp 0.7s ease 0.2s both;
+  }
+  .hero-sub {
+    color:rgba(255,255,255,0.55); font-size:1rem; max-width:540px;
+    line-height:1.75; margin-bottom:40px;
+    animation: fadeInUp 0.7s ease 0.3s both;
+  }
+  .hero-search-wrap {
+    position: relative; width: 100%; max-width: 600px; margin: 0 0 48px;
+    animation: fadeInUp 0.7s ease 0.4s both;
+    z-index: 20;   /* keep suggestions dropdown above hero chips & stats */
+  }
+  .hero-search {
+    display:flex; gap:0; width:100%;
+    background: var(--white); border-radius:14px;
+    padding: 6px 6px 6px 20px;
+    box-shadow: 0 20px 60px rgba(0,200,83,0.22), 0 4px 20px rgba(0,0,0,0.2);
+  }
+  .hero-search input {
+    flex:1; border:none; outline:none;
+    font-family:'Sora',sans-serif; font-size:0.95rem; color:var(--navy);
+    background:transparent;
+  }
+  .hero-search input::placeholder { color:var(--gray-400); }
+  .hero-search button {
+    background:var(--green); color:var(--navy); border:none;
+    padding:12px 26px; border-radius:10px; font-weight:700;
+    font-size:0.9rem; cursor:pointer; transition:all 0.2s; white-space:nowrap;
+  }
+  .hero-search button:hover { background:#00e060; transform:scale(1.03); }
+  @media(max-width:620px){
+    .hero-search { padding:6px 6px 6px 16px; }
+    .hero-search button { padding:11px 15px; font-size:1.05rem; }
+    .search-btn-label { display:none; }
+  }
+  /* search suggestions dropdown */
+  .search-suggestions {
+    display:none; position:absolute; top:calc(100% + 8px); left:0; right:0; z-index:200;
+    background:var(--white); border-radius:14px; overflow:hidden;
+    box-shadow:0 16px 44px rgba(0,0,0,0.28); max-height:340px; overflow-y:auto;
+    text-align:left;
+  }
+  .search-suggestions.show { display:block; }
+  .sug-item {
+    display:flex; align-items:center; gap:12px; padding:12px 18px; cursor:pointer;
+    border-bottom:1px solid var(--gray-100); transition:background 0.15s;
+  }
+  .sug-item:last-child { border-bottom:none; }
+  .sug-item:hover { background:var(--green-light); }
+  .sug-icon { font-size:1.1rem; width:30px; height:30px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .sug-icon img { width:30px; height:30px; object-fit:contain; border-radius:6px; background:var(--white); }
+  .sug-text { flex:1; min-width:0; }
+  .sug-title { font-size:0.9rem; font-weight:700; color:var(--navy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sug-sub { font-size:0.74rem; color:var(--gray-400); }
+  .sug-type { font-size:0.66rem; font-weight:700; color:var(--green-dark); background:var(--green-light); padding:3px 8px; border-radius:12px; flex-shrink:0; }
+  .sug-empty { padding:14px 18px; color:var(--gray-400); font-size:0.85rem; }
+  /* hero quick-filter chips */
+  .hero-chips {
+    display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
+    margin-bottom: 52px;
+    animation: fadeInUp 0.7s ease 0.45s both;
+  }
+  .hero-chip {
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
+    color:rgba(255,255,255,0.65); padding:6px 16px; border-radius:40px;
+    font-size:0.78rem; font-weight:600; cursor:pointer;
+    transition:all 0.2s; font-family:'Sora',sans-serif;
+  }
+  .hero-chip:hover { background:var(--green); border-color:var(--green); color:var(--navy); }
+  .hero-stats {
+    display:flex; gap:0; justify-content:center; flex-wrap:wrap;
+    animation: fadeInUp 0.7s ease 0.5s both;
+    border-top:1px solid rgba(255,255,255,0.06);
+    width:100%; max-width:700px;
+    margin: 0 auto;
+  }
+  .stat {
+    flex:1; min-width:120px; text-align:center;
+    padding:28px 16px;
+    border-right:1px solid rgba(255,255,255,0.06);
+  }
+  .stat:last-child { border-right:none; }
+  .stat-icon { font-size:1.3rem; margin-bottom:6px; }
+  .stat-num { font-size:1.9rem; font-weight:800; color:var(--green); line-height:1; }
+  .stat-label { font-size:0.75rem; color:rgba(255,255,255,0.4); margin-top:5px; font-weight:500; }
+  /* hero scroll arrow */
+  .hero-scroll {
+    position:absolute; bottom:24px; left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    color:rgba(255,255,255,0.25); font-size:0.72rem; font-weight:500; z-index:1;
+    animation: float 2.5s ease-in-out infinite;
+    cursor:pointer; text-decoration:none;
+  }
+  .hero-scroll span { font-size:1rem; }
+  @keyframes float {
+    0%,100% { transform:translateX(-50%) translateY(0); }
+    50% { transform:translateX(-50%) translateY(6px); }
+  }
+
+  /* ───── SECTION COMMON ───── */
+  section { padding: 80px 5%; }
+  .section-label {
+    font-size:0.8rem; font-weight:700; color:var(--green);
+    text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;
+  }
+  .section-title {
+    font-size:clamp(1.8rem, 3.5vw, 2.7rem); font-weight:800;
+    color:var(--navy); line-height:1.2; margin-bottom:10px; letter-spacing:-0.02em;
+  }
+  .section-sub { color:var(--gray-600); font-size:1rem; line-height:1.75; max-width:580px; }
+  .section-header { margin-bottom:48px; }
+  /* Optional eyebrow label */
+  .section-label{ display:inline-block; font-size:.74rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--green-dark); margin-bottom:10px; }
+
+  /* ───── FILTER BAR ───── */
+  .filter-section {
+    background: var(--gray-100);
+    padding: 32px 5%;
+    border-top: 1px solid var(--gray-200);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .filters {
+    display:flex; gap:12px; flex-wrap:wrap; align-items:center;
+  }
+  .filter-label { font-size:0.85rem; font-weight:600; color:var(--gray-600); margin-right:4px; }
+  .filter-btn {
+    padding:8px 18px; border-radius:40px; border:2px solid var(--gray-200);
+    background:var(--white); font-family:'Sora',sans-serif;
+    font-size:0.82rem; font-weight:600; color:var(--gray-600);
+    cursor:pointer; transition:all 0.2s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    border-color:var(--green); background:var(--green); color:var(--navy);
+  }
+  .city-filter {
+    padding:8px 14px; border-radius:40px; border:2px solid var(--gray-200);
+    background:var(--white); font-family:'Sora',sans-serif;
+    font-size:0.82rem; font-weight:600; color:var(--gray-600);
+    cursor:pointer; transition:all 0.2s; max-width:180px;
+  }
+  .city-filter:hover, .city-filter:focus {
+    border-color:var(--green); outline:none;
+  }
+  .city-filter[data-active="1"] {
+    border-color:var(--green); background:var(--green); color:var(--navy);
+  }
+  .clear-filters{
+    background:transparent; border:2px dashed var(--gray-200); color:var(--gray-600);
+    padding:8px 16px; border-radius:40px; font-family:'Sora',sans-serif;
+    font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.2s;
+  }
+  .clear-filters:hover{ border-color:var(--red); color:var(--red); }
+  .clear-filters.show{ background:#fff5f5; border-color:var(--red); color:var(--red); border-style:solid; }
+  /* Mobile: dropdowns full-width in a clean 2-column grid for even alignment */
+  @media(max-width:620px){
+    .filters { gap:8px; }
+    .filter-label { width:100%; margin-bottom:2px; }
+    .city-filter { max-width:none; flex:1 1 calc(50% - 4px); width:auto; }
+  }
+  @media(max-width:380px){
+    .city-filter { flex-basis:100%; }
+  }
+
+  /* ───── UNI GRID ───── */
+  .uni-grid {
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:20px;
+    padding: 32px 5%;
+  }
+  @media(max-width:1200px){
+    .uni-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media(max-width:860px){
+    .uni-grid { grid-template-columns: repeat(2, 1fr); gap:14px; }
+  }
+  @media(max-width:520px){
+    .uni-grid { grid-template-columns: 1fr; }
+  }
+  .uni-card {
+    background:var(--white); border-radius:var(--radius);
+    border:2px solid var(--gray-200);
+    padding:20px;
+    transition:all 0.3s;
+    cursor:pointer;
+    position:relative;
+    overflow:hidden;
+    display:flex; flex-direction:column;       /* equal heights when grid stretches */
+  }
+  .uni-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:4px;
+    background:var(--green); transform:scaleX(0); transition:transform 0.3s;
+    transform-origin:left;
+  }
+  .uni-card:hover { border-color:var(--green); box-shadow:var(--shadow-md); transform:translateY(-4px); }
+  .uni-card:hover::before { transform:scaleX(1); }
+  .uni-card.selected { border-color:var(--green); background:var(--green-light); box-shadow:var(--shadow-md); }
+  /* Skeleton loader */
+  .skel-card{ background:#fff; border:2px solid var(--gray-200); border-radius:var(--radius); padding:20px; min-height:340px; }
+  .skel{ background:linear-gradient(90deg,#eef0f3 0%,#f7f8fa 50%,#eef0f3 100%); background-size:200% 100%; border-radius:8px; animation:skel-shine 1.4s ease-in-out infinite; }
+  @keyframes skel-shine{ 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+  .skel-line{ height:14px; margin:8px 0; }
+  .skel-circle{ width:46px; height:46px; border-radius:10px; }
+  .grid-error{ padding:50px 20px; text-align:center; color:var(--gray-600); grid-column:1/-1; }
+  .grid-error h3{ font-size:1.1rem; color:var(--navy); margin-bottom:8px; }
+  .grid-error button{ margin-top:14px; background:var(--green); color:var(--navy); border:none; padding:9px 22px; border-radius:9px; font-weight:700; cursor:pointer; font-family:'Sora',sans-serif; }
+  /* Recently viewed strip */
+  .recent-strip{ margin:0 5% 14px; padding:14px 18px; background:#fff; border:1px solid var(--gray-200); border-radius:12px; }
+  .recent-strip h4{ font-size:0.78rem; text-transform:uppercase; letter-spacing:0.5px; color:var(--gray-600); font-weight:700; margin-bottom:10px; }
+  .recent-strip .rec-row{ display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+  .rec-chip{ display:inline-flex; align-items:center; gap:8px; background:var(--gray-100); border:1px solid var(--gray-200); border-radius:30px; padding:6px 14px 6px 8px; cursor:pointer; flex-shrink:0; transition:all 0.2s; }
+  .rec-chip:hover{ border-color:var(--green); background:#fff; }
+  .rec-chip img{ width:24px; height:24px; border-radius:50%; object-fit:contain; background:#fff; }
+  .rec-chip-name{ font-size:0.82rem; font-weight:700; color:var(--navy); white-space:nowrap; }
+  .rec-clear{ background:none; border:none; color:var(--gray-400); cursor:pointer; font-size:0.78rem; margin-left:6px; }
+  .uni-card-top {
+    display:flex; align-items:flex-start; justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .uni-icon {
+    width:52px; height:52px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.5rem; background:var(--white);
+    border: 1px solid var(--gray-200);
+    flex-shrink:0; overflow:hidden; padding:4px;
+  }
+  .uni-icon img {
+    width:100%; height:100%; object-fit:contain; border-radius:8px;
+    image-rendering:-webkit-optimize-contrast; image-rendering:crisp-edges;
+  }
+  .uni-rank {
+    font-size:0.75rem; font-weight:700; color:var(--gray-400);
+    background:var(--gray-100); padding:4px 10px; border-radius:20px;
+  }
+  .uni-rank.top3 { background:linear-gradient(135deg,#FFD56B,#FFB800); color:#5b3d00; box-shadow:0 2px 8px rgba(255,184,0,.35); }
+  /* Top-3 cards get a subtle gold tint and gradient border */
+  .uni-card.is-top3 { border-color:transparent; background-image:linear-gradient(#fff,#fff),linear-gradient(135deg,#FFD56B 0%,#FFB800 50%,#FFD56B 100%); background-origin:border-box; background-clip:padding-box,border-box; border:2px solid transparent; position:relative; }
+  .uni-card.is-top3::after{ content:''; position:absolute; inset:0; border-radius:var(--radius); pointer-events:none; box-shadow:inset 0 0 0 1px rgba(255,184,0,.18); }
+  .uni-card.is-top3:hover { transform:translateY(-4px); box-shadow:0 10px 30px rgba(255,184,0,.22); }
+  .uni-name {
+    font-size:1.1rem; font-weight:800; color:var(--navy);
+    margin-bottom:4px; line-height:1.3; letter-spacing:-0.01em;
+  }
+  .uni-location {
+    font-size:0.8rem; color:var(--gray-400); margin-bottom:14px;
+  }
+  .uni-location::before { content:'📍 '; }
+  .uni-tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+  .tag {
+    font-size:0.72rem; font-weight:600; padding:3px 10px;
+    border-radius:20px; background:var(--gray-100); color:var(--gray-600);
+  }
+  .tag.public { background:#E3F2FD; color:#1565C0; }
+  .tag.private { background:#FCE4EC; color:#C62828; }
+  .tag.engineering { background:#E8F5E9; color:#2E7D32; }
+  .tag.medical { background:#FFF3E0; color:#E65100; }
+  .tag.business { background:#EDE7F6; color:#4527A0; }
+  .tag.arts { background:#FFF8E1; color:#F57F17; }
+  .uni-info {
+    display:grid; grid-template-columns:1fr 1fr; gap:10px;
+    padding-top:16px; border-top:1px solid var(--gray-200);
+    margin-top:auto;                          /* push info+footer to the bottom */
+  }
+  .info-item { min-width:0; }
+  .info-key { font-size:0.72rem; color:var(--gray-400); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+  .info-val {
+    font-size:0.92rem; font-weight:700; color:var(--navy); margin-top:2px;
+    /* Clamp to 2 lines so cards stay even when uni has long merit/entry text */
+    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+    overflow:hidden; line-height:1.35; min-height:2.6em;
+    word-break:break-word;
+  }
+  .info-val.green { color:var(--green-dark); }
+  .uni-card-footer {
+    display:flex; gap:8px; margin-top:16px;
+  }
+  .btn-compare {
+    flex:1; padding:9px; border-radius:8px;
+    border:2px solid var(--green); background:transparent;
+    color:var(--green); font-family:'Sora',sans-serif;
+    font-size:0.82rem; font-weight:700; cursor:pointer; transition:all 0.2s;
+  }
+  .btn-compare:hover, .uni-card.selected .btn-compare {
+    background:var(--green); color:var(--navy);
+  }
+  .btn-details {
+    flex:1; padding:9px; border-radius:8px;
+    border:2px solid var(--gray-200); background:transparent;
+    color:var(--gray-600); font-family:'Sora',sans-serif;
+    font-size:0.82rem; font-weight:700; cursor:pointer; transition:all 0.2s;
+  }
+  .btn-details:hover { border-color:var(--navy); color:var(--navy); }
+
+  /* ───── COMPARE BAR ───── */
+  .compare-bar {
+    position:fixed; bottom:0; left:0; right:0; z-index:200;
+    background:var(--navy); padding:16px 5%;
+    display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 -4px 24px rgba(0,0,0,0.3);
+    transform:translateY(100%); transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .compare-bar.show { transform:translateY(0); }
+  .compare-bar-left {
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  }
+  .compare-bar-title { color:var(--white); font-weight:700; font-size:0.9rem; }
+  .compare-chips { display:flex; gap:8px; flex-wrap:wrap; }
+  .compare-chip {
+    background:rgba(0,200,83,0.15); border:1px solid rgba(0,200,83,0.3);
+    color:var(--green); padding:6px 12px 6px 14px;
+    border-radius:40px; font-size:0.8rem; font-weight:600;
+    display:flex; align-items:center; gap:6px;
+  }
+  .compare-chip button {
+    background:none; border:none; color:var(--green);
+    cursor:pointer; font-size:1rem; line-height:1; padding:0;
+  }
+  .btn-start-compare {
+    background:var(--green); color:var(--navy);
+    border:none; padding:12px 28px; border-radius:10px;
+    font-family:'Sora',sans-serif; font-weight:800; font-size:0.9rem;
+    cursor:pointer; transition:background 0.2s; white-space:nowrap;
+  }
+  .btn-start-compare:hover { background:#00e060; }
+
+  /* ───── MODAL ───── */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(10,22,40,0.85);
+    z-index:300; display:flex; align-items:flex-start; justify-content:center;
+    padding:5% 5%;
+    opacity:0; pointer-events:none; transition:opacity 0.3s;
+    overflow-y:auto;
+  }
+  .modal-overlay.show { opacity:1; pointer-events:all; }
+  .modal {
+    background:var(--white); border-radius:24px;
+    width:100%; max-width:900px;
+    padding:40px;
+    transform:scale(0.95); transition:transform 0.3s;
+    max-height:90vh; overflow-y:auto;
+  }
+  .modal-overlay.show .modal { transform:scale(1); }
+  .modal-close {
+    position:absolute; top:20px; right:20px;
+    background:var(--gray-100); border:none; width:36px; height:36px;
+    border-radius:50%; cursor:pointer; font-size:1.2rem;
+    display:flex; align-items:center; justify-content:center;
+    transition:background 0.2s;
+  }
+  .modal-close:hover { background:var(--gray-200); }
+  .modal { position:relative; }
+
+  /* Compare Modal */
+  .compare-grid {
+    display:grid;
+    gap:24px;
+    margin-top:24px;
+  }
+  .compare-row {
+    display:grid;
+    gap:2px;
+    background:var(--gray-200);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .compare-header-row {
+    display:grid; gap:2px; background:var(--gray-200);
+    border-radius:12px; overflow:hidden; margin-bottom:2px;
+  }
+  .compare-cell {
+    background:var(--white); padding:14px 20px;
+    font-size:0.88rem;
+  }
+  .compare-cell.label {
+    background:var(--gray-100); font-weight:700;
+    color:var(--gray-600); font-size:0.78rem;
+    text-transform:uppercase; letter-spacing:0.5px;
+  }
+  .compare-cell.header {
+    background:var(--navy); color:var(--white);
+    font-weight:700; text-align:center;
+    font-size:0.9rem;
+  }
+  .compare-cell .winner { color:var(--green); font-weight:700; }
+
+  /* Detail Modal */
+  .detail-hero {
+    display:flex; gap:20px; align-items:flex-start;
+    margin-bottom:28px; padding-bottom:28px;
+    border-bottom:1px solid var(--gray-200);
+  }
+  .detail-icon {
+    width:72px; height:72px; border-radius:16px;
+    background:var(--white); border:1px solid var(--gray-200);
+    display:flex; align-items:center; justify-content:center;
+    font-size:2.2rem; flex-shrink:0; overflow:hidden; padding:6px;
+  }
+  .detail-icon img {
+    width:100%; height:100%; object-fit:contain;
+  }
+  .detail-title { font-size:1.5rem; font-weight:800; color:var(--navy); }
+  .detail-loc { color:var(--gray-400); margin:4px 0 10px; }
+  .detail-grid {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:16px; margin-bottom:28px;
+  }
+  .detail-box {
+    background:var(--gray-100); border-radius:12px;
+    padding:16px;
+  }
+  .detail-box-title { font-size:0.75rem; text-transform:uppercase;
+    letter-spacing:1px; color:var(--gray-400); font-weight:700; margin-bottom:8px; }
+  .detail-box-val { font-size:1.1rem; font-weight:700; color:var(--navy); }
+  .programs-list { display:flex; flex-wrap:wrap; gap:8px; }
+  .program-pill {
+    background:var(--green-light); border:1px solid rgba(0,200,83,0.2);
+    color:var(--green-dark); padding:5px 14px;
+    border-radius:20px; font-size:0.82rem; font-weight:600;
+  }
+  .prog-group { margin-bottom:16px; }
+  .prog-group:last-child { margin-bottom:0; }
+  .prog-group-title { font-size:0.8rem; font-weight:700; color:var(--gray-600); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.4px; }
+  .prog-count { background:var(--gray-200); color:var(--gray-600); border-radius:20px; padding:1px 8px; font-size:0.7rem; margin-left:4px; }
+
+  /* University detail as a full page (not a cramped popup) */
+  #detailModalOverlay { padding:0; background:rgba(10,22,40,0.45); }
+  #detailModalOverlay .modal {
+    max-width:980px; min-height:100vh; max-height:none; border-radius:0;
+    padding:40px 6%; transform:none;
+  }
+  @media(max-width:600px){ #detailModalOverlay .modal { padding:24px 18px; } }
+
+  /* ───── HOW IT WORKS ───── */
+  .hiw { background:var(--navy); }
+  .hiw .section-title { color:var(--white); }
+  .hiw .section-label { color:var(--green); }
+  .hiw .section-sub { color:rgba(255,255,255,0.5); }
+  .hiw-steps {
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+    gap:24px; margin-top:48px;
+  }
+  .hiw-step {
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+    border-radius:var(--radius); padding:28px 24px;
+    transition:border-color 0.3s;
+  }
+  .hiw-step:hover { border-color:var(--green); }
+  .step-num {
+    font-size:0.75rem; font-weight:800; color:var(--green);
+    letter-spacing:2px; margin-bottom:16px;
+  }
+  .step-icon { font-size:2rem; margin-bottom:12px; }
+  .step-title { font-size:1rem; font-weight:700; color:var(--white); margin-bottom:8px; }
+  .step-desc { font-size:0.85rem; color:rgba(255,255,255,0.5); line-height:1.6; }
+
+  /* ───── FOOTER ───── */
+  footer {
+    background: var(--navy);
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .footer-main {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr 1fr 1fr;
+    gap: 48px;
+    padding: 64px 5% 48px;
+  }
+  @media(max-width:900px){
+    .footer-main { grid-template-columns: 1fr 1fr; gap:36px; padding:48px 5% 36px; }
+  }
+  @media(max-width:520px){
+    .footer-main { grid-template-columns: 1fr; gap:28px; padding:40px 5% 28px; }
+  }
+  .footer-brand {}
+  .footer-logo {
+    font-size:1.5rem; font-weight:800; color:var(--white); margin-bottom:10px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .footer-logo .fl-icon {
+    width:36px; height:36px; background:var(--green); border-radius:10px;
+    display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0;
+  }
+  .footer-logo span { color:var(--green); }
+  .footer-tagline { color:rgba(255,255,255,0.45); font-size:0.85rem; line-height:1.6; margin-bottom:20px; max-width:240px; }
+  .footer-social { display:flex; gap:10px; }
+  .footer-social a {
+    width:34px; height:34px; border-radius:8px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.9rem; text-decoration:none; color:rgba(255,255,255,0.5);
+    transition:all 0.2s;
+  }
+  .footer-social a:hover { background:var(--green); border-color:var(--green); color:var(--navy); }
+  .footer-col h4 {
+    font-size:0.78rem; font-weight:700; color:var(--white);
+    text-transform:uppercase; letter-spacing:1.5px;
+    margin-bottom:18px; padding-bottom:10px;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .footer-links { display:flex; flex-direction:column; gap:10px; }
+  .footer-links a {
+    color:rgba(255,255,255,0.45); text-decoration:none;
+    font-size:0.85rem; font-weight:500; transition:color 0.2s;
+    display:flex; align-items:center; gap:6px;
+  }
+  .footer-links a::before { content:'→'; font-size:0.7rem; opacity:0; transition:opacity 0.2s; }
+  .footer-links a:hover { color:var(--green); }
+  .footer-links a:hover::before { opacity:1; }
+  .footer-contact-item {
+    display:flex; align-items:flex-start; gap:10px;
+    margin-bottom:12px;
+  }
+  .footer-contact-item .fci-icon {
+    width:28px; height:28px; background:rgba(0,200,83,0.1);
+    border-radius:6px; display:flex; align-items:center; justify-content:center;
+    font-size:0.75rem; flex-shrink:0; margin-top:1px; color:var(--green);
+  }
+  .footer-contact-item span { color:rgba(255,255,255,0.45); font-size:0.82rem; line-height:1.5; }
+  .footer-bottom {
+    padding: 20px 5%;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .footer-copy { color:rgba(255,255,255,0.2); font-size:0.78rem; }
+  .footer-bottom-links { display:flex; gap:20px; }
+  .footer-bottom-links a { color:rgba(255,255,255,0.2); text-decoration:none; font-size:0.75rem; transition:color 0.2s; }
+  .footer-bottom-links a:hover { color:rgba(255,255,255,0.5); }
+
+  /* ───── ABOUT PAGE ───── */
+  #aboutPage {
+    display: none;
+    background: var(--white);
+    min-height: 100vh;
+  }
+  #aboutPage.active { display: block; }
+  .about-hero {
+    background: var(--navy);
+    padding: 120px 5% 80px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .about-hero::before {
+    content:''; position:absolute; top:-100px; left:50%; transform:translateX(-50%);
+    width:700px; height:700px;
+    background: radial-gradient(ellipse, rgba(0,200,83,0.13) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .about-hero::after {
+    content:''; position:absolute; inset:0;
+    background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size:32px 32px; pointer-events:none;
+  }
+  .about-hero > * { position:relative; z-index:1; }
+  .about-back {
+    display:inline-flex; align-items:center; gap:8px;
+    color:rgba(255,255,255,0.5); font-size:0.82rem; font-weight:600;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+    padding:7px 16px; border-radius:40px; cursor:pointer;
+    margin-bottom:32px; transition:all 0.2s; border:none; font-family:'Sora',sans-serif;
+  }
+  .about-back:hover { background:rgba(255,255,255,0.1); color:var(--white); }
+  .about-hero h1 { font-size:clamp(2rem,4vw,3.2rem); font-weight:800; color:var(--white); margin-bottom:16px; }
+  .about-hero h1 span { color:var(--green); }
+  .about-hero p { color:rgba(255,255,255,0.55); font-size:1rem; max-width:520px; margin:0 auto; line-height:1.75; }
+  .about-body { padding: 80px 5%; max-width:1100px; margin:0 auto; }
+  .about-mission {
+    display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center;
+    margin-bottom:80px;
+  }
+  @media(max-width:760px){ .about-mission { grid-template-columns:1fr; gap:32px; } }
+  .about-mission-text .section-label { margin-bottom:10px; }
+  .about-mission-text h2 { font-size:clamp(1.5rem,3vw,2.2rem); font-weight:800; color:var(--navy); line-height:1.25; margin-bottom:16px; }
+  .about-mission-text p { color:var(--gray-600); line-height:1.8; font-size:0.95rem; margin-bottom:12px; }
+  .about-mission-visual {
+    background: var(--navy); border-radius:24px; padding:40px;
+    display:grid; grid-template-columns:1fr 1fr; gap:20px;
+  }
+  .about-stat-box {
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
+    border-radius:14px; padding:24px 20px; text-align:center;
+    transition:border-color 0.3s;
+  }
+  .about-stat-box:hover { border-color:var(--green); }
+  .about-stat-box .num { font-size:2rem; font-weight:800; color:var(--green); }
+  .about-stat-box .lbl { font-size:0.78rem; color:rgba(255,255,255,0.45); margin-top:4px; }
+  .about-values {
+    margin-bottom:80px;
+  }
+  .about-values h2 { font-size:clamp(1.4rem,2.5vw,2rem); font-weight:800; color:var(--navy); margin-bottom:32px; text-align:center; }
+  .about-values-grid {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:24px;
+  }
+  @media(max-width:760px){ .about-values-grid { grid-template-columns:1fr; } }
+  .about-value-card {
+    border:2px solid var(--gray-200); border-radius:16px; padding:28px 24px;
+    transition:all 0.3s;
+  }
+  .about-value-card:hover { border-color:var(--green); transform:translateY(-4px); box-shadow:var(--shadow-md); }
+  .about-value-icon { font-size:2rem; margin-bottom:14px; }
+  .about-value-title { font-size:1rem; font-weight:700; color:var(--navy); margin-bottom:8px; }
+  .about-value-desc { font-size:0.85rem; color:var(--gray-600); line-height:1.7; }
+  .about-team {
+    margin-bottom:80px;
+  }
+  .about-team h2 { font-size:clamp(1.4rem,2.5vw,2rem); font-weight:800; color:var(--navy); margin-bottom:8px; text-align:center; }
+  .about-team-sub { text-align:center; color:var(--gray-600); font-size:0.9rem; margin-bottom:36px; }
+  .about-disclaimer {
+    background:#fffaf0; border:2px solid #f5d68a; border-left:6px solid #e8a317;
+    border-radius:16px; padding:28px 32px; margin-bottom:48px;
+    display:flex; gap:18px; align-items:flex-start;
+  }
+  .about-disclaimer-icon { font-size:1.8rem; line-height:1; flex-shrink:0; }
+  .about-disclaimer-body h3 { font-size:1.15rem; font-weight:800; color:#8a5a00; margin-bottom:12px; }
+  .about-disclaimer-body p { font-size:0.88rem; color:#6b5524; line-height:1.75; margin-bottom:10px; }
+  .about-disclaimer-body p:last-child { margin-bottom:0; }
+  .about-disclaimer-body strong { color:#8a5a00; }
+  .about-disclaimer-note {
+    font-style:italic; font-size:0.82rem !important; color:#9b7a3a !important;
+    padding-top:8px; border-top:1px dashed #e8c178; margin-top:12px !important;
+  }
+  @media(max-width:560px){ .about-disclaimer { flex-direction:column; gap:10px; padding:22px 20px; } }
+  .about-contact {
+    background:var(--navy); border-radius:24px; padding:48px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:32px; flex-wrap:wrap;
+  }
+  .about-contact-text h3 { font-size:1.5rem; font-weight:800; color:var(--white); margin-bottom:8px; }
+  .about-contact-text p { color:rgba(255,255,255,0.5); font-size:0.9rem; }
+  .about-contact-actions { display:flex; gap:12px; flex-wrap:wrap; }
+  .about-contact-btn {
+    padding:12px 24px; border-radius:10px; font-family:'Sora',sans-serif;
+    font-size:0.88rem; font-weight:700; cursor:pointer; transition:all 0.2s;
+    text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+  }
+  .about-contact-btn.primary { background:var(--green); color:var(--navy); border:none; }
+  .about-contact-btn.primary:hover { background:#00e060; }
+  .about-contact-btn.secondary { background:transparent; color:var(--white); border:2px solid rgba(255,255,255,0.2); }
+  .about-contact-btn.secondary:hover { border-color:var(--green); color:var(--green); }
+
+  /* hide main content when about page is active */
+  body.about-active .hero,
+  body.about-active .filter-section,
+  body.about-active .predictor-banner,
+  body.about-active .predictor-active-bar,
+  body.about-active #predictorModal,
+  body.about-active .tools-bar,
+  body.about-active .calendar-section,
+  body.about-active #mapContainer,
+  body.about-active .results-count,
+  body.about-active .uni-grid,
+  body.about-active .pagination,
+  body.about-active .hiw,
+  body.about-active .news-section,
+  body.about-active footer { display:none !important; }
+
+  /* ───── CARD STAR RATING ───── */
+  .card-rating { display:flex; align-items:center; gap:6px; margin:4px 0 2px; font-size:0.8rem; }
+  .cr-stars { letter-spacing:1px; color:var(--gray-200); }
+  .cr-stars.filled { color:#FFB800; }
+  .cr-num { font-weight:700; color:var(--navy); }
+  .cr-count { color:var(--gray-400); font-size:0.72rem; }
+  .card-rating.none .cr-count { font-style:italic; }
+
+  /* ───── BACK TO TOP ───── */
+  .back-to-top {
+    position:fixed; bottom:24px; right:24px; z-index:900;
+    width:46px; height:46px; border-radius:50%; border:none;
+    background:var(--navy); color:var(--white); font-size:1.3rem; font-weight:700;
+    cursor:pointer; box-shadow:var(--shadow-md); transition:all 0.25s;
+    opacity:0; visibility:hidden; transform:translateY(10px);
+  }
+  .back-to-top.show { opacity:1; visibility:visible; transform:translateY(0); }
+  .back-to-top:hover { background:var(--green); color:var(--navy); }
+
+  /* ───── AUTH MODAL ───── */
+  .auth-overlay{ display:none; position:fixed; inset:0; z-index:1300; background:rgba(10,22,40,.6); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:20px; }
+  .auth-overlay.show{ display:flex; }
+  .auth-modal{ background:var(--white); border-radius:20px; padding:34px 30px; width:100%; max-width:400px; position:relative; animation:fadeInUp .3s ease; }
+  .auth-close{ position:absolute; top:16px; right:16px; width:34px; height:34px; border:none; border-radius:50%; background:var(--gray-100); font-size:1.2rem; cursor:pointer; color:var(--navy); }
+  .auth-close:hover{ background:var(--gray-200); }
+  .auth-modal h2{ font-size:1.3rem; color:var(--navy); margin-bottom:4px; }
+  .auth-sub{ color:var(--gray-600); font-size:.86rem; margin-bottom:18px; }
+  .auth-tabs{ display:flex; gap:8px; margin-bottom:18px; }
+  .auth-tab{ flex:1; padding:9px; border:2px solid var(--gray-200); background:var(--white); border-radius:10px; font-family:'Sora',sans-serif; font-weight:700; font-size:.85rem; color:var(--gray-600); cursor:pointer; }
+  .auth-tab.active{ border-color:var(--green); background:var(--green); color:var(--navy); }
+  .auth-label{ display:block; font-size:.74rem; font-weight:700; color:var(--gray-600); margin:12px 0 5px; text-transform:uppercase; letter-spacing:.4px; }
+  .auth-input{ width:100%; padding:11px 14px; border:2px solid var(--gray-200); border-radius:10px; font-family:'Sora',sans-serif; font-size:.9rem; color:var(--navy); outline:none; }
+  .auth-input:focus{ border-color:var(--green); }
+  .auth-submit{ width:100%; margin-top:18px; padding:13px; background:var(--green); color:var(--navy); border:none; border-radius:11px; font-family:'Sora',sans-serif; font-weight:800; font-size:.95rem; cursor:pointer; }
+  .auth-submit:hover{ background:var(--green-dark); color:#fff; }
+  .auth-msg{ font-size:.84rem; margin-top:12px; padding:10px 13px; border-radius:9px; display:none; }
+  .auth-msg.err{ display:block; background:#fde8ea; color:#b3263a; }
+  .auth-msg.ok{ display:block; background:var(--green-light); color:var(--green-dark); }
+
+  /* ───── DETAILED FEE TABLE (detail modal) ───── */
+  .fee-table-section { margin-bottom:24px; }
+  .fee-table { border:1px solid var(--gray-200); border-radius:12px; overflow:hidden; }
+  .fee-row { display:flex; justify-content:space-between; gap:16px; padding:11px 16px; }
+  .fee-row:nth-child(odd) { background:var(--gray-100); }
+  .fee-row-k { font-size:0.85rem; color:var(--gray-600); }
+  .fee-row-v { font-size:0.85rem; font-weight:700; color:var(--navy); text-align:right; white-space:nowrap; }
+  .fee-table-note { font-size:0.78rem; color:var(--gray-400); margin-top:10px; line-height:1.6; font-style:italic; }
+  @media(max-width:480px){ .fee-row { flex-direction:column; gap:2px; } .fee-row-v { text-align:left; } }
+
+  /* ───── BLOG / NEWS ───── */
+  .news-section { padding:64px 5%; background:var(--gray-100); }
+  .news-head {
+    max-width:1280px; margin:0 auto 36px;
+    display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap;
+  }
+  .news-head h2 { font-size:clamp(1.5rem,3vw,2.2rem); font-weight:800; color:var(--navy); margin-bottom:6px; }
+  .news-head p { color:var(--gray-600); font-size:0.95rem; }
+  .news-viewall {
+    background:var(--navy); color:var(--white); border:none; border-radius:40px;
+    padding:11px 22px; font-family:'Sora',sans-serif; font-size:0.85rem; font-weight:700;
+    cursor:pointer; transition:all 0.2s; white-space:nowrap;
+  }
+  .news-viewall:hover { background:var(--green); color:var(--navy); }
+  /* Blog page (all articles) — same show/hide pattern as About page */
+  #blogPage { display:none; }
+  #blogPage.active { display:block; }
+  .blog-page-body { max-width:1280px; margin:0 auto; padding:56px 5% 80px; }
+  body.blog-active .hero,
+  body.blog-active .filter-section,
+  body.blog-active .predictor-banner,
+  body.blog-active .predictor-active-bar,
+  body.blog-active #predictorModal,
+  body.blog-active .tools-bar,
+  body.blog-active .calendar-section,
+  body.blog-active #mapContainer,
+  body.blog-active .results-count,
+  body.blog-active .uni-grid,
+  body.blog-active .pagination,
+  body.blog-active .hiw,
+  body.blog-active .news-section { display:none !important; }
+
+  /* Scholarships page (same show/hide pattern) */
+  #scholarshipsPage{ display:none; }
+  #scholarshipsPage.active{ display:block; }
+  body.scholar-active .hero,
+  body.scholar-active .filter-section,
+  body.scholar-active .predictor-banner,
+  body.scholar-active .predictor-active-bar,
+  body.scholar-active #predictorModal,
+  body.scholar-active .tools-bar,
+  body.scholar-active .calendar-section,
+  body.scholar-active #mapContainer,
+  body.scholar-active .results-count,
+  body.scholar-active .uni-grid,
+  body.scholar-active .pagination,
+  body.scholar-active .hiw,
+  body.scholar-active .news-section { display:none !important; }
+  .schol-filter{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px; }
+  .schol-fbtn{ padding:8px 18px; border-radius:40px; border:2px solid var(--gray-200); background:var(--white); font-family:'Sora',sans-serif; font-size:.82rem; font-weight:600; color:var(--gray-600); cursor:pointer; transition:.2s; }
+  .schol-fbtn:hover{ border-color:var(--green); }
+  .schol-fbtn.active{ background:var(--navy); border-color:var(--navy); color:#fff; }
+  .schol-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+  @media(max-width:760px){ .schol-grid{ grid-template-columns:1fr; } }
+  .schol-card{ background:var(--white); border:2px solid var(--gray-200); border-radius:16px; padding:24px; display:flex; flex-direction:column; transition:.25s; }
+  .schol-card:hover{ border-color:var(--green); box-shadow:var(--shadow-md); transform:translateY(-3px); }
+  .schol-card.feat{ border-color:var(--green); }
+  .schol-top{ display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; }
+  .schol-icon{ font-size:1.9rem; line-height:1; }
+  .schol-title{ font-size:1.05rem; font-weight:800; color:var(--navy); line-height:1.35; }
+  .schol-provider{ font-size:.78rem; color:var(--gray-400); margin-top:2px; }
+  .schol-badges{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .schol-badge{ font-size:.7rem; font-weight:700; padding:3px 10px; border-radius:20px; background:var(--green-light); color:var(--green-dark); }
+  .schol-badge.lvl{ background:var(--gray-100); color:var(--gray-600); }
+  .schol-feat-tag{ font-size:.66rem; font-weight:800; padding:3px 9px; border-radius:20px; background:var(--gold); color:var(--navy); }
+  .schol-row{ font-size:.84rem; color:var(--gray-600); line-height:1.6; margin-bottom:6px; }
+  .schol-row b{ color:var(--navy); }
+  .schol-desc{ font-size:.84rem; color:var(--gray-600); line-height:1.65; margin:8px 0 14px; flex:1; }
+  .schol-apply{ align-self:flex-start; background:var(--green); color:var(--navy); text-decoration:none; padding:9px 20px; border-radius:9px; font-weight:700; font-size:.85rem; }
+  .schol-apply:hover{ background:var(--green-dark); color:#fff; }
+  .news-grid {
+    max-width:1280px; margin:0 auto;
+    display:grid; grid-template-columns:repeat(3,1fr); gap:24px;
+  }
+  .news-card {
+    background:var(--white); border:2px solid var(--gray-200); border-radius:16px;
+    overflow:hidden; cursor:pointer; transition:all 0.25s; display:flex; flex-direction:column;
+  }
+  .news-card:hover { border-color:var(--green); transform:translateY(-4px); box-shadow:var(--shadow-md); }
+  .news-card-banner {
+    background:linear-gradient(135deg,var(--navy),var(--navy-mid));
+    height:120px; display:flex; align-items:center; justify-content:center; font-size:3rem;
+  }
+  .news-card-body { padding:20px 22px; display:flex; flex-direction:column; flex:1; }
+  .news-cat {
+    align-self:flex-start; background:var(--green-light); color:var(--green-dark);
+    font-size:0.7rem; font-weight:700; padding:4px 10px; border-radius:20px; margin-bottom:10px;
+    text-transform:uppercase; letter-spacing:0.4px;
+  }
+  .news-card-title { font-size:1.05rem; font-weight:700; color:var(--navy); line-height:1.4; margin-bottom:8px; }
+  .news-card-excerpt { font-size:0.86rem; color:var(--gray-600); line-height:1.6; flex:1; }
+  .news-card-meta {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:14px; font-size:0.78rem; color:var(--gray-400);
+  }
+  .news-read { color:var(--green-dark); font-weight:700; }
+
+  /* Article reader modal */
+  .article-overlay {
+    display:none; position:fixed; inset:0; z-index:1200;
+    background:rgba(10,22,40,0.6); backdrop-filter:blur(4px);
+    padding:40px 20px; overflow-y:auto;
+  }
+  .article-overlay.show { display:block; }
+  .article-modal {
+    max-width:760px; margin:0 auto; background:var(--white);
+    border-radius:20px; padding:40px 44px; position:relative;
+    animation:fadeInUp 0.3s ease;
+  }
+  .article-close {
+    position:absolute; top:18px; right:18px; width:38px; height:38px;
+    border-radius:50%; border:none; background:var(--gray-100); color:var(--navy);
+    font-size:1.3rem; cursor:pointer; transition:background 0.2s;
+  }
+  .article-close:hover { background:var(--gray-200); }
+  .article-cat {
+    display:inline-block; background:var(--green-light); color:var(--green-dark);
+    font-size:0.72rem; font-weight:700; padding:4px 12px; border-radius:20px;
+    text-transform:uppercase; letter-spacing:0.4px; margin-bottom:14px;
+  }
+  .article-modal h1 { font-size:clamp(1.4rem,3vw,2rem); font-weight:800; color:var(--navy); line-height:1.3; margin-bottom:12px; }
+  .article-meta { font-size:0.82rem; color:var(--gray-400); margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--gray-200); }
+  .article-content p { font-size:0.95rem; color:var(--gray-600); line-height:1.8; margin-bottom:16px; }
+  .article-content h3 { font-size:1.15rem; font-weight:700; color:var(--navy); margin:22px 0 10px; }
+  .article-content ul { margin:0 0 16px 22px; }
+  .article-content li { font-size:0.95rem; color:var(--gray-600); line-height:1.8; margin-bottom:6px; }
+  .article-content strong { color:var(--navy); }
+  @media(max-width:900px){ .news-grid { grid-template-columns:repeat(2,1fr); } }
+  @media(max-width:600px){ .news-grid { grid-template-columns:1fr; } .article-modal { padding:30px 22px; } }
+
+  /* ───── ANIMATIONS ───── */
+  @keyframes fadeInDown {
+    from { opacity:0; transform:translateY(-20px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  @keyframes fadeInUp {
+    from { opacity:0; transform:translateY(30px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  .fade-in {
+    opacity:0; transform:translateY(20px);
+    transition:opacity 0.5s, transform 0.5s;
+  }
+  .fade-in.visible { opacity:1; transform:translateY(0); }
+
+  /* Search results count */
+  .results-count {
+    padding: 16px 5% 0;
+    font-size:0.9rem; color:var(--gray-600); font-weight:600;
+  }
+  .results-count span { color:var(--green); }
+
+  /* ───── PAGINATION ───── */
+  .pagination {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 32px 5% 16px; flex-wrap: wrap;
+  }
+  .page-btn.loadmore { min-width:200px; padding:0 28px; height:44px; background:var(--navy); color:#fff; border-color:var(--navy); font-weight:800; }
+  .page-btn.loadmore:hover{ background:var(--green); color:var(--navy); border-color:var(--green); }
+  .page-btn {
+    min-width: 40px; height: 40px; padding: 0 12px;
+    border-radius: 10px; border: 2px solid var(--gray-200);
+    background: var(--white); color: var(--navy);
+    font-family: 'Sora', sans-serif; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .page-btn:hover { border-color: var(--green); color: var(--green); }
+  .page-btn.active { background: var(--green); border-color: var(--green); color: var(--navy); }
+  .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .page-ellipsis { color: var(--gray-400); font-weight: 700; padding: 0 4px; line-height: 40px; }
+  .page-info { font-size: 0.8rem; color: var(--gray-600); font-weight: 500; padding: 0 8px; }
+
+
+  /* ───── ADMISSION PREDICTOR ───── */
+  .predictor-banner {
+    margin: 0 5% 0; padding: 18px 24px;
+    background: linear-gradient(135deg, #0a1628 0%, #1a3a5c 100%);
+    border-radius: 16px; border: 1.5px solid var(--green);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .predictor-banner-text { flex: 1; }
+  .predictor-banner-text h3 { color: var(--white); font-size: 1rem; font-weight: 700; margin: 0 0 4px; }
+  .predictor-banner-text p { color: var(--gray-400); font-size: 0.82rem; margin: 0; }
+  .predictor-open-btn {
+    background: var(--green); color: var(--navy); border: none;
+    padding: 10px 22px; border-radius: 10px; font-family: 'Sora', sans-serif;
+    font-size: 0.88rem; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .predictor-open-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,200,81,0.35); }
+  @media(max-width:620px){
+    .predictor-banner { flex-direction: column; align-items: stretch; text-align: left; }
+    .predictor-open-btn { width: 100%; }
+  }
+  .predictor-active-bar {
+    display: none; margin: 8px 5% 0; padding: 10px 18px;
+    background: #e8fff1; border-radius: 10px; border: 1.5px solid var(--green);
+    align-items: center; gap: 12px; justify-content: space-between;
+  }
+  .predictor-active-bar.show { display: flex; }
+  .predictor-active-info { font-size: 0.85rem; color: #0a6632; font-weight: 600; }
+  .predictor-clear-btn {
+    background: none; border: 1.5px solid var(--green); color: #0a6632;
+    padding: 5px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; font-family: 'Sora', sans-serif;
+  }
+
+  /* Predictor Modal */
+  .predictor-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    z-index: 2000; align-items: center; justify-content: center; padding: 16px;
+  }
+  .predictor-overlay.open { display: flex; }
+  .predictor-modal {
+    background: var(--white); border-radius: 20px; width: 100%; max-width: 600px;
+    max-height: 90vh; overflow-y: auto; padding: 32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .predictor-modal h2 { font-size: clamp(1.05rem, 4.2vw, 1.4rem); color: var(--navy); margin: 0 0 6px; font-weight: 800; padding-right: 44px; white-space: nowrap; }
+  .predictor-modal > p { color: var(--gray-500); font-size: 0.88rem; margin: 0 0 28px; }
+  .predictor-close {
+    position: absolute; top: 16px; right: 16px; background: var(--gray-100);
+    border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .pred-section { margin-bottom: 24px; }
+  .pred-section label { display: block; font-size: 0.82rem; font-weight: 700;
+    color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 10px; }
+  .pred-pct-display {
+    display: flex; align-items: center; gap: 16px;
+  }
+  .pred-pct-display input[type=range] {
+    flex: 1; accent-color: var(--green); height: 6px; cursor: pointer;
+  }
+  .pred-pct-val {
+    background: var(--green); color: var(--navy); font-weight: 800;
+    font-size: 1.1rem; min-width: 62px; text-align: center;
+    padding: 6px 12px; border-radius: 10px;
+  }
+  .pred-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pred-opt {
+    padding: 10px 14px; border-radius: 10px; border: 2px solid var(--gray-200);
+    background: var(--white); color: var(--navy); font-family: 'Sora', sans-serif;
+    font-size: 0.83rem; font-weight: 600; cursor: pointer; transition: all 0.18s;
+    text-align: center;
+  }
+  .pred-opt:hover { border-color: var(--green); color: var(--green); }
+  .pred-opt.selected { background: var(--green); border-color: var(--green); color: var(--navy); }
+  .pred-selects { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pred-select-wrap select {
+    width: 100%; padding: 10px 14px; border-radius: 10px;
+    border: 2px solid var(--gray-200); font-family: 'Sora', sans-serif;
+    font-size: 0.85rem; color: var(--navy); background: var(--white);
+    cursor: pointer; outline: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23555' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+  }
+  .pred-select-wrap select:focus { border-color: var(--green); }
+  .pred-select-wrap { display: flex; flex-direction: column; }
+  .pred-select-wrap select { margin-top: auto; }
+  .pred-select-wrap label { font-size: 0.78rem; font-weight: 600; color: var(--gray-500); margin-bottom: 6px; display: block; line-height: 1.25; min-height: 2em; }
+  .pred-run-btn {
+    width: 100%; padding: 14px; background: var(--green); border: none;
+    border-radius: 12px; color: var(--navy); font-family: 'Sora', sans-serif;
+    font-size: 1rem; font-weight: 800; cursor: pointer; transition: all 0.2s;
+    margin-top: 8px;
+  }
+  .pred-run-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,200,81,0.35); }
+
+  /* Match Badges on Cards */
+  .match-badge {
+    position: absolute; top: 12px; left: 12px;
+    padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.03em; z-index: 5;
+  }
+  .match-strong { background: #dcfce7; color: #15803d; border: 1.5px solid #86efac; }
+  .match-good   { background: #dbeafe; color: #1d4ed8; border: 1.5px solid #93c5fd; }
+  .match-border { background: #fef9c3; color: #854d0e; border: 1.5px solid #fde047; }
+  .match-reach  { background: #fee2e2; color: #b91c1c; border: 1.5px solid #fca5a5; }
+
+  /* ───── COMMUNITY MERIT DATA ───── */
+  .merit-community-section {
+    margin-top: 24px; padding-top: 20px;
+    border-top: 1px solid var(--gray-200);
+  }
+  .merit-community-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .merit-community-title {
+    font-size: 0.9rem; font-weight: 700; color: var(--navy); flex: 1;
+  }
+  .merit-verified-tag {
+    background: #dcfce7; color: #15803d; border: 1.5px solid #86efac;
+    font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+  }
+  .merit-submit-btn {
+    background: none; border: 1.5px solid var(--green); color: var(--green);
+    padding: 5px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 700;
+    cursor: pointer; font-family: 'Sora', sans-serif; transition: all 0.2s; white-space: nowrap;
+  }
+  .merit-submit-btn:hover { background: var(--green); color: var(--navy); }
+  .no-merit-msg {
+    color: var(--gray-400); font-size: 0.83rem; text-align: center;
+    padding: 16px; background: var(--gray-100); border-radius: 10px; margin: 0;
+  }
+  .merit-table {
+    width: 100%; border-collapse: collapse; font-size: 0.83rem;
+    border-radius: 8px; overflow: hidden;
+  }
+  .merit-table thead tr { background: var(--navy); color: var(--white); }
+  .merit-table th { padding: 9px 14px; text-align: left; font-weight: 700; }
+  .merit-table td {
+    padding: 8px 14px; border-bottom: 1px solid var(--gray-200);
+    color: var(--navy); font-weight: 500;
+  }
+  .merit-table tr:last-child td { border-bottom: none; }
+  .merit-table tr:nth-child(even) td { background: var(--gray-100); }
+  .merit-pct { font-weight: 800 !important; color: var(--green-dark) !important; }
+  .merit-source-note {
+    font-size: 0.74rem; color: var(--gray-400); margin-top: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  /* Merit Submit Modal */
+  .merit-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+    z-index: 3000; align-items: center; justify-content: center; padding: 16px;
+  }
+  .merit-overlay.open { display: flex; }
+  .merit-submit-modal {
+    background: var(--white); border-radius: 20px; width: 100%; max-width: 540px;
+    max-height: 90vh; overflow-y: auto; padding: 32px; position: relative;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+  }
+  .merit-submit-modal h2 { font-size: 1.2rem; color: var(--navy); font-weight: 800; margin: 0 0 4px; }
+  .merit-submit-modal .ms-uni { color: #15803d; font-size: 0.85rem; font-weight: 600; margin: 0 0 24px; }
+  .ms-field { margin-bottom: 16px; }
+  .ms-field label {
+    display: block; font-size: 0.75rem; font-weight: 700; color: var(--gray-600);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+  }
+  .ms-field input, .ms-field select {
+    width: 100%; padding: 10px 14px; border-radius: 10px;
+    border: 2px solid var(--gray-200); font-family: 'Sora', sans-serif;
+    font-size: 0.87rem; color: var(--navy); outline: none; transition: border-color 0.2s;
+  }
+  .ms-field input:focus, .ms-field select:focus { border-color: var(--green); }
+  .ms-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ms-actions { display: flex; gap: 10px; margin-top: 8px; }
+  .ms-submit-btn {
+    flex: 1; padding: 13px; background: var(--green); border: none; border-radius: 12px;
+    color: var(--navy); font-family: 'Sora', sans-serif; font-size: 0.92rem; font-weight: 800;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .ms-submit-btn:hover { background: #00e060; transform: translateY(-1px); }
+  .ms-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .ms-wa-btn {
+    flex: 1; padding: 12px; background: #25D366; border: none; border-radius: 12px;
+    color: var(--white); font-family: 'Sora', sans-serif; font-size: 0.9rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .ms-wa-btn:hover { background: #1fbc5a; transform: translateY(-1px); }
+  .ms-copy-btn {
+    padding: 12px 20px; background: var(--navy); border: none; border-radius: 12px;
+    color: var(--white); font-family: 'Sora', sans-serif; font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .ms-copy-btn:hover { background: #1a3a5c; }
+  .ms-alt-row {
+    display: flex; align-items: center; gap: 10px; margin-top: 10px;
+    font-size: 0.78rem; color: var(--gray-400);
+  }
+  .ms-alt-row span { white-space: nowrap; }
+  .ms-alt-wa {
+    background: none; border: none; color: #25D366; font-family: 'Sora', sans-serif;
+    font-size: 0.78rem; font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0;
+  }
+  .ms-alt-wa:hover { color: #1fbc5a; }
+  .ms-note {
+    font-size: 0.74rem; color: var(--gray-400); margin-top: 12px;
+    text-align: center; line-height: 1.6;
+  }
+  .ms-img-area {
+    border: 2px dashed var(--gray-200); border-radius: 10px;
+    padding: 18px; cursor: pointer; text-align: center;
+    transition: all 0.2s; position: relative; overflow: hidden;
+    background: var(--gray-100);
+  }
+  .ms-img-area:hover, .ms-img-area.drag-over {
+    border-color: var(--green); background: #f0fff6;
+  }
+  .ms-img-placeholder {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    pointer-events: none;
+  }
+  .ms-img-placeholder .img-icon { font-size: 1.8rem; }
+  .ms-img-placeholder p { color: var(--gray-600); font-size: 0.83rem; font-weight: 600; margin: 0; }
+  .ms-img-placeholder small { color: var(--gray-400); font-size: 0.72rem; }
+  .ms-img-remove {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(0,0,0,0.55); color: var(--white); border: none;
+    border-radius: 6px; padding: 3px 9px; font-size: 0.75rem; font-weight: 600;
+    cursor: pointer; font-family: 'Sora', sans-serif; z-index: 2;
+  }
+  .ms-img-remove:hover { background: rgba(0,0,0,0.75); }
+  .ms-share-note {
+    display: none; background: #fef3c7; border: 1.5px solid #fde68a;
+    border-radius: 8px; padding: 10px 14px; margin-top: 8px;
+    font-size: 0.79rem; color: #92400e; line-height: 1.55;
+  }
+
+  /* ───── STUDENT TOOLS BAR ───── */
+  .tools-bar {
+    display:flex; gap:8px; margin:14px 5% 0; flex-wrap:wrap;
+  }
+  .tool-btn {
+    display:flex; align-items:center; gap:7px;
+    padding:8px 16px; border-radius:22px;
+    border:1.5px solid var(--gray-200); background:var(--white);
+    color:var(--navy); font-family:'Sora',sans-serif;
+    font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.2s;
+  }
+  .tool-btn:hover { border-color:var(--green); color:var(--green); }
+  .tool-btn.active { background:var(--navy); border-color:var(--navy); color:var(--white); }
+  /* Mobile: even 2-column grid for the tools bar */
+  @media(max-width:620px){
+    .tools-bar { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .tool-btn { justify-content:center; }
+  }
+  .tool-badge {
+    background:var(--green); color:var(--navy);
+    font-size:0.68rem; font-weight:800;
+    padding:1px 6px; border-radius:10px; min-width:18px; text-align:center;
+  }
+  /* ───── SHORTLIST ───── */
+  .btn-save {
+    background:none; border:none; font-size:1.05rem; cursor:pointer;
+    padding:6px 8px; border-radius:8px; transition:transform 0.2s; line-height:1;
+  }
+  .btn-save:hover { transform:scale(1.25); }
+  @keyframes heartPop { 0%{transform:scale(1)} 50%{transform:scale(1.45)} 100%{transform:scale(1)} }
+  .btn-save.saved { animation:heartPop 0.3s ease; }
+  /* ───── ADMISSION CALENDAR ───── */
+  .calendar-section {
+    display:none; margin:10px 5% 0;
+    background:var(--white); border:1.5px solid var(--gray-200);
+    border-radius:16px; padding:20px 22px; box-shadow:var(--shadow-sm);
+  }
+  .calendar-section.show { display:block; }
+  .calendar-header {
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
+  }
+  .calendar-header h3 { font-size:0.95rem; font-weight:800; color:var(--navy); margin:0; }
+  .cal-filter-row { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:12px; }
+  .cal-filter-btn {
+    padding:4px 13px; border-radius:20px; font-size:0.75rem; font-weight:600;
+    border:1.5px solid var(--gray-200); background:var(--white); color:var(--gray-600);
+    cursor:pointer; font-family:'Sora',sans-serif; transition:all 0.18s;
+  }
+  .cal-filter-btn.active { background:var(--navy); border-color:var(--navy); color:var(--white); }
+  .cal-events { display:flex; flex-direction:column; gap:7px; max-height:340px; overflow-y:auto; }
+  .cal-event {
+    display:flex; align-items:center; gap:12px; padding:9px 12px;
+    border-radius:10px; border-left:4px solid; transition:background 0.15s;
+  }
+  .cal-event:hover { background:var(--gray-100); }
+  .cal-event.urgent { border-color:#ef4444; }
+  .cal-event.soon   { border-color:#f59e0b; }
+  .cal-event.ok     { border-color:var(--green); }
+  .cal-event.past   { border-color:var(--gray-200); opacity:0.5; }
+  .cal-date { min-width:48px; text-align:center; line-height:1.2; }
+  .cal-day  { font-size:1.05rem; font-weight:800; color:var(--navy); }
+  .cal-mon  { font-size:0.7rem; font-weight:600; color:var(--gray-400); }
+  .cal-info { flex:1; }
+  .cal-uni  { font-size:0.81rem; font-weight:700; color:var(--navy); }
+  .cal-desc { font-size:0.74rem; color:var(--gray-600); margin-top:2px; }
+  .cal-badge {
+    padding:3px 9px; border-radius:20px; font-size:0.68rem; font-weight:700; white-space:nowrap;
+  }
+  .cal-badge.test     { background:#fef3c7; color:#92400e; }
+  .cal-badge.deadline { background:#fee2e2; color:#b91c1c; }
+  .cal-badge.merit    { background:#dcfce7; color:#15803d; }
+  .cal-badge.open     { background:#dbeafe; color:#1d4ed8; }
+  .cal-empty { color:var(--gray-400); text-align:center; padding:20px; font-size:0.84rem; }
+  /* ───── MAP VIEW ───── */
+  #mapContainer {
+    display:none; margin:10px 5% 0; border-radius:16px; overflow:hidden;
+    height:500px; border:1.5px solid var(--gray-200); box-shadow:var(--shadow-sm);
+  }
+  #mapContainer.show { display:block; }
+  .leaflet-popup-content-wrapper { border-radius:12px !important; font-family:'Sora',sans-serif !important; }
+  .map-popup { font-family:'Sora',sans-serif; }
+  .map-popup-name { font-weight:700; font-size:0.9rem; color:#0A1628; margin-bottom:3px; }
+  .map-popup-city { font-size:0.76rem; color:#5A6478; margin-bottom:8px; }
+  .map-popup-btn {
+    display:inline-block; background:#00C853; color:#0A1628 !important;
+    padding:5px 13px; border-radius:7px; font-size:0.76rem; font-weight:700;
+    cursor:pointer; text-decoration:none !important; border:none;
+  }
+  /* ───── FEE CALCULATOR ───── */
+  .fee-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6);
+    z-index:2500; align-items:center; justify-content:center; padding:16px;
+  }
+  .fee-overlay.open { display:flex; }
+  .fee-modal {
+    background:var(--white); border-radius:20px; width:100%; max-width:540px;
+    max-height:90vh; overflow-y:auto; padding:32px; position:relative;
+    box-shadow:0 24px 64px rgba(0,0,0,0.25);
+  }
+  .fee-modal h2 { font-size:1.2rem; color:var(--navy); font-weight:800; margin:0 0 6px; }
+  .fee-modal > p { color:var(--gray-400); font-size:0.82rem; margin:0 0 22px; }
+  .fee-field { margin-bottom:18px; }
+  .fee-field label {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:0.76rem; font-weight:700; color:var(--gray-600);
+    text-transform:uppercase; letter-spacing:0.05em; margin-bottom:7px;
+  }
+  .fee-field label .fee-val { font-size:0.88rem; color:var(--green); font-weight:800; text-transform:none; letter-spacing:0; }
+  .fee-field input[type=range] { width:100%; accent-color:var(--green); height:5px; cursor:pointer; }
+  .fee-select {
+    width:100%; padding:10px 14px; border-radius:10px;
+    border:2px solid var(--gray-200); font-family:'Sora',sans-serif;
+    font-size:0.86rem; color:var(--navy); outline:none;
+    transition:border-color 0.2s; background:var(--white);
+  }
+  .fee-select:focus { border-color:var(--green); }
+  .fee-toggle-row { display:flex; gap:8px; }
+  .fee-toggle {
+    flex:1; padding:9px; border:2px solid var(--gray-200); border-radius:10px;
+    background:var(--white); color:var(--navy); font-family:'Sora',sans-serif;
+    font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.18s; text-align:center;
+  }
+  .fee-toggle.active { background:var(--green); border-color:var(--green); color:var(--navy); }
+  .fee-result {
+    display:none; background:var(--navy); border-radius:14px; padding:20px 22px; margin-top:8px;
+  }
+  .fee-result.show { display:block; }
+  .fee-result-lbl  { color:rgba(255,255,255,0.55); font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; }
+  .fee-result-total{ color:var(--green); font-size:1.9rem; font-weight:800; margin-bottom:14px; }
+  .fee-breakdown   { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+  .fee-bline { background:rgba(255,255,255,0.06); border-radius:8px; padding:8px 11px; }
+  .fee-bline-k { color:rgba(255,255,255,0.5); font-size:0.7rem; font-weight:600; }
+  .fee-bline-v { color:var(--white); font-size:0.86rem; font-weight:700; }
+  .fee-calc-btn {
+    width:100%; padding:13px; background:var(--green); border:none; border-radius:12px;
+    color:var(--navy); font-family:'Sora',sans-serif; font-size:0.95rem; font-weight:800;
+    cursor:pointer; transition:all 0.2s; margin-top:8px;
+  }
+  .fee-calc-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,200,81,0.35); }
+  /* ───── MERIT TREND (detail modal) ───── */
+  .trend-section {
+    margin-top:22px; padding-top:20px; border-top:1px solid var(--gray-200);
+  }
+  .trend-title { font-size:0.88rem; font-weight:700; color:var(--navy); margin-bottom:12px; }
+  .trend-wrap  { position:relative; height:150px; }
+
+  /* ───── COMMUNITY SECTIONS (Reviews / Alumni / Q&A) ───── */
+  .comm-section {
+    margin-top:22px; padding-top:20px; border-top:1px solid var(--gray-200);
+  }
+  .comm-header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:14px; flex-wrap:wrap; gap:8px;
+  }
+  .comm-title {
+    font-size:0.9rem; font-weight:800; color:var(--navy);
+  }
+  .comm-add-btn {
+    padding:6px 14px; border-radius:20px; border:1.5px solid var(--green);
+    background:transparent; color:var(--green); font-family:'Sora',sans-serif;
+    font-size:0.75rem; font-weight:700; cursor:pointer; transition:all 0.18s;
+  }
+  .comm-add-btn:hover { background:var(--green); color:var(--navy); }
+
+  /* — Reviews — */
+  .review-avg { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .review-stars-big { font-size:1.3rem; letter-spacing:2px; }
+  .review-avg-num { font-size:1.6rem; font-weight:800; color:var(--navy); }
+  .review-avg-of  { font-size:0.75rem; color:var(--gray-400); }
+  .review-form {
+    background:var(--gray-100); border-radius:12px; padding:16px;
+    margin-bottom:14px; display:none;
+  }
+  .review-form.open { display:block; }
+  .review-form textarea {
+    width:100%; border:1.5px solid var(--gray-200); border-radius:8px;
+    padding:10px 12px; font-family:'Sora',sans-serif; font-size:0.83rem;
+    resize:none; outline:none; transition:border-color 0.2s; background:var(--white);
+  }
+  .review-form textarea:focus { border-color:var(--green); }
+  .star-picker { display:flex; gap:6px; margin:10px 0; font-size:1.4rem; cursor:pointer; }
+  .star-picker span { opacity:0.3; transition:opacity 0.15s, transform 0.15s; }
+  .star-picker span.on { opacity:1; }
+  .star-picker span:hover { transform:scale(1.2); }
+  .review-cat-row { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0 12px; }
+  .review-cat {
+    padding:4px 11px; border-radius:20px; font-size:0.72rem; font-weight:600;
+    border:1.5px solid var(--gray-200); background:var(--white); color:var(--gray-600);
+    cursor:pointer; font-family:'Sora',sans-serif; transition:all 0.15s;
+  }
+  .review-cat.sel { background:var(--navy); border-color:var(--navy); color:var(--white); }
+  .review-submit-btn {
+    padding:8px 20px; background:var(--green); border:none; border-radius:8px;
+    color:var(--navy); font-family:'Sora',sans-serif; font-size:0.82rem;
+    font-weight:700; cursor:pointer;
+  }
+  .review-list { display:flex; flex-direction:column; gap:10px; }
+  .review-card {
+    background:var(--gray-100); border-radius:10px; padding:12px 14px;
+  }
+  .review-card-top { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .review-card-stars { font-size:0.85rem; letter-spacing:1px; }
+  .review-card-cat {
+    font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px;
+    background:var(--navy); color:var(--white);
+  }
+  .review-card-date { font-size:0.7rem; color:var(--gray-400); margin-left:auto; }
+  .review-card-text { font-size:0.82rem; color:var(--gray-600); line-height:1.5; }
+  .review-helpful { margin-top:7px; font-size:0.72rem; color:var(--gray-400); cursor:pointer; }
+  .review-helpful:hover { color:var(--green); }
+  .review-empty, .qa-empty, .empty-state {
+    text-align:center; padding:28px 18px; background:var(--gray-100); border:1.5px dashed var(--gray-200);
+    border-radius:14px; color:var(--gray-600);
+  }
+  .empty-icon { font-size:2rem; margin-bottom:8px; display:block; }
+  .empty-title { font-size:.95rem; font-weight:700; color:var(--navy); margin-bottom:4px; }
+  .empty-sub { font-size:.82rem; color:var(--gray-400); }
+
+  /* — Alumni — */
+  .alumni-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; }
+  .alumni-card {
+    background:var(--gray-100); border-radius:12px; padding:14px 12px; text-align:center;
+  }
+  .alumni-avatar {
+    width:44px; height:44px; border-radius:50%; background:var(--navy);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem; margin:0 auto 8px;
+  }
+  .alumni-name { font-size:0.82rem; font-weight:700; color:var(--navy); margin-bottom:2px; }
+  .alumni-batch { font-size:0.7rem; color:var(--gray-400); margin-bottom:4px; }
+  .alumni-role {
+    font-size:0.7rem; font-weight:600; color:var(--green);
+    background:var(--green-light); padding:2px 8px; border-radius:10px; display:inline-block;
+  }
+  .alumni-advice { font-size:0.74rem; color:var(--gray-600); margin-top:7px; font-style:italic; line-height:1.4; }
+  .alumni-form {
+    background:var(--gray-100); border-radius:12px; padding:16px;
+    margin-bottom:14px; display:none;
+  }
+  .alumni-form.open { display:block; }
+  .alumni-form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+  .alumni-inp {
+    width:100%; padding:9px 12px; border:1.5px solid var(--gray-200);
+    border-radius:8px; font-family:'Sora',sans-serif; font-size:0.82rem;
+    color:var(--navy); outline:none; transition:border-color 0.2s; background:var(--white);
+  }
+  .alumni-inp:focus { border-color:var(--green); }
+  .alumni-empty { color:var(--gray-400); font-size:0.82rem; text-align:center; padding:16px 0; }
+
+  /* — Q&A — */
+  .qa-list { display:flex; flex-direction:column; gap:8px; }
+  .qa-item { border:1.5px solid var(--gray-200); border-radius:12px; overflow:hidden; }
+  .qa-question {
+    display:flex; align-items:flex-start; gap:10px;
+    padding:12px 14px; cursor:pointer; transition:background 0.15s;
+    background:var(--white);
+  }
+  .qa-question:hover { background:var(--gray-100); }
+  .qa-q-text { flex:1; font-size:0.84rem; font-weight:600; color:var(--navy); line-height:1.4; }
+  .qa-meta { display:flex; gap:8px; align-items:center; }
+  .qa-ans-count {
+    font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:10px;
+    background:var(--green-light); color:var(--green-dark); white-space:nowrap;
+  }
+  .qa-expand-icon { font-size:0.8rem; color:var(--gray-400); transition:transform 0.2s; }
+  .qa-item.open .qa-expand-icon { transform:rotate(180deg); }
+  .qa-answers {
+    display:none; padding:0 14px 14px; background:var(--gray-100);
+    border-top:1px solid var(--gray-200);
+  }
+  .qa-item.open .qa-answers { display:block; }
+  .qa-answer {
+    background:var(--white); border-radius:8px; padding:10px 12px;
+    margin-top:8px; font-size:0.81rem; color:var(--gray-600); line-height:1.5;
+  }
+  .qa-answer-meta {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:6px; font-size:0.7rem; color:var(--gray-400);
+  }
+  .qa-vote-btn {
+    background:none; border:none; cursor:pointer; font-size:0.8rem;
+    color:var(--gray-400); font-family:'Sora',sans-serif; transition:color 0.15s;
+  }
+  .qa-vote-btn:hover { color:var(--green); }
+  .qa-answer-form { margin-top:10px; }
+  .qa-answer-form textarea {
+    width:100%; border:1.5px solid var(--gray-200); border-radius:8px;
+    padding:9px 12px; font-family:'Sora',sans-serif; font-size:0.81rem;
+    resize:none; outline:none; background:var(--white); transition:border-color 0.2s;
+  }
+  .qa-answer-form textarea:focus { border-color:var(--green); }
+  .qa-post-ans-btn {
+    margin-top:7px; padding:7px 16px; background:var(--green); border:none;
+    border-radius:7px; color:var(--navy); font-family:'Sora',sans-serif;
+    font-size:0.79rem; font-weight:700; cursor:pointer;
+  }
+  .qa-ask-form {
+    background:var(--gray-100); border-radius:12px; padding:14px;
+    margin-bottom:12px; display:none;
+  }
+  .qa-ask-form.open { display:block; }
+  .qa-ask-form input {
+    width:100%; padding:9px 12px; border:1.5px solid var(--gray-200);
+    border-radius:8px; font-family:'Sora',sans-serif; font-size:0.83rem;
+    color:var(--navy); outline:none; transition:border-color 0.2s; background:var(--white);
+  }
+  .qa-ask-form input:focus { border-color:var(--green); }
+  .qa-empty { color:var(--gray-400); font-size:0.82rem; text-align:center; padding:14px 0; }
+
+  /* ───── HAMBURGER (mobile menu button) ───── */
+  .nav-hamburger {
+    display:none; flex-direction:column; justify-content:center; gap:5px;
+    width:40px; height:40px; padding:8px; background:transparent;
+    border:none; cursor:pointer; margin-left:8px;
+  }
+  .nav-hamburger span {
+    display:block; height:2px; width:100%; background:var(--white);
+    border-radius:2px; transition:all 0.25s;
+  }
+  .nav-hamburger.open span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+  .nav-hamburger.open span:nth-child(2){ opacity:0; }
+  .nav-hamburger.open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+
+  /* ───── RESPONSIVE ───── */
+  @media (max-width:768px) {
+    .nav-hamburger { display:flex; }
+    .nav-links { display:none; }
+    .nav-links.open {
+      display:flex; flex-direction:column; align-items:stretch; gap:0;
+      position:fixed; top:68px; left:0; right:0;
+      background:rgba(10,22,40,0.99); backdrop-filter:blur(12px);
+      padding:8px 5% 18px; border-top:1px solid rgba(255,255,255,0.08);
+      box-shadow:0 10px 24px rgba(0,0,0,0.35); max-height:calc(100vh - 68px); overflow-y:auto;
+    }
+    .nav-links.open li { width:100%; border-bottom:1px solid rgba(255,255,255,0.06); }
+    .nav-links.open li:last-child { border-bottom:none; }
+    .mobile-auth-item { display:block; }
+    .mobile-auth-item a { background:var(--green); color:var(--navy) !important; border-radius:10px; margin-top:8px; text-align:center !important; font-weight:800 !important; }
+    .nav-links.open a, .nav-links.open .nav-dropdown-btn {
+      display:block; width:100%; padding:14px 4px; font-size:1rem; text-align:left;
+    }
+    /* Tools dropdown flows inline inside the mobile menu */
+    .nav-links.open .nav-dropdown-menu {
+      position:static; opacity:1; visibility:visible; transform:none;
+      box-shadow:none; background:rgba(255,255,255,0.04); border:none;
+      width:100%; margin:4px 0 8px; padding:4px 0; display:none;
+    }
+    .nav-links.open .nav-dropdown.open .nav-dropdown-menu { display:block; }
+    .nav-links.open .nav-dropdown-menu button { padding:12px 14px; font-size:0.95rem; }
+    .nav-cta { display:none; }   /* on mobile, login moves into the menu */
+    .hero-stats { gap:28px; }
+    .stat-num { font-size:1.5rem; }
+    .uni-grid { grid-template-columns:1fr; }
+    .detail-grid { grid-template-columns:1fr; }
+    .modal { padding:24px; }
+    .compare-bar { flex-direction:column; gap:12px; align-items:stretch; }
+    .btn-start-compare { text-align:center; }
+    .alumni-form-row { grid-template-columns:1fr; }
+  }
+</style>
 </head>
 <body>
 
@@ -979,6 +2623,48 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+const T = {
+  en: {
+    nav_universities:'Universities', nav_compare:'Compare', nav_how:'How It Works', nav_cta:'View Universities',
+    hero_badge:"Pakistan's #1 Education Comparison Platform",
+    hero_h1:'Choose the Right <span>University</span> <span class="hero-dash">—</span><br>All Info in One Place',
+    hero_urdu:'فیس، میرٹ، پروگرام — سب کچھ ایک جگہ',
+    hero_sub:'Data on 218 HEC-recognized universities in Pakistan — fees, merit, programs. Compare side-by-side and decide your future.',
+    hero_search_placeholder:'Search university or program…',
+    hero_search_btn:'🔍 Search',
+    stat1_label:'Top Universities', stat2_label:'Programs Listed', stat3_label:'Students Helped', stat4_label:'Cities Covered',
+    filter_label:'Filter:', filter_all:'All (218)', filter_public:'🏛️ Public', filter_private:'🏢 Private',
+    filter_engineering:'⚙️ Engineering', filter_medical:'🏥 Medical', filter_business:'💼 Business',
+    filter_federal:'🏙️ Federal', filter_punjab:'🌾 Punjab', filter_sindh:'🌊 Sindh',
+    filter_kpk:'🏔️ KPK', filter_balochistan:'🏜️ Balochistan', filter_ajk:'🏞️ AJK', filter_gb:'⛰️ GB',
+    fee_label:'FEE/SEMESTER', merit_label:'MERIT / ENTRY',
+    btn_compare:'+ Compare', btn_added:'✓ Added', btn_details:'Details →',
+    tag_public:'🏛️ Public', tag_private:'🏢 Private',
+    hiw_label:'Simple Process', hiw_title:'Make the Right<br>Decision in 3 Steps',
+    hiw_sub:'Comprehensive university data for Pakistan — all in one place',
+    step1_num:'STEP 01', step1_title:'Search', step1_desc:'Find universities by city, program, or fee range. 218 HEC-recognized institutions listed.',
+    step2_num:'STEP 02', step2_title:'Compare', step2_desc:'Compare 2–3 universities side-by-side — fees, merit, programs, and location all at once.',
+    step3_num:'STEP 03', step3_title:'Decide', step3_desc:'Make a confident decision with complete information. No guessing, no confusion.',
+    step4_num:'COMING SOON', step4_title:'AI Predictor', step4_desc:'Enter your aggregate — AI will predict your admission chances at each university.',
+    compare_bar_title:'⚖️ Compare List:', compare_bar_btn:'Compare Now →',
+    footer_tagline:"Pakistan's #1 Education Comparison Platform",
+    footer_link1:'Universities', footer_link2:'Compare', footer_link3:'Admission Calendar', footer_link4:'Scholarships', footer_link5:'About',
+    footer_copy:'© 2026 TaleemPK — All rights reserved | Karachi, Pakistan',
+    detail_fee:'💰 Fee Per Semester', detail_entry:'📝 Entry Test', detail_merit:'🏆 Merit Required',
+    detail_seats:'👥 Seats Per Year', detail_scholarships:'🎓 Scholarships', detail_hostel:'🏠 Hostel',
+    detail_programs:'📚 Programs Offered', detail_highlights:'✨ Highlights',
+    detail_website_btn:'🌐 Visit Official Website →', detail_est:'Est.',
+    compare_modal_label:'Side-by-Side Comparison', compare_modal_title:'University Comparison',
+    compare_tip:'💡 The <strong>green</strong> highlight shows the most affordable fee option. The right choice depends on your program, merit, and budget.',
+    row_university:'University', row_city:'City', row_type:'Type', row_fee:'Fee/Semester',
+    row_entry:'Entry Test', row_merit:'Merit Required', row_programs:'Top Programs',
+    row_seats:'Seats/Year', row_scholarships:'Scholarships', row_hostel:'Hostel',
+    row_established:'Established', row_website:'Website',
+    alert_max:'You can compare a maximum of 3 universities!',
+    alert_min:'Please select at least 2 universities to compare!',
+    showing: c => `Showing <span>${c}</span> universities`,
+  },
+};
 const E = T.en;
 function t(key) { return E[key] ?? key; }
 
@@ -1497,6 +3183,14 @@ const UNIVERSITIES = [
 ];
 
 // ─── Province map for original 29 universities (NCA already has province) ───
+const PROVINCE_MAP = {
+  1:'Federal',2:'Punjab',3:'Punjab',4:'Sindh',5:'Federal',
+  6:'Federal',7:'Federal',8:'KPK',9:'Federal',10:'Sindh',
+  11:'Punjab',12:'Sindh',13:'Sindh',14:'Federal',15:'Federal',
+  16:'Punjab',17:'Sindh',18:'Punjab',19:'Sindh',20:'Punjab',
+  21:'Federal',22:'Punjab',23:'Federal',24:'Punjab',25:'Sindh',
+  26:'Punjab',27:'Punjab',28:'Federal',29:'KPK'
+};
 UNIVERSITIES.forEach(u=>{if(!u.province&&PROVINCE_MAP[u.id])u.province=PROVINCE_MAP[u.id];});
 
 // ─── Smart default programs based on university focus (name + tags) ───
@@ -1750,12 +3444,429 @@ mk(218,'BU','Baltistan University','Skardu','public',2017,'Gilgit-Baltistan')
 );
 
 // ─── Website map for 188 basic HEC universities ───
+const WEBSITE_MAP = {
+  // Federal
+  31:'ndu.edu.pk',32:'aiou.edu.pk',33:'vu.edu.pk',34:'cust.edu.pk',
+  35:'riphah.edu.pk',36:'fuuast.edu.pk',37:'fui.edu.pk',38:'pide.org.pk',
+  39:'shifa.edu.pk',40:'szabmu.edu.pk',41:'nutech.edu.pk',42:'nsu.edu.pk',
+  43:'case.edu.pk',44:'ibadat.edu.pk',45:'myu.edu.pk',
+  // Punjab - Lahore
+  46:'lcwu.edu.pk',47:'fjmu.edu.pk',48:'kemu.edu.pk',49:'uvas.edu.pk',
+  50:'kinnaird.edu.pk',51:'umt.edu.pk',52:'uol.edu.pk',53:'bnu.edu.pk',
+  54:'minhaj.edu.pk',55:'superior.edu.pk',56:'ue.edu.pk',57:'hajvery.edu.pk',
+  58:'pifd.edu.pk',59:'lahoreschoolofeconomics.edu.pk',60:'lgu.edu.pk',
+  61:'uohe.edu.pk',62:'ncbae.edu.pk',63:'southasia.edu.pk',64:'imscienceslahore.edu.pk',
+  65:'iac.edu.pk',66:'leads.edu.pk',67:'qarshi.edu.pk',68:'nur.edu.pk',
+  // Punjab - Rawalpindi / Attock
+  69:'uaar.edu.pk',70:'fjwu.edu.pk',71:'rmu.edu.pk',72:'nums.edu.pk',73:'rwu.edu.pk',
+  // Punjab - Taxila / Wah
+  74:'hitecuni.edu.pk',112:'uow.edu.pk',113:'putr.edu.pk',
+  // Punjab - Faisalabad
+  75:'uaf.edu.pk',76:'gcuf.edu.pk',77:'ntu.edu.pk',78:'fmu.edu.pk',
+  79:'gcwuf.edu.pk',80:'tuf.edu.pk',
+  // Punjab - Bahawalpur
+  81:'iub.edu.pk',82:'gscwu.edu.pk',83:'cuvas.edu.pk',
+  // Punjab - Multan
+  84:'wum.edu.pk',85:'usp.edu.pk',86:'nmu.edu.pk',87:'nfc-iet.edu.pk',
+  88:'mnsuam.edu.pk',89:'mnsuet.edu.pk',90:'timesinstitute.edu.pk',91:'emerson.edu.pk',
+  // Punjab - Sargodha / Gujranwala / Sialkot / Mianwali
+  92:'uos.edu.pk',93:'gift.edu.pk',94:'uog.edu.pk',95:'uskt.edu.pk',
+  96:'gcwus.edu.pk',97:'namal.edu.pk',98:'umianwali.edu.pk',99:'uookara.edu.pk',
+  100:'uosaghiwal.edu.pk',101:'ujhang.edu.pk',102:'ghaziuniversity.edu.pk',
+  103:'kfueit.edu.pk',104:'unarowal.edu.pk',105:'uochakwal.edu.pk',
+  106:'ulayyah.edu.pk',107:'kum.edu.pk',108:'thaluniversity.edu.pk',
+  109:'alqadiruniversity.edu.pk',110:'bgnu.edu.pk',111:'ptutt.edu.pk',
+  // Sindh - Karachi
+  114:'uok.edu.pk',115:'ssuet.edu.pk',116:'ivs.edu.pk',117:'hamdard.edu.pk',
+  118:'jsmu.edu.pk',119:'baqai.edu.pk',120:'dsu.edu.pk',121:'zu.edu.pk',
+  122:'iobm.edu.pk',123:'iqra.edu.pk',124:'duet.edu.pk',125:'greenwich.edu.pk',
+  126:'jinnah.edu.pk',127:'kiet.edu.pk',128:'smiu.edu.pk',129:'juw.edu.pk',
+  130:'dadabhoy.edu.pk',131:'ilmauniversity.edu.pk',132:'indus.edu.pk',
+  133:'ksbl.edu.pk',134:'shu.edu.pk',135:'sbbcu.edu.pk',136:'cuhs.edu.pk',
+  137:'newports.edu.pk',138:'pna.edu.pk',139:'kinpoe.edu.pk',140:'malir.edu.pk',
+  141:'bbsul.edu.pk',
+  // Sindh - Interior
+  142:'usindh.edu.pk',143:'lumhs.edu.pk',144:'gcuh.edu.pk',145:'isra.edu.pk',
+  146:'sau.edu.pk',147:'iba-suk.edu.pk',148:'salu.edu.pk',149:'quest.edu.pk',
+  150:'sbbu.edu.pk',151:'pumhs.edu.pk',152:'sbbuvs.edu.pk',153:'sbbmul.edu.pk',
+  154:'usms.edu.pk',155:'shaikhayaz.edu.pk',156:'aror.edu.pk',157:'bnbwu.edu.pk',
+  158:'sabsua.edu.pk',
+  // KPK - Peshawar
+  159:'icp.edu.pk',160:'uetpeshawar.edu.pk',161:'kmu.edu.pk',162:'imsciences.edu.pk',
+  163:'sbbwup.edu.pk',164:'cecos.edu.pk',165:'gandhara.edu.pk',166:'sarhad.edu.pk',
+  167:'cityuniversity.edu.pk',168:'abasyn.edu.pk',
+  // KPK - DI Khan / Gomal
+  169:'qurtuba.edu.pk',170:'gu.edu.pk',
+  // KPK - Agriculture / Malakand / Swat / Hazara
+  171:'aup.edu.pk',172:'uom.edu.pk',173:'uswat.edu.pk',174:'uswabi.edu.pk',
+  175:'hu.edu.pk',176:'aust.edu.pk',177:'kust.edu.pk',178:'uoh.edu.pk',
+  // KPK - Mardan / Charsadda / Bannu / Others
+  179:'awkum.edu.pk',180:'wumardan.edu.pk',181:'uetmardan.edu.pk',182:'bkuc.edu.pk',
+  183:'ustb.edu.pk',184:'wuswabi.edu.pk',185:'kkkuk.edu.pk',186:'sbbush.edu.pk',
+  187:'ubuner.edu.pk',188:'utn.edu.pk',189:'fatauniversity.edu.pk',
+  190:'uochitral.edu.pk',191:'uolm.edu.pk',192:'uodir.edu.pk',193:'uoshangla.edu.pk',
+  194:'paf-iast.edu.pk',195:'inu.edu.pk',196:'northern.edu.pk',197:'uoadik.edu.pk',
+  // Balochistan
+  198:'uob.edu.pk',199:'bumhs.edu.pk',200:'buitms.edu.pk',201:'sbkwu.edu.pk',
+  202:'uot.edu.pk',203:'uogwadar.edu.pk',204:'umakran.edu.pk',205:'buetk.edu.pk',
+  206:'luawms.edu.pk',207:'uolor.edu.pk',208:'mckru.edu.pk',209:'alhamd.edu.pk',
+  // AJK
+  210:'must.edu.pk',211:'ajku.edu.pk',212:'upr.edu.pk',213:'al-khair.edu.pk',
+  214:'miuazad.edu.pk',215:'wuajkbagh.edu.pk',216:'uokotli.edu.pk',
+  // Gilgit-Baltistan
+  217:'kiu.edu.pk',218:'baltistanuniversity.edu.pk'
+};
 UNIVERSITIES.forEach(u=>{ if(!u.website && WEBSITE_MAP[u.id]) u.website=WEBSITE_MAP[u.id]; });
 
 // ─── Data updates for top 50 well-known universities (approx. 2024-25) ───
+const DATA_UPDATES = {
+  // ── FEDERAL ──
+  32:{ fee:'Rs. 5–15K/sem', feeNum:10000, merit:'Open Enrollment', entry:'No entry test',
+    programs:['BA','BSc','B.Ed','BBA','MBA','MA','MSc','MPhil','PhD'],
+    description:'Allama Iqbal Open University (AIOU) is Pakistan\'s largest distance-learning institution, founded in 1974. With over 1.3 million enrolled students, it offers flexible education from matric to PhD level across all four provinces.',
+    highlights:['1.3M+ Students','Distance Learning','Countrywide Reach','Affordable Fees'],
+    scholarships:'Need-based & merit scholarships available', hostel:'Not applicable (distance learning)' },
+  33:{ fee:'Rs. 8–20K/sem', feeNum:14000, merit:'Merit-based (previous grades)', entry:'No entry test',
+    programs:['BS CS','BS IT','BBA','MBA','BS Math','BS English','BS Commerce'],
+    description:'Virtual University of Pakistan (VU) is the country\'s first public online university, established in 2002. It delivers HEC-recognized degrees entirely through e-learning, making quality education accessible from anywhere in Pakistan.',
+    highlights:['100% Online','Affordable','HEC Recognized','No Entry Test'],
+    scholarships:'Need-based scholarships via HEC', hostel:'Not applicable (online university)' },
+  34:{ fee:'Rs. 60–100K/sem', feeNum:80000, merit:'70%+ in FSc', entry:'CUST Entry Test',
+    programs:['BS CS','BS SE','BS EE','BBA','MBA','BS Telecom'],
+    description:'Capital University of Science & Technology (CUST) is a private HEC-recognized university in Islamabad, known for strong engineering and IT programs with modern labs and industry linkages.',
+    highlights:['Engineering Focus','Modern Labs','Industry Links','Islamabad Campus'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  35:{ fee:'Rs. 80–150K/sem', feeNum:115000, merit:'65%+ in FSc', entry:'Riphah Entry Test',
+    programs:['MBBS','DPT','Pharmacy','BS Nursing','BBA','BS CS','Islamic Studies'],
+    description:'Riphah International University is a private university in Islamabad offering programs in medical, engineering, and Islamic studies. It is known for integrating Islamic values with modern education.',
+    highlights:['Medical & Islamic Studies','Modern Facilities','Multiple Campuses','HEC W-Category'],
+    scholarships:'Merit, need-based & Islamic studies scholarships', hostel:'Separate hostels for males & females' },
+  41:{ fee:'Rs. 40–70K/sem', feeNum:55000, merit:'60%+ in FSc Pre-Engineering', entry:'NUTECH Entry Test',
+    programs:['BS Civil Eng','BS Electrical Eng','BS Mechanical Eng','BS CS','BS SE'],
+    description:'National University of Technology (NUTECH) is a public university in Islamabad established in 2018, offering engineering and technology programs with strong industrial collaboration.',
+    highlights:['Public University','Engineering Focus','Industry Collaboration','New Campus'],
+    scholarships:'HEC need-based & merit scholarships', hostel:'Available on campus' },
+  72:{ fee:'Rs. 60–120K/sem', feeNum:90000, merit:'Army/NUMS Merit List', entry:'NUMS Entry Test / MDCAT',
+    programs:['MBBS','BDS','Doctor of Pharmacy','DPT','BS Nursing','Allied Health'],
+    description:'National University of Medical Sciences (NUMS) Rawalpindi is a military-affiliated medical university. It is ranked among Pakistan\'s top medical institutions with state-of-the-art facilities and teaching hospitals.',
+    highlights:['Military Affiliation','Top Medical University','Teaching Hospitals','State-of-art Labs'],
+    scholarships:'Military & merit-based scholarships', hostel:'Well-equipped hostels available' },
+
+  // ── PUNJAB – LAHORE ──
+  46:{ fee:'Rs. 15–30K/sem', feeNum:22000, merit:'60%+ in Intermediate', entry:'LCWU Entry Test',
+    programs:['BS Sciences','BS Arts','BS Commerce','BS IT','BS Education','BS Fashion Design','MA','MSc'],
+    description:'Lahore College for Women University (LCWU) is one of Pakistan\'s oldest and most prestigious women\'s universities, founded in 1922. It offers a wide range of undergraduate and postgraduate programs in a safe and academic environment.',
+    highlights:['Women\'s University','100+ Years Heritage','Large Campus','Affordable Fees'],
+    scholarships:'Merit, need-based & provincial scholarships', hostel:'On-campus hostel available' },
+  47:{ fee:'Rs. 50–80K/sem', feeNum:65000, merit:'85%+ aggregate (MDCAT)', entry:'MDCAT',
+    programs:['MBBS','BDS','DPT','Allied Health Sciences'],
+    description:'Fatima Jinnah Medical University (FJMU) Lahore, formerly Fatima Jinnah Medical College, is one of the oldest and most respected women\'s medical colleges in Pakistan, established in 1948.',
+    highlights:['Top Medical College','Women\'s University','150+ Years Heritage','Teaching Hospital'],
+    scholarships:'Government & merit-based scholarships', hostel:'On-campus hostel for females' },
+  48:{ fee:'Rs. 60–100K/sem', feeNum:80000, merit:'85%+ aggregate (MDCAT)', entry:'MDCAT',
+    programs:['MBBS','BDS','DPT','Allied Health Sciences','Doctor of Pharmacy'],
+    description:'King Edward Medical University (KEMU) Lahore is one of the most prestigious medical universities in South Asia, established in 1860. Affiliated with Mayo Hospital, it consistently produces top-ranking doctors.',
+    highlights:['165+ Years Heritage','Top Ranking Medical','Affiliated Mayo Hospital','Highly Competitive'],
+    scholarships:'Government scholarships & need-based aid', hostel:'Separate hostels for males & females' },
+  49:{ fee:'Rs. 25–45K/sem', feeNum:35000, merit:'60%+ in FSc (Pre-Medical)', entry:'UVAS Entry Test',
+    programs:['DVM','BS Animal Sciences','BS Food Sciences','BS Bioinformatics','BS Zoology','MPhil','PhD'],
+    description:'University of Veterinary & Animal Sciences (UVAS) Lahore is a leading public institution for veterinary, animal, and food sciences in Pakistan, established in 1882. It is the premier institution for DVM programs in Punjab.',
+    highlights:['Pakistan\'s Top Vet University','140+ Years Heritage','Research Excellence','Teaching Hospitals'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  50:{ fee:'Rs. 30–60K/sem', feeNum:45000, merit:'60%+ in Intermediate', entry:'Kinnaird Entry Test',
+    programs:['BS Sciences','BS Social Sciences','BS Business','BS Arts','MA','MSc'],
+    description:'Kinnaird College for Women University Lahore is a prestigious private women\'s institution, founded in 1913 by the Church of Scotland. It is one of Pakistan\'s most respected colleges for liberal arts and sciences.',
+    highlights:['Women\'s University','110+ Years Heritage','International Affiliation','Lahore Campus'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  51:{ fee:'Rs. 80–150K/sem', feeNum:115000, merit:'65%+ in FSc', entry:'UMT Entry Test',
+    programs:['BBA','MBA','BS CS','BS SE','BS EE','BS Civil Eng','BS Architecture','BS Law'],
+    description:'University of Management & Technology (UMT) Lahore is a leading private university known for strong business and engineering programs, industry partnerships, and modern research facilities.',
+    highlights:['Business & Engineering','Industry Links','Modern Facilities','Multiple Programs'],
+    scholarships:'Merit, need-based & departmental scholarships', hostel:'On-campus hostel available' },
+  52:{ fee:'Rs. 60–120K/sem', feeNum:90000, merit:'60%+ in FSc', entry:'UOL Entry Test',
+    programs:['MBBS','BDS','BS Engineering','BBA','MBA','BS CS','BS Nursing','BS Allied Health'],
+    description:'University of Lahore (UOL) is a large private university offering diverse programs including medical, engineering, and business. It has multiple campuses across Pakistan.',
+    highlights:['Diverse Programs','Medical College','Multiple Campuses','Large University'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  55:{ fee:'Rs. 50–100K/sem', feeNum:75000, merit:'60%+ in Intermediate', entry:'Superior Entry Test',
+    programs:['BBA','MBA','BS CS','BS SE','BS EE','BS Civil','BS Law','BS Psychology'],
+    description:'Superior University Lahore is a well-known private university offering programs in business, engineering, IT, and social sciences with modern facilities and strong alumni network.',
+    highlights:['Modern Campus','Strong Alumni','Multiple Programs','Industry Connections'],
+    scholarships:'Merit & sports scholarships', hostel:'On-campus hostel available' },
+  59:{ fee:'Rs. 30–65K/sem', feeNum:47000, merit:'65%+ in Intermediate', entry:'LSE Entry Test',
+    programs:['BS Economics','BBA','MBA','BS Finance','BS Accounting','MA Economics','MPhil'],
+    description:'Lahore School of Economics (LSE) is a public sector institution established in 1997, recognized as one of Pakistan\'s leading centers for economics and business education with strong research output.',
+    highlights:['Economics Focused','Research Excellence','Lahore Campus','Public Sector'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+
+  // ── PUNJAB – RAWALPINDI / ATTOCK ──
+  69:{ fee:'Rs. 20–40K/sem', feeNum:30000, merit:'55%+ in FSc', entry:'PMAS-AAUR Entry Test',
+    programs:['BS Agriculture','BS Horticulture','BS Food Tech','BS IT','BS Engineering','DVM','MPhil','PhD'],
+    description:'Pir Mehr Ali Shah Arid Agriculture University (PMAS-AAUR) Rawalpindi is a public agriculture university established in 1970, specializing in arid zone agriculture, water conservation, and rural development.',
+    highlights:['Agriculture Specialist','Research Excellence','Arid Zone Focus','Public University'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  70:{ fee:'Rs. 15–30K/sem', feeNum:22000, merit:'55%+ in Intermediate', entry:'FJWU Entry Test',
+    programs:['BS Sciences','BS Social Sciences','BS IT','BS Business','BS Education','MA','MSc'],
+    description:'Fatima Jinnah Women University (FJWU) Rawalpindi is a public women\'s university established in 1998, named after the Mother of the Nation. It provides quality higher education to women across Rawalpindi and surrounding areas.',
+    highlights:['Women\'s University','Public Sector','Rawalpindi Campus','Affordable Fees'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  71:{ fee:'Rs. 50–80K/sem', feeNum:65000, merit:'80%+ aggregate (MDCAT)', entry:'MDCAT',
+    programs:['MBBS','BS Nursing','DPT','Allied Health Sciences'],
+    description:'Rawalpindi Medical University (RMU), formerly Rawalpindi Medical College, is one of Pakistan\'s oldest medical institutions established in 1974. It is affiliated with Holy Family Hospital and Benazir Bhutto Hospital.',
+    highlights:['Public Medical University','Teaching Hospitals','Rawalpindi Campus','Competitive Merit'],
+    scholarships:'Government & merit-based scholarships', hostel:'Separate hostels available' },
+
+  // ── PUNJAB – FAISALABAD ──
+  75:{ fee:'Rs. 20–40K/sem', feeNum:30000, merit:'55%+ in FSc', entry:'UAF Entry Test',
+    programs:['BS Agriculture','DVM','BS Food Sciences','BS Horticulture','BS Agri Engineering','MPhil','PhD'],
+    description:'University of Agriculture Faisalabad (UAF) is one of Pakistan\'s top agricultural universities, established in 1906. It is a leading research institution in food security, crop sciences, and veterinary medicine with nine faculties.',
+    highlights:['120+ Years Heritage','Top Agriculture Uni','9 Faculties','Research Excellence'],
+    scholarships:'Merit, need-based & HEC scholarships', hostel:'Well-equipped hostels available' },
+  76:{ fee:'Rs. 15–30K/sem', feeNum:22000, merit:'55%+ in Intermediate', entry:'GCUF Entry Test',
+    programs:['BS Sciences','BS Commerce','BS Arts','BS IT','BS Engineering','MA','MSc','MPhil','PhD'],
+    description:'Government College University Faisalabad (GCUF) is a historic public university, tracing its origins to 1897. It offers a wide range of programs across sciences, humanities, and engineering with affordable public sector fees.',
+    highlights:['125+ Years Heritage','Affordable Fees','Public University','Multiple Programs'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  77:{ fee:'Rs. 25–50K/sem', feeNum:37000, merit:'60%+ in FSc', entry:'NTU Entry Test / NET',
+    programs:['BS Textile Engineering','BS Textile Design','BS Fashion Design','BS Textile Management','MPhil','PhD'],
+    description:'National Textile University (NTU) Faisalabad is Pakistan\'s only specialized textile university, established in 1959. It is the country\'s premier institution for textile engineering, design, and management education.',
+    highlights:['Pakistan\'s Only Textile Uni','Specialized Programs','Industry Links','Research Excellence'],
+    scholarships:'Merit & industry scholarships', hostel:'On-campus hostel available' },
+  81:{ fee:'Rs. 15–35K/sem', feeNum:25000, merit:'55%+ in Intermediate', entry:'IUB Entry Test / NTS',
+    programs:['BS Engineering','BS Sciences','BS Commerce','Islamic Studies','BS IT','BS Social Sciences','LLB','MPhil','PhD'],
+    description:'Islamia University of Bahawalpur (IUB) is one of Pakistan\'s oldest universities, founded in 1925. It has a rich heritage combining Islamic education with modern sciences, and serves thousands of students from southern Punjab.',
+    highlights:['100+ Years Heritage','Islamic Heritage','Southern Punjab','Multiple Programs'],
+    scholarships:'Merit, need-based & religious scholarships', hostel:'On-campus hostel available' },
+
+  // ── PUNJAB – OTHERS ──
+  91:{ fee:'Rs. 15–25K/sem', feeNum:20000, merit:'55%+ in Intermediate', entry:'NTS / Emerson Test',
+    programs:['BS Sciences','BS Arts','BS Commerce','BS Education','MA','MSc'],
+    description:'Emerson University Multan, formerly Emerson College, is a historic public institution established in 1920. Named after a British education commissioner, it offers diverse undergraduate and graduate programs in Multan.',
+    highlights:['100+ Years Heritage','Public University','Multan Campus','Affordable Fees'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  92:{ fee:'Rs. 15–30K/sem', feeNum:22000, merit:'55%+ in Intermediate', entry:'UOS Entry Test',
+    programs:['BS Sciences','BS Agriculture','BS Pharmacy','BS Engineering','BS IT','BS Social Sciences','LLB','MPhil','PhD'],
+    description:'University of Sargodha (UOS) is a comprehensive public university with 216+ degree programs across 8 faculties and 3 campuses. It serves students from Sargodha, Bhakkar, Mianwali, and Khushab districts.',
+    highlights:['216+ Programs','3 Campuses','Public University','Research Focus'],
+    scholarships:'Merit & need-based scholarships', hostel:'Separate hostels available' },
+  94:{ fee:'Rs. 15–35K/sem', feeNum:25000, merit:'55%+ in Intermediate', entry:'UOG Entry Test',
+    programs:['BS Engineering','BS IT','BS Sciences','BS Arts','BS Business','BS Architecture','MPhil','PhD'],
+    description:'University of Gujrat (UOG) is a public university established in 2004, offering 120+ degree programs across 7 faculties. With 16,000+ students and a modern campus, it is one of Punjab\'s fastest growing universities.',
+    highlights:['120+ Programs','16K+ Students','Modern Campus','Public University'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  97:{ fee:'Rs. 50–100K/sem', feeNum:75000, merit:'70%+ in FSc', entry:'Namal NAT / Entry Test',
+    programs:['BS CS','BS SE','BS Electrical Eng','BS Business Analytics','BS Economics','BBA'],
+    description:'Namal University Mianwali is a unique private university affiliated with the University of Bradford (UK), founded by Imran Khan in 2008. It offers internationally recognized degrees with a focus on STEM and business in a modern campus setting.',
+    highlights:['Bradford UK Affiliation','International Degrees','Modern Campus','STEM Focus'],
+    scholarships:'Generous need-based & merit scholarships (many full scholarships)', hostel:'On-campus hostel available' },
+  103:{ fee:'Rs. 25–50K/sem', feeNum:37000, merit:'60%+ in FSc Pre-Engineering', entry:'ETEA / KFUEIT Test',
+    programs:['BS CS','BS SE','BS EE','BS Civil Eng','BS Mechanical Eng','BS IT','BBA'],
+    description:'Khawaja Fareed University of Engineering & IT (KFUEIT) Rahim Yar Khan is a public engineering university established in 2014 to serve southern Punjab. It offers modern engineering programs with focus on regional development.',
+    highlights:['Engineering Focused','Southern Punjab','Public University','Modern Campus'],
+    scholarships:'HEC & merit-based scholarships', hostel:'On-campus hostel available' },
+
+  // ── SINDH – KARACHI ──
+  114:{ fee:'Rs. 10–25K/sem', feeNum:17000, merit:'55%+ in Intermediate', entry:'KU Entry Test',
+    programs:['BS Sciences','BS Social Sciences','BS Pharmacy','BS Business','LLB','BS IT','Mass Communication','MPhil','PhD'],
+    description:'University of Karachi (KU) is Pakistan\'s largest university by enrollment, founded in 1951. It is a premier public institution offering diverse programs across natural sciences, social sciences, pharmacy, and business in the heart of Karachi.',
+    highlights:['Pakistan\'s Largest Uni','Public Sector','Founded 1951','70+ Departments'],
+    scholarships:'Merit, need-based & government scholarships', hostel:'Separate hostels available' },
+  115:{ fee:'Rs. 40–70K/sem', feeNum:55000, merit:'60%+ in FSc', entry:'SSUET Entry Test',
+    programs:['BS CS','BS SE','BS EE','BS Telecom','BS Civil Eng','BS Mechanical Eng','BBA'],
+    description:'Sir Syed University of Engineering & Technology (SSUET) Karachi is a private engineering university established in 1993, affiliated with the Sir Syed Memorial Society. It is one of Karachi\'s leading engineering institutions.',
+    highlights:['Engineering Focus','Sir Syed Heritage','Karachi Campus','Industry Links'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  117:{ fee:'Rs. 80–150K/sem', feeNum:115000, merit:'65%+ in FSc', entry:'Hamdard Entry Test',
+    programs:['MBBS','BDS','DPT','Doctor of Pharmacy','BS Eastern Medicine','BS Engineering','BBA'],
+    description:'Hamdard University Karachi is a private university founded in 1991 by Hamdard Foundation, known for integrating modern medicine with Eastern/Unani medicine. It operates multiple teaching hospitals and research centers.',
+    highlights:['Unani Medicine Pioneer','Teaching Hospitals','Multiple Programs','Research Focus'],
+    scholarships:'Hamdard Foundation scholarships', hostel:'On-campus hostel available' },
+  118:{ fee:'Rs. 50–80K/sem', feeNum:65000, merit:'80%+ aggregate (MDCAT)', entry:'MDCAT',
+    programs:['MBBS','BDS','DPT','BS Nursing','Allied Health Sciences'],
+    description:'Jinnah Sindh Medical University (JSMU) Karachi, formerly Dow Medical College Karachi campus, is one of Sindh\'s leading public medical universities. It is affiliated with multiple teaching hospitals across Karachi.',
+    highlights:['Public Medical','Teaching Hospitals','Karachi Campus','Competitive Merit'],
+    scholarships:'Government & merit-based scholarships', hostel:'Separate hostels available' },
+  121:{ fee:'Rs. 100–200K/sem', feeNum:150000, merit:'80%+ aggregate (MDCAT)', entry:'MDCAT / Ziauddin Test',
+    programs:['MBBS','BDS','Doctor of Pharmacy','DPT','BS Nursing','BS Allied Health','MBA Health Management'],
+    description:'Ziauddin University Karachi is one of Pakistan\'s premier private medical universities, established in 1995. Known for world-class medical education and research, it operates multiple state-of-the-art teaching hospitals.',
+    highlights:['Premium Medical Uni','State-of-art Hospitals','Research Excellence','International Standards'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  122:{ fee:'Rs. 70–120K/sem', feeNum:95000, merit:'65%+ in Intermediate', entry:'IoBM Entry Test',
+    programs:['BBA','MBA','BS Finance','BS Marketing','BS Accounting','BS CS','MPA','Executive MBA'],
+    description:'Institute of Business Management (IoBM) Karachi is one of Pakistan\'s top business schools, offering AACSB-accredited programs. Known for strong industry connections and career placement, it is a preferred choice for business education.',
+    highlights:['Top Business School','AACSB Accredited','Industry Connections','Career Placement'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  123:{ fee:'Rs. 60–120K/sem', feeNum:90000, merit:'60%+ in Intermediate', entry:'Iqra University Test',
+    programs:['BBA','MBA','BS CS','BS SE','BS Engineering','BS Media Studies','BS Education'],
+    description:'Iqra University Karachi is a private university established in 1998 with campuses in Karachi, Islamabad, and Peshawar. It is known for business and IT programs with strong industry linkages.',
+    highlights:['Multiple Campuses','Business & IT Focus','Industry Links','Modern Facilities'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  124:{ fee:'Rs. 25–50K/sem', feeNum:37000, merit:'60%+ in FSc Pre-Engineering', entry:'DUET Entry Test',
+    programs:['BS Civil Eng','BS Electrical Eng','BS Mechanical Eng','BS Industrial Eng','BS CS'],
+    description:'Dawood University of Engineering & Technology (DUET) Karachi is a public engineering university established in 1962. One of Karachi\'s oldest engineering institutions, it produces skilled engineers for Pakistan\'s industrial sector.',
+    highlights:['Public Engineering Uni','60+ Years Heritage','Karachi Campus','Industry Ties'],
+    scholarships:'Government & merit scholarships', hostel:'On-campus hostel available' },
+
+  // ── SINDH – INTERIOR ──
+  142:{ fee:'Rs. 10–25K/sem', feeNum:17000, merit:'55%+ in Intermediate', entry:'Sindh University Test',
+    programs:['BS Sciences','BS Arts','BS Commerce','LLB','BS Education','BS IT','Mass Communication','MPhil','PhD'],
+    description:'University of Sindh Jamshoro, established in 1947, is one of Pakistan\'s oldest and largest public universities. As the premier institution of Sindh, it serves thousands of students across 83 departments and institutes.',
+    highlights:['80+ Years Heritage','Public University','83 Departments','Sindh\'s Premier Uni'],
+    scholarships:'Government, merit & need-based scholarships', hostel:'Separate hostels available' },
+  143:{ fee:'Rs. 30–60K/sem', feeNum:45000, merit:'75%+ aggregate (MDCAT)', entry:'MDCAT',
+    programs:['MBBS','BDS','DPT','BS Nursing','Doctor of Pharmacy','Allied Health'],
+    description:'Liaquat University of Medical & Health Sciences (LUMHS) Jamshoro is Sindh\'s largest public medical university, established in 1881. It operates multiple teaching hospitals and is the primary medical institution for interior Sindh.',
+    highlights:['140+ Years Heritage','Public Medical','Teaching Hospitals','Interior Sindh'],
+    scholarships:'Government & merit-based scholarships', hostel:'Separate hostels available' },
+  145:{ fee:'Rs. 80–150K/sem', feeNum:115000, merit:'75%+ aggregate (MDCAT)', entry:'MDCAT / Isra Test',
+    programs:['MBBS','BDS','DPT','Doctor of Pharmacy','BS Allied Health'],
+    description:'Isra University Hyderabad is a private medical university established in 1997. It operates a modern teaching hospital in Hyderabad and provides quality medical education to students from Sindh and Balochistan.',
+    highlights:['Private Medical Uni','Teaching Hospital','Hyderabad Campus','Modern Facilities'],
+    scholarships:'Merit & need-based scholarships', hostel:'Separate hostels available' },
+  147:{ fee:'Rs. 20–50K/sem', feeNum:35000, merit:'65%+ in Intermediate', entry:'Sukkur IBA Test',
+    programs:['BBA','MBA','BS CS','BS SE','BE Civil','BE Electrical','BS Economics','BS Education'],
+    description:'Sukkur IBA University is a public university established in 1994 with a strong focus on business and technology education. Known for producing highly employable graduates, it has transformed higher education access in interior Sindh.',
+    highlights:['Interior Sindh Leader','Business & Tech','Employability Focus','Public University'],
+    scholarships:'Generous merit & need-based scholarships', hostel:'On-campus hostel available' },
+  149:{ fee:'Rs. 20–40K/sem', feeNum:30000, merit:'60%+ in FSc Pre-Engineering', entry:'ECAT / QUEST Test',
+    programs:['BE Civil Eng','BE Electrical Eng','BE Mechanical Eng','BE Computer Eng','BS CS'],
+    description:'Quaid-e-Awam University of Engineering, Science & Technology (QUEST) Nawabshah is a public engineering university in Sindh, established in 1974. It is the premier engineering institution for interior Sindh students.',
+    highlights:['Public Engineering','Interior Sindh','ECAT Based Admission','50+ Years Heritage'],
+    scholarships:'Government & merit scholarships', hostel:'On-campus hostel available' },
+
+  // ── KPK ──
+  159:{ fee:'Rs. 15–30K/sem', feeNum:22000, merit:'55%+ in Intermediate', entry:'ICU Entry Test',
+    programs:['BS Sciences','BS Arts','BS Commerce','BS IT','BS Business','MA','MSc','MPhil'],
+    description:'Islamia College University (ICU) Peshawar is one of Pakistan\'s most historic institutions, established in 1913 during the British era. It is a cherished symbol of Pashtun culture and academic heritage, offering diverse programs.',
+    highlights:['110+ Years Heritage','Historic Institution','Pashtun Heritage','Public University'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  160:{ fee:'Rs. 30–60K/sem', feeNum:45000, merit:'60%+ in FSc (ETEA)', entry:'ETEA',
+    programs:['BS Civil Eng','BS Electrical Eng','BS Mechanical Eng','BS Computer Eng','BS CS','BS Industrial Eng'],
+    description:'University of Engineering & Technology (UET) Peshawar is KPK\'s premier public engineering university, founded in 1952. It is affiliated with ETEA and produces highly skilled engineers for Pakistan\'s construction and technology sectors.',
+    highlights:['KPK\'s Top Engineering','ETEA Based','70+ Years Heritage','Public University'],
+    scholarships:'Merit & HEC scholarships', hostel:'Separate hostels available' },
+  161:{ fee:'Rs. 50–100K/sem', feeNum:75000, merit:'75%+ aggregate (MDCAT)', entry:'KMU / MDCAT',
+    programs:['MBBS','BDS','Doctor of Pharmacy','DPT','BS Nursing','BS Allied Health'],
+    description:'Khyber Medical University (KMU) Peshawar is KPK\'s premier public medical university, established in 2007. It regulates and oversees medical education across all of KPK and supervises multiple affiliated medical colleges.',
+    highlights:['KPK\'s Top Medical Uni','Regulatory Body','Multiple Affiliates','Modern Facilities'],
+    scholarships:'Government & merit-based scholarships', hostel:'Separate hostels available' },
+  162:{ fee:'Rs. 40–70K/sem', feeNum:55000, merit:'65%+ in Intermediate', entry:'IMSciences Test',
+    programs:['BBA','MBA','BS Economics','BS Media Studies','MPA','Executive MBA'],
+    description:'Institute of Management Sciences (IMSciences) Peshawar is a public business school established in 1995, recognized as one of KPK\'s top institutions for business and management education with a strong alumni network.',
+    highlights:['KPK\'s Top Business School','Public Sector','Strong Alumni','Career Focused'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  170:{ fee:'Rs. 15–30K/sem', feeNum:22000, merit:'55%+ in FSc', entry:'Gomal University Test',
+    programs:['BS Agriculture','BS Pharmacy','BS Sciences','BS Arts','BS Education','BS IT','BS Business','DVM','MPhil','PhD'],
+    description:'Gomal University DI Khan, established in 1974, is one of KPK\'s largest public universities serving students from DI Khan, Tank, and South KPK regions. It offers diverse programs including agriculture, pharmacy, and sciences.',
+    highlights:['Public University','South KPK','Diverse Programs','50+ Years Heritage'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  172:{ fee:'Rs. 10–25K/sem', feeNum:17000, merit:'50%+ in Intermediate', entry:'UOM Entry Test',
+    programs:['BS Sciences','BS Arts','BS Commerce','BS IT','BS Education','BS Business','MPhil'],
+    description:'University of Malakand (UOM) Chakdara is a public university in Lower Dir, KPK, established in 2001. It provides affordable higher education to students from Malakand Division including Dir, Swat, and Chitral.',
+    highlights:['Malakand Division','Public University','Affordable Fees','Mountain Region'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  175:{ fee:'Rs. 10–25K/sem', feeNum:17000, merit:'50%+ in Intermediate', entry:'HU Entry Test',
+    programs:['BS Sciences','BS Arts','BS Commerce','BS IT','BS Engineering','BS Education','MPhil','PhD'],
+    description:'Hazara University Mansehra is a public university established in 2002, serving the Hazara Division of KPK including Mansehra, Abbottabad, Battagram, and Kohistan. It offers affordable higher education in a scenic mountain setting.',
+    highlights:['Hazara Division','Public University','Mountain Setting','Affordable Education'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+  179:{ fee:'Rs. 15–30K/sem', feeNum:22000, merit:'55%+ in Intermediate', entry:'AWKUM Entry Test',
+    programs:['BS Sciences','BS Arts','BS Business','BS Engineering','BS Pharmacy','BS IT','BS Education','MPhil','PhD'],
+    description:'Abdul Wali Khan University Mardan (AWKUM) is a public university established in 2009, named after the legendary Pashtun leader. It serves as the primary higher education institution for Mardan and Charsadda districts of KPK.',
+    highlights:['Mardan Campus','Public University','Named After AWK','Diverse Programs'],
+    scholarships:'Merit & need-based scholarships', hostel:'On-campus hostel available' },
+
+  // ── BALOCHISTAN ──
+  198:{ fee:'Rs. 10–25K/sem', feeNum:17000, merit:'50%+ in Intermediate', entry:'UOB Entry Test',
+    programs:['BS Sciences','BS Arts','BS Commerce','LLB','BS Engineering','BS IT','BS Social Sciences','MPhil','PhD'],
+    description:'University of Balochistan (UOB) Quetta is Balochistan\'s oldest and largest public university, established in 1970. It is the premier institution for higher education in the province, serving students from all across Balochistan.',
+    highlights:['Balochistan\'s Oldest Uni','Public Sector','55+ Years Heritage','Quetta Campus'],
+    scholarships:'Government, provincial & merit scholarships', hostel:'Separate hostels available' },
+  200:{ fee:'Rs. 20–45K/sem', feeNum:32000, merit:'55%+ in FSc', entry:'BUITEMS Entry Test',
+    programs:['BS CS','BS SE','BS EE','BS Civil Eng','BBA','MBA','BS Architecture','BS Textile'],
+    description:'Balochistan University of IT, Engineering & Management Sciences (BUITEMS) Quetta is Balochistan\'s leading public technology university, established in 2002. It has transformed technical education in the province with modern programs.',
+    highlights:['Tech & Engineering Focus','Public University','Modern Programs','Quetta Campus'],
+    scholarships:'Merit, provincial & HEC scholarships', hostel:'On-campus hostel available' },
+
+  // ── AJK & GILGIT-BALTISTAN ──
+  210:{ fee:'Rs. 20–45K/sem', feeNum:32000, merit:'60%+ in FSc', entry:'MUST Entry Test',
+    programs:['BS CS','BS SE','BS EE','BS Civil Eng','BS Telecom','BBA','MBA'],
+    description:'Mirpur University of Science & Technology (MUST) is AJK\'s premier public engineering university, established in 1980. It has played a central role in developing a skilled technical workforce in Azad Kashmir.',
+    highlights:['AJK\'s Top Engineering','Public University','45+ Years Heritage','Technical Focus'],
+    scholarships:'AJK government & merit scholarships', hostel:'On-campus hostel available' },
+  211:{ fee:'Rs. 10–25K/sem', feeNum:17000, merit:'50%+ in Intermediate', entry:'UAJK Entry Test',
+    programs:['BS Sciences','BS Arts','BS Education','BS IT','BS Business','BS Social Sciences','MPhil','PhD'],
+    description:'University of Azad Jammu & Kashmir (UAJK) Muzaffarabad is the state university of AJK, established in 1980. It is the flagship university of Azad Kashmir, offering diverse programs and serving as a center of higher education for the region.',
+    highlights:['AJK\'s Flagship Uni','State University','Public Sector','Muzaffarabad Campus'],
+    scholarships:'AJK government, merit & need-based scholarships', hostel:'Separate hostels available' },
+  217:{ fee:'Rs. 15–35K/sem', feeNum:25000, merit:'55%+ in Intermediate', entry:'KIU Entry Test',
+    programs:['BS Sciences','BS Social Sciences','BS IT','BS CS','BS Engineering','BS Education','MPhil','PhD'],
+    description:'Karakoram International University (KIU) Gilgit is the only public university in Gilgit-Baltistan, established in 2002. Located amid the world\'s highest mountain ranges, it is a vital center of education and research for the GB region.',
+    highlights:['GB\'s Only Public Uni','World\'s Highest Campus','Public Sector','Mountain Research'],
+    scholarships:'GB government, AKES & merit scholarships', hostel:'On-campus hostel available' }
+};
 UNIVERSITIES.forEach(u=>{ if(DATA_UPDATES[u.id]) Object.assign(u, DATA_UPDATES[u.id]); });
 
 // ─── Logo loading: Clearbit HD → favicon fallback → emoji ───
+const LOGO_OVERRIDES = {
+  'nust.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/a/aa/NUSTuniversitylogo.jpg',
+  'lums.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/thumb/3/38/Lahore_University_of_Management_Sciences_Logo.svg/500px-Lahore_University_of_Management_Sciences_Logo.svg.png',
+  'uet.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/thumb/b/b0/University_of_Engineering_and_Technology_Lahore_logo.svg/500px-University_of_Engineering_and_Technology_Lahore_logo.svg.png',
+  'iba.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/1/1e/Institute_of_Business_Administration%2C_Karachi_%28logo%29.png',
+  'comsats.edu.pk':    'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/COMSATS_new_logo.jpg/250px-COMSATS_new_logo.jpg',
+  'nu.edu.pk':         'https://upload.wikimedia.org/wikipedia/en/thumb/e/e4/National_University_of_Computer_and_Emerging_Sciences_logo.png/250px-National_University_of_Computer_and_Emerging_Sciences_logo.png',
+  'qau.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/3/35/Quaid-i-Azam_University_logo.png',
+  'giki.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/5/59/GIKI_logo_with_text.png',
+  'pieas.edu.pk':      'https://upload.wikimedia.org/wikipedia/en/e/e0/PIEAS_Logo.jpg',
+  'neduet.edu.pk':     'https://upload.wikimedia.org/wikipedia/en/thumb/8/8b/NEDUET_logo.svg/500px-NEDUET_logo.svg.png',
+  'pu.edu.pk':         'https://upload.wikimedia.org/wikipedia/en/c/c8/University_of_the_Punjab_logo.png',
+  'aku.edu':           'https://upload.wikimedia.org/wikipedia/en/6/64/Aga_Khan_University_Logo.png',
+  'habib.edu.pk':      'https://upload.wikimedia.org/wikipedia/en/3/38/Habib_University.jpg',
+  'au.edu.pk':         'https://upload.wikimedia.org/wikipedia/en/6/61/Air_University_Pakistan_Insignia.png',
+  'itu.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/d/d9/Information_Technology_University.png',
+  'muet.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/thumb/e/e3/Mehran_University_of_Engineering_and_Technology_logo.svg/500px-Mehran_University_of_Engineering_and_Technology_logo.svg.png',
+  'ucp.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/e/eb/University_of_Central_Punjab_%28logo%29.jpg',
+  'szabist.edu.pk':    'https://upload.wikimedia.org/wikipedia/en/f/f9/SZABIST-University-Logo-Blue-Horizontal.png',
+  'gcu.edu.pk':        'https://upload.wikimedia.org/wikipedia/commons/f/f5/Government_College_University%2CLogo.png',
+  'ist.edu.pk':        'https://upload.wikimedia.org/wikipedia/commons/2/23/Logo_IST.png',
+  'fccollege.edu.pk':  'https://upload.wikimedia.org/wikipedia/en/9/97/Forman_Christian_College_logo.png',
+  'numl.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/d/d5/National_University_of_Modern_Languages_%28logo%29.jpg',
+  'uettaxila.edu.pk':  'https://upload.wikimedia.org/wikipedia/en/thumb/4/41/UET_Taxila_logo.svg/500px-UET_Taxila_logo.svg.png',
+  'duhs.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/b/bf/Logo_of_Dow_University_of_Health_Sciences.gif',
+  'uhs.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/thumb/3/3c/University_of_Health_Sciences_Lahore_Logo.svg/500px-University_of_Health_Sciences_Lahore_Logo.svg.png',
+  'bzu.edu.pk':        'https://upload.wikimedia.org/wikipedia/commons/9/9c/BZU-Multan.png',
+  'iiu.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/1/1e/International_Islamic_University%2C_Islamabad_%28crest%29.png',
+  'uop.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/d/de/University_of_Peshawar_logo.png',
+  'nca.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/f/f5/National_College_of_Arts_%28emblem%29.jpg',
+  'bahria.edu.pk':     'https://bahria.edu.pk/Content/images/bu_logo.png',
+  // 188 basic universities — Wikipedia verified logos
+  'aiou.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/8/87/Allama_Iqbal_Open_University_logo.png',
+  'vu.edu.pk':         'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/VU_Logo.png/250px-VU_Logo.png',
+  'lcwu.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/e/e0/LCWU_Lahore_logo.PNG',
+  'kemu.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/4/4f/King_Edward_Medical_University.png',
+  'uvas.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/0/0b/UVAS_Lahore.jpg',
+  'uaf.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/2/2e/Agriculture_University_Faisalabad_emblem.png',
+  'ntu.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/e/e4/National_Textile_University_Logo.png',
+  'gcuf.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/0/01/Government_College_University_Logo.jpg',
+  'uos.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/c/c3/University_of_Sargodha.png',
+  'uog.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/c/c4/University_of_Gujrat_Logo.png',
+  'uok.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/d/d9/Karachi_University_logo.png',
+  'usindh.edu.pk':     'https://upload.wikimedia.org/wikipedia/en/7/7c/University_of_Sindh_%28logo%29.png',
+  'lumhs.edu.pk':      'https://upload.wikimedia.org/wikipedia/en/7/7c/Liaquat_University_of_Medical_and_Health_Sciences_%28crest%29.jpg',
+  'iba-suk.edu.pk':    'https://upload.wikimedia.org/wikipedia/commons/d/d3/SIBA_Logo.jpg',
+  'quest.edu.pk':      'https://upload.wikimedia.org/wikipedia/commons/b/b9/Logo_of_Quaid-e-Awam_university_of_engineering_science_and_technology.jpg',
+  'uetpeshawar.edu.pk':'https://upload.wikimedia.org/wikipedia/en/thumb/9/95/University_of_Engineering_and_Technology_Peshawar_logo.svg/250px-University_of_Engineering_and_Technology_Peshawar_logo.svg.png',
+  'kmu.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/f/f1/KMU_Peshawar.jpg',
+  'gu.edu.pk':         'https://upload.wikimedia.org/wikipedia/en/5/57/Gomal_University_logo.png',
+  'uom.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/a/a3/University_of_Malakand_%28crest%29.jpg',
+  'hu.edu.pk':         'https://upload.wikimedia.org/wikipedia/en/2/28/Hazara_University_logo.jpeg',
+  'kust.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/0/06/KUST.png',
+  'uob.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/3/30/University_of_Balochistan_logo.jpg',
+  'buitms.edu.pk':     'https://upload.wikimedia.org/wikipedia/en/f/fd/BUITEMS_logo.png',
+  'must.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/2/2c/Mirpur_University_Of_Science_And_Technology_Logo.png',
+  'ajku.edu.pk':       'https://upload.wikimedia.org/wikipedia/en/4/49/University_Of_Azad_Jammu_And_Kashmir_Logo.png',
+  'kiu.edu.pk':        'https://upload.wikimedia.org/wikipedia/en/a/a8/Karakoram_International_University_%28logo%29.jpg',
+};
 
 function logoSrc(u) {
   if (u.logoUrl) return u.logoUrl;              // custom logo from DB (preferred)
@@ -1778,6 +3889,36 @@ function checkLogoSize(img, fallback) {
 }
 
 // ─── MERIT MAP: minimum aggregate % for admission ───
+const MERIT_MAP = {
+  1:85,2:84,3:75,4:82,5:75,6:65,7:60,8:82,9:87,10:72,
+  11:55,12:87,13:75,14:65,15:60,16:72,17:60,18:60,19:65,20:65,
+  21:65,22:70,23:55,24:72,25:78,26:78,27:55,28:55,29:55,30:60,
+  31:62,32:45,33:45,34:65,35:60,36:55,37:62,38:65,39:60,40:82,
+  41:62,42:55,43:65,44:55,45:55,
+  46:55,47:82,48:84,49:60,50:60,51:62,52:57,53:62,54:55,55:57,
+  56:55,57:55,58:60,59:63,60:57,61:55,62:60,63:55,64:62,65:55,
+  66:55,67:55,68:55,
+  69:55,70:55,71:77,72:82,73:55,74:62,
+  75:57,76:55,77:62,78:77,79:55,80:55,
+  81:55,82:55,83:55,84:55,85:57,86:77,87:62,88:55,89:60,90:55,
+  91:55,92:55,93:62,94:55,95:57,96:55,97:67,98:50,99:50,100:50,
+  101:50,102:50,103:62,104:50,105:50,106:50,107:50,108:50,109:50,
+  110:50,111:62,112:57,113:55,
+  114:55,115:62,116:62,117:65,118:80,119:65,120:60,121:80,122:67,
+  123:60,124:62,125:55,126:60,127:60,128:55,129:55,130:55,131:57,
+  132:55,133:67,134:57,135:55,136:60,137:55,138:67,139:60,140:55,141:55,
+  142:50,143:75,144:50,145:72,146:55,147:62,148:50,149:62,150:50,
+  151:72,152:50,153:72,154:50,155:50,156:55,157:50,158:55,
+  159:55,160:65,161:75,162:65,163:55,164:62,165:65,166:57,167:57,
+  168:57,169:55,170:55,171:57,172:50,173:50,174:50,175:50,176:55,
+  177:57,178:50,179:55,180:50,181:57,182:50,183:50,184:50,185:50,
+  186:50,187:50,188:50,189:55,190:50,191:50,192:50,193:50,194:57,
+  195:57,196:55,197:50,
+  198:50,199:72,200:55,201:50,202:50,203:50,204:50,205:57,206:50,
+  207:50,208:50,209:57,
+  210:62,211:50,212:50,213:55,214:50,215:50,216:50,
+  217:57,218:50
+};
 UNIVERSITIES.forEach(u=>{ if(!u.meritMin) u.meritMin = MERIT_MAP[u.id] || 50; });
 
 // ─── COMMUNITY VERIFIED MERIT DATA ───
@@ -1791,6 +3932,9 @@ UNIVERSITIES.forEach(u=>{ if(!u.meritMin) u.meritMin = MERIT_MAP[u.id] || 50; })
 //          { name: 'BE Electrical Engineering', merit: 87.5, seats: 120 },
 //        ]},
 // };
+const VERIFIED_MERIT = {
+  // Add verified entries here — empty until first verified submission
+};
 
 // ─── MERIT SUBMISSION CONTACT ───
 // Replace with your actual WhatsApp number (no + or spaces, e.g. 923001234567)
@@ -2024,8 +4168,51 @@ async function submitMeritForm() {
 }
 
 // ─── CITY COORDINATES (for Map View) ───
+const CITY_COORDS = {
+  'Islamabad':[33.6844,73.0479],'Rawalpindi':[33.5651,73.0169],'Wah':[33.7830,72.7286],'Attock':[33.7660,72.3600],
+  'Lahore':[31.5204,74.3587],'Faisalabad':[31.4504,73.1350],'Multan':[30.1575,71.5249],
+  'Gujranwala':[32.1877,74.1945],'Sialkot':[32.4945,74.5229],'Sargodha':[32.0836,72.6711],
+  'Gujrat':[32.5739,74.0786],'Bahawalpur':[29.3956,71.6836],'Sheikhupura':[31.7167,73.9850],
+  'Okara':[30.8138,73.4536],'Mianwali':[32.5847,71.5433],'Jhang':[31.2781,72.3220],
+  'Sahiwal':[30.6706,73.1077],'Jhelum':[32.9343,73.7214],'Chakwal':[32.9332,72.8505],
+  'Narowal':[32.0991,74.8761],'Hafizabad':[32.0709,73.6881],'DG Khan':[30.0489,70.6330],
+  'Dera Ghazi Khan':[30.0489,70.6330],'Layyah':[30.9591,70.9396],'Khanewal':[30.3006,71.9327],
+  'Nankana Sahib':[31.4505,73.7067],'Kasur':[31.1166,74.4501],'Bhakkar':[31.6271,71.0645],
+  'Vehari':[30.0451,72.3491],'Toba Tek Singh':[30.9774,72.4827],
+  'Karachi':[24.8607,67.0011],'Hyderabad':[25.3960,68.3578],'Sukkur':[27.6995,68.8673],
+  'Jamshoro':[25.4211,68.2828],'Larkana':[27.5570,68.2142],'Nawabshah':[26.2442,68.4102],
+  'Khairpur':[27.5295,68.7586],'Tandojam':[25.4280,68.5336],'Mirpurkhas':[25.5276,69.0084],
+  'Peshawar':[34.0151,71.5249],'Abbottabad':[34.1463,73.2117],'Mardan':[34.1985,72.0440],
+  'Mansehra':[34.3293,73.2063],'Nowshera':[34.0153,71.9747],'Swat':[35.2227,72.4258],
+  'DI Khan':[31.8313,70.9017],'Dera Ismail Khan':[31.8313,70.9017],'Kohat':[33.5869,71.4414],
+  'Bannu':[32.9887,70.6045],'Chitral':[35.8518,71.7865],'Swabi':[34.1203,72.4699],
+  'Haripur':[33.9950,72.9407],'Buner':[34.5082,72.4947],'Shangla':[35.0200,72.5300],
+  'Dir':[35.2018,71.8766],'Karak':[33.1172,71.0936],'Batagram':[34.6770,73.0269],
+  'Quetta':[30.1798,66.9750],'Turbat':[26.0022,63.0442],'Khuzdar':[27.8000,66.6167],
+  'Hub':[25.0325,66.8960],'Sibi':[29.5430,67.8770],'Loralai':[30.3700,68.5942],
+  'Muzaffarabad':[34.3703,73.4705],'Mirpur':[33.1532,73.7508],'Rawalakot':[33.8591,73.7602],
+  'Bagh':[33.9866,73.7832],'Kotli':[33.5170,73.9022],
+  'Gilgit':[35.9221,74.3083],'Skardu':[35.2971,75.6341],
+  'Online':[33.6844,73.0479],
+};
 
 // ─── MERIT TRENDS (last 3 years closing merit %) ───
+const MERIT_TRENDS = {
+  1:{y:['2022','2023','2024'],m:[83,84,85]}, 2:{y:['2022','2023','2024'],m:[81,82,84]},
+  3:{y:['2022','2023','2024'],m:[73,74,75]}, 4:{y:['2022','2023','2024'],m:[81,83,82]},
+  5:{y:['2022','2023','2024'],m:[73,74,75]}, 6:{y:['2022','2023','2024'],m:[63,64,65]},
+  7:{y:['2022','2023','2024'],m:[58,59,60]}, 8:{y:['2022','2023','2024'],m:[80,81,82]},
+  9:{y:['2022','2023','2024'],m:[86,86,87]},10:{y:['2022','2023','2024'],m:[70,71,72]},
+  12:{y:['2022','2023','2024'],m:[85,86,87]},13:{y:['2022','2023','2024'],m:[73,74,75]},
+  14:{y:['2022','2023','2024'],m:[63,64,65]},16:{y:['2022','2023','2024'],m:[70,71,72]},
+  22:{y:['2022','2023','2024'],m:[68,69,70]},24:{y:['2022','2023','2024'],m:[70,71,72]},
+  32:{y:['2022','2023','2024'],m:[43,44,45]},33:{y:['2022','2023','2024'],m:[43,44,45]},
+  47:{y:['2022','2023','2024'],m:[80,81,82]},48:{y:['2022','2023','2024'],m:[82,83,84]},
+  51:{y:['2022','2023','2024'],m:[60,61,62]},71:{y:['2022','2023','2024'],m:[75,76,77]},
+  72:{y:['2022','2023','2024'],m:[80,81,82]},97:{y:['2022','2023','2024'],m:[65,66,67]},
+  115:{y:['2022','2023','2024'],m:[60,61,62]},118:{y:['2022','2023','2024'],m:[78,79,80]},
+  160:{y:['2022','2023','2024'],m:[63,64,65]},200:{y:['2022','2023','2024'],m:[53,54,55]},
+};
 
 // ─── ADMISSION CALENDAR 2026 ───
 const ADMISSION_DATES = [
