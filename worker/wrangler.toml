@@ -1,0 +1,28 @@
+# ══════════════════════════════════════════════════════════════
+#  TaleemPK — Cloudflare Workers Config
+#  Two workers: chat (existing) + social-poster (new)
+# ══════════════════════════════════════════════════════════════
+
+# ── Social Media Auto-Poster ────────────────────────────────────
+name = "taleempk-social"
+main = "social-worker.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+# Runs every day at 04:00 UTC = 09:00 AM PKT (UTC+5)
+crons = ["0 4 * * *"]
+
+# ── Secrets (add via: wrangler secret put SECRET_NAME) ─────────
+# Or add manually in Cloudflare Dashboard → Worker → Settings → Variables
+#
+# GEMINI_API_KEY           — from aistudio.google.com
+# SUPABASE_URL             — https://vpioffkkzwbfnmpxpwgc.supabase.co
+# SUPABASE_ANON_KEY        — (same as frontend config.js)
+# FB_PAGE_ID               — Facebook Page numeric ID
+# FB_PAGE_ACCESS_TOKEN     — Long-lived Page Access Token
+# IG_USER_ID               — Instagram Business Account ID
+# TWITTER_API_KEY          — Consumer Key
+# TWITTER_API_SECRET       — Consumer Secret
+# TWITTER_ACCESS_TOKEN     — Access Token
+# TWITTER_ACCESS_SECRET    — Access Token Secret

@@ -13,7 +13,7 @@
 
   // ── Inject styles
   const css = `
-    .tpk-chat-fab{ position:fixed; right:20px; bottom:20px; z-index:9000;
+    .tpk-chat-fab{ position:fixed; right:20px; bottom:20px; z-index:900; /* chat-fab */
       width:60px; height:60px; border-radius:50%; border:none; cursor:pointer;
       background:linear-gradient(135deg,#00C853,#00A040); color:#0A1628;
       box-shadow:0 12px 30px rgba(0,200,83,.35); font-size:1.6rem;
@@ -22,7 +22,7 @@
     .tpk-chat-fab .tpk-badge{ position:absolute; top:-2px; right:-2px;
       background:#FF4757; color:#fff; font-size:.6rem; font-weight:800;
       padding:2px 6px; border-radius:10px; }
-    .tpk-chat-panel{ position:fixed; right:20px; bottom:90px; z-index:9001;
+    .tpk-chat-panel{ position:fixed; right:20px; bottom:90px; z-index:901; /* chat-panel */
       width:380px; max-width:calc(100vw - 32px); height:560px; max-height:calc(100vh - 110px);
       background:#fff; border-radius:18px; box-shadow:0 22px 60px rgba(10,22,40,.28);
       display:none; flex-direction:column; overflow:hidden; font-family:'Sora',system-ui,sans-serif; color:#0A1628; }

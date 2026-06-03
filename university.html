@@ -8,14 +8,15 @@
 <meta property="og:title" id="ogTitle" content="TaleemPK">
 <meta property="og:description" id="ogDesc" content="Compare universities in Pakistan.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="https://taleempk.pk/og-image.svg">
+<meta property="og:image" content="https://taleempk.pk/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@TaleemPK_">
 <meta name="twitter:title" id="twTitle" content="TaleemPK — Pakistan Universities">
 <meta name="twitter:description" id="twDesc" content="Compare fees, merit lists & admissions of Pakistani universities on TaleemPK.">
-<meta name="twitter:image" content="https://taleempk.pk/og-image.svg">
+<meta name="twitter:image" content="https://taleempk.pk/og-image.png">
 <meta name="robots" content="index, follow">
 <link rel="canonical" id="canonicalUrl" href="">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
@@ -66,6 +67,18 @@
   .nav-sug a:hover{background:var(--green-light);}
   .nav-sug img{width:24px;height:24px;object-fit:contain;border-radius:5px;background:#fff;}
   @media(max-width:780px){ .nav-search-wrap{display:none;} }
+  /* Mobile search toggle */
+  .nav-search-toggle{display:none;background:transparent;border:1.5px solid rgba(255,255,255,.35);color:#fff;
+    border-radius:9px;padding:7px 12px;font-size:1rem;cursor:pointer;line-height:1;}
+  @media(max-width:780px){.nav-search-toggle{display:flex;align-items:center;}}
+  /* Slide-down search bar for mobile */
+  .mobile-search-bar{display:none;background:rgba(10,22,40,0.98);padding:10px 16px;border-top:1px solid rgba(255,255,255,.08);}
+  .mobile-search-bar.open{display:block;}
+  .mobile-search-bar input{width:100%;padding:10px 14px;border-radius:9px;border:1.5px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.08);color:#fff;font-family:'Sora',sans-serif;font-size:.9rem;outline:none;}
+  .mobile-search-bar input:focus{background:#fff;color:var(--navy);}
+  .mobile-search-bar .nav-sug{position:relative;top:6px;left:0;right:0;border-radius:10px;
+    box-shadow:0 12px 36px rgba(0,0,0,.4);}
   .nav-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;}
   .nav-btn{background:transparent;border:1.5px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:8px 14px;
     font-family:'Sora',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;text-decoration:none;white-space:nowrap;}
@@ -279,10 +292,15 @@
     <div class="nav-sug" id="navSug"></div>
   </div>
   <div class="nav-actions">
+    <button class="nav-search-toggle" id="mobileSearchToggle" aria-label="Search universities" onclick="toggleMobileSearch()">🔍</button>
     <a href="index.html" class="nav-btn" title="All Universities"><span class="full">← All</span><span class="short">←</span></a>
     <button class="nav-btn solid" id="authBtn" onclick="onAuthBtn()">Login</button>
   </div>
 </nav>
+<div class="mobile-search-bar" id="mobileSearchBar">
+  <input type="search" id="mobileNavSearch" placeholder="Search university…" autocomplete="off" onkeydown="if(event.key==='Enter')doMobileNavSearch()" oninput="doMobileNavSuggest(this.value)">
+  <div class="nav-sug" id="mobileNavSug"></div>
+</div>
 
 <div id="content"><div class="loading">Loading university…</div></div>
 
@@ -399,6 +417,32 @@ async function preloadUnis(){
     const { data } = await sb.from('institutions').select('id,name,full_name,city,sector,website,logo_url,tags,type,programs').order('rank',{ascending:true});
     ALL_UNIS_CACHE = data || [];
   }catch(e){}
+}
+function toggleMobileSearch(){
+  const bar = document.getElementById('mobileSearchBar');
+  bar.classList.toggle('open');
+  if(bar.classList.contains('open')) document.getElementById('mobileNavSearch').focus();
+}
+function doMobileNavSearch(){
+  const q = document.getElementById('mobileNavSearch').value.trim();
+  if(!q) return;
+  const m = ALL_UNIS_CACHE.find(u => u.name.toLowerCase()===q.toLowerCase() || (u.full_name||'').toLowerCase()===q.toLowerCase());
+  if(m){ location.href = '/university/' + toSlug(m.name); return; }
+  location.href = 'index.html#search=' + encodeURIComponent(q);
+}
+function doMobileNavSuggest(val){
+  const q = (val||'').trim().toLowerCase();
+  const box = document.getElementById('mobileNavSug');
+  if(q.length<1){ box.classList.remove('show'); return; }
+  const matches = ALL_UNIS_CACHE
+    .filter(u => u.name.toLowerCase().includes(q) || (u.full_name||'').toLowerCase().includes(q))
+    .slice(0,6);
+  if(!matches.length){ box.classList.remove('show'); return; }
+  box.innerHTML = matches.map(u=>{
+    const ic = u.logo_url ? `<img src="${u.logo_url}" alt="">` : (u.website ? `<img src="https://www.google.com/s2/favicons?domain=${u.website}&sz=64" alt="">` : '🏛️');
+    return `<a href="/university/${toSlug(u.name)}">${ic}<div><div style="font-weight:700">${u.name}</div><div style="font-size:.74rem;color:var(--gray-400)">📍 ${u.city||''}</div></div></a>`;
+  }).join('');
+  box.classList.add('show');
 }
 function doNavSearch(){
   const q = document.getElementById('navSearch').value.trim();
