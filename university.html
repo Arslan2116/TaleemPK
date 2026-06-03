@@ -12,7 +12,11 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@taleempk">
+<meta name="twitter:title" id="twTitle" content="TaleemPK — Pakistan Universities">
+<meta name="twitter:description" id="twDesc" content="Compare fees, merit lists & admissions of Pakistani universities on TaleemPK.">
 <meta name="twitter:image" content="https://taleempk.pk/og-image.svg">
+<meta name="robots" content="index, follow">
 <link rel="canonical" id="canonicalUrl" href="">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
@@ -527,6 +531,8 @@ function setSEO(){
   $('metaDesc').setAttribute('content', d);
   $('ogTitle').setAttribute('content', `${u.full_name||u.name} | TaleemPK`);
   $('ogDesc').setAttribute('content', d);
+  const tw = document.getElementById('twTitle'); if(tw) tw.setAttribute('content', document.title);
+  const td = document.getElementById('twDesc'); if(td) td.setAttribute('content', d);
   const slug = toSlug(u.name);
   const canon = `https://taleempk.pk/university/${slug}`;
   const cl = $('canonicalUrl'); if(cl) cl.setAttribute('href', canon);
