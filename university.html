@@ -205,6 +205,27 @@
   .merit-empty-icn{ font-size:1.6rem; }
   .merit-empty-txt{ flex:1; font-size:.88rem; color:var(--gray-600); }
   .merit-submit-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+  /* Aggregate Calculator */
+  .agg-calc{ background:var(--gray-100); border-radius:14px; padding:20px; }
+  .agg-formula-tag{ display:inline-block; font-size:.75rem; color:var(--gray-400); background:var(--gray-200); border-radius:20px; padding:4px 12px; margin-bottom:16px; }
+  .agg-inputs{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+  .agg-input-group{ display:flex; flex-direction:column; gap:6px; }
+  .agg-input-group label{ font-size:.78rem; font-weight:600; color:var(--gray-600); }
+  .agg-input-group input{ border:1.5px solid var(--gray-200); border-radius:8px; padding:10px 12px; font-size:.95rem; font-family:inherit; outline:none; transition:border-color .2s; }
+  .agg-input-group input:focus{ border-color:var(--green); }
+  .agg-result{ border-radius:12px; padding:16px 20px; display:none; margin-top:4px; }
+  .agg-result.show{ display:block; }
+  .agg-result.eligible{ background:rgba(0,200,83,0.1); border:1.5px solid rgba(0,200,83,0.3); }
+  .agg-result.borderline{ background:rgba(255,152,0,0.1); border:1.5px solid rgba(255,152,0,0.3); }
+  .agg-result.noteligible{ background:rgba(239,68,68,0.1); border:1.5px solid rgba(239,68,68,0.3); }
+  .agg-score{ font-size:1.8rem; font-weight:800; color:var(--navy); }
+  .agg-score span{ font-size:1rem; font-weight:400; color:var(--gray-400); }
+  .agg-verdict{ font-size:.9rem; font-weight:600; margin-top:4px; }
+  .agg-verdict.eligible{ color:#00C853; }
+  .agg-verdict.borderline{ color:#FF9800; }
+  .agg-verdict.noteligible{ color:#EF4444; }
+  .agg-breakdown{ font-size:.78rem; color:var(--gray-400); margin-top:8px; }
+  @media(max-width:600px){ .agg-inputs{ grid-template-columns:1fr; } }
   /* Similar universities */
   .similar-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
   @media(max-width:780px){
@@ -517,6 +538,7 @@ async function load(){
   render();
   setSEO();
   setTimeout(drawMeritChart, 100);
+  setTimeout(buildAggCalc, 50);
   loadReviews(); loadQA();
   loadSimilar();
   // Mobile sticky action bar
@@ -564,6 +586,88 @@ function submitMerit(){
   if(!UNI) return;
   const msg = `Hi! I want to submit closing-merit data for ${UNI.full_name||UNI.name} on TaleemPK.\n\nProgram:\nClosing Merit %:\nAvailable Seats:\nYear:\nProof (link/screenshot):`;
   window.open(`https://wa.me/${MERIT_WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+/* ── Aggregate Calculator ── */
+const MERIT_FORMULAS = {
+  // id: [matric_weight, fsc_weight, test_weight, test_label]
+  1:  [10, 15, 75, 'NET Score'],         // NUST
+  2:  [0,  0,  0,  'SAT/LCAT'],          // LUMS (special)
+  3:  [10, 40, 50, 'ECAT'],              // UET Lahore
+  4:  [0,  0,  0,  'IBA Test'],          // IBA (special)
+  5:  [10, 15, 75, 'NU Test'],           // FAST NUCES
+  6:  [10, 40, 50, 'NTS/Entry Test'],    // COMSATS
+  7:  [10, 40, 50, 'Entry Test'],        // QAU
+  8:  [10, 15, 75, 'GIKI Test'],         // GIKI
+  9:  [10, 15, 75, 'PIEAS Test'],        // PIEAS
+  10: [10, 40, 50, 'Entry Test'],        // NED
+  14: [10, 40, 50, 'Entry Test'],        // Air University
+  21: [20, 40, 40, 'IST Entry Test'],    // IST
+  // Default for all others
+  default: [10, 40, 50, 'Entry Test']
+};
+
+function buildAggCalc(){
+  if(!UNI) return;
+  const f = MERIT_FORMULAS[UNI.id] || MERIT_FORMULAS.default;
+  const isSpecial = f[0]===0; // LUMS, IBA — test-only, can't calculate simply
+  const closing = UNI.merit ? parseFloat(UNI.merit) : null;
+
+  let html = '';
+  if(isSpecial){
+    html = `<div class="agg-formula-tag">⚡ ${UNI.name} uses a custom test/interview-based admission — no standard aggregate formula applies.</div>`;
+  } else {
+    html = `
+      <div class="agg-formula-tag">Formula: Matric ${f[0]}% + FSc/Inter ${f[1]}% + ${f[3]} ${f[2]}%</div>
+      <div class="agg-inputs">
+        <div class="agg-input-group">
+          <label>Matric / O-Level %</label>
+          <input type="number" id="calcMatric" min="0" max="100" placeholder="e.g. 85" oninput="calcAggregate()">
+        </div>
+        <div class="agg-input-group">
+          <label>FSc / Inter %</label>
+          <input type="number" id="calcFsc" min="0" max="100" placeholder="e.g. 80" oninput="calcAggregate()">
+        </div>
+        <div class="agg-input-group">
+          <label>${f[3]} Score %</label>
+          <input type="number" id="calcTest" min="0" max="100" placeholder="e.g. 70" oninput="calcAggregate()">
+        </div>
+      </div>
+      <div class="agg-result" id="aggResult">
+        <div class="agg-score" id="aggScore">--%<span> aggregate</span></div>
+        <div class="agg-verdict" id="aggVerdict"></div>
+        <div class="agg-breakdown" id="aggBreakdown"></div>
+      </div>`;
+  }
+  document.getElementById('aggCalcBox').innerHTML = `<div class="agg-calc">${html}</div>`;
+}
+
+function calcAggregate(){
+  const f = MERIT_FORMULAS[UNI.id] || MERIT_FORMULAS.default;
+  const m = parseFloat(document.getElementById('calcMatric')?.value)||0;
+  const s = parseFloat(document.getElementById('calcFsc')?.value)||0;
+  const t = parseFloat(document.getElementById('calcTest')?.value)||0;
+  if(!m && !s && !t) return;
+  const agg = ((m*f[0]) + (s*f[1]) + (t*f[2])) / 100;
+  const closing = UNI.merit ? parseFloat(UNI.merit) : null;
+  const res = document.getElementById('aggResult');
+  const scoreEl = document.getElementById('aggScore');
+  const verdictEl = document.getElementById('aggVerdict');
+  const breakEl = document.getElementById('aggBreakdown');
+  scoreEl.innerHTML = `${agg.toFixed(2)}%<span> aggregate</span>`;
+  res.className = 'agg-result show';
+  breakEl.innerHTML = `Matric: ${(m*f[0]/100).toFixed(1)} + FSc: ${(s*f[1]/100).toFixed(1)} + ${f[3]}: ${(t*f[2]/100).toFixed(1)}`;
+  if(closing){
+    const diff = agg - closing;
+    if(diff >= 2){ res.classList.add('eligible'); verdictEl.className='agg-verdict eligible'; verdictEl.textContent=`✅ Eligible — ${diff.toFixed(1)}% above closing merit (${closing}%)`; }
+    else if(diff >= -3){ res.classList.add('borderline'); verdictEl.className='agg-verdict borderline'; verdictEl.textContent=`⚠️ Borderline — ${Math.abs(diff).toFixed(1)}% ${diff>=0?'above':'below'} last closing merit (${closing}%)`; }
+    else{ res.classList.add('noteligible'); verdictEl.className='agg-verdict noteligible'; verdictEl.textContent=`❌ Below closing merit (${closing}%) by ${Math.abs(diff).toFixed(1)}% — consider improving test score`; }
+  } else {
+    res.classList.add('eligible');
+    verdictEl.className='agg-verdict';
+    verdictEl.style.color='var(--navy)';
+    verdictEl.textContent=`No closing merit data yet for ${UNI.name}`;
+  }
 }
 
 function setSEO(){
@@ -699,6 +803,11 @@ function render(){
           <button class="btn navyb" onclick="submitMerit()">+ Submit Merit / Closing Data</button>
           <span class="muted" style="align-self:center;font-size:.8rem;">Helps every future applicant 🙏</span>
         </div>
+      </div>
+
+      <div class="sec" id="aggCalcSec">
+        <div class="sec-head"><div class="icn">🧮</div><h2>Aggregate Calculator <span class="count" style="background:rgba(0,200,83,0.15);color:#00C853">For ${esc(u.name)}</span></h2></div>
+        <div id="aggCalcBox"></div>
       </div>
 
       <div class="sec">
