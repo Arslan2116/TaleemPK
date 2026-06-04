@@ -4421,25 +4421,65 @@ let filteredCache = [];
 // ════════════════════════════════════════════
 //  STUDENT TOOL 1 — PERSONAL SHORTLIST
 // ════════════════════════════════════════════
-const SL_KEY = 'tpk_shortlist_v1';
-function getShortlist(){ try{return JSON.parse(localStorage.getItem(SL_KEY)||'[]');}catch{return [];} }
-function isInShortlist(id){ return getShortlist().includes(id); }
+// ─── Shortlist — DB-backed, login required ───
+// In-memory cache loaded from the user_shortlists table on login.
+let _shortlistIds = new Set();
 let _slActive = false;
 
-function toggleShortlist(id, event) {
-  event && event.stopPropagation();
-  let sl = getShortlist();
-  const isSaved = sl.includes(id);
-  sl = isSaved ? sl.filter(x=>x!==id) : [...sl, id];
-  localStorage.setItem(SL_KEY, JSON.stringify(sl));
-  const btn = document.getElementById(`sl-btn-${id}`);
-  if(btn){ btn.textContent = !isSaved?'❤️':'🤍'; btn.classList.toggle('saved',!isSaved); }
+function getShortlist(){ return [..._shortlistIds]; }
+function isInShortlist(id){ return _shortlistIds.has(id); }
+
+async function loadShortlistFromDB(){
+  if(!currentUser || !sbClient){ _shortlistIds = new Set(); updateSlBadge(); return; }
+  try{
+    const { data, error } = await sbClient.from('user_shortlists').select('institution_id').eq('user_id', currentUser.id);
+    if(error) throw error;
+    _shortlistIds = new Set((data||[]).map(r => r.institution_id));
+  }catch(e){ _shortlistIds = new Set(); }
+  // Refresh all save buttons + badge
+  document.querySelectorAll('[id^="sl-btn-"]').forEach(btn => {
+    const id = parseInt(btn.id.replace('sl-btn-',''));
+    btn.textContent = _shortlistIds.has(id) ? '❤️' : '🤍';
+    btn.classList.toggle('saved', _shortlistIds.has(id));
+  });
   updateSlBadge();
-  if(_slActive && isSaved) { currentPage=1; applyFilters(); }
+  if(_slActive){ currentPage=1; applyFilters(); }
+}
+
+async function toggleShortlist(id, event) {
+  event && event.stopPropagation();
+  // Gate: only logged-in users can shortlist
+  if(!currentUser){
+    if(typeof openAuthModal === 'function') openAuthModal('login');
+    return;
+  }
+  const wasSaved = _shortlistIds.has(id);
+  // Optimistic update
+  if(wasSaved) _shortlistIds.delete(id); else _shortlistIds.add(id);
+  const btn = document.getElementById(`sl-btn-${id}`);
+  if(btn){ btn.textContent = !wasSaved?'❤️':'🤍'; btn.classList.toggle('saved',!wasSaved); }
+  updateSlBadge();
+  // Persist to DB
+  try{
+    if(wasSaved){
+      const { error } = await sbClient.from('user_shortlists').delete().eq('user_id', currentUser.id).eq('institution_id', id);
+      if(error) throw error;
+    } else {
+      const { error } = await sbClient.from('user_shortlists').insert({ user_id: currentUser.id, institution_id: id });
+      if(error) throw error;
+    }
+  }catch(e){
+    // Revert UI on failure
+    if(wasSaved) _shortlistIds.add(id); else _shortlistIds.delete(id);
+    if(btn){ btn.textContent = wasSaved?'❤️':'🤍'; btn.classList.toggle('saved',wasSaved); }
+    updateSlBadge();
+    alert('Could not update shortlist: ' + (e.message || 'please try again'));
+  }
+  if(_slActive && wasSaved) { currentPage=1; applyFilters(); }
 }
 
 function updateSlBadge() {
-  const count = getShortlist().length;
+  const count = _shortlistIds.size;
   const btn = document.getElementById('slToolBtn');
   if(btn){
     btn.innerHTML = (_slActive?'❤️':'🤍') + ' My Shortlist <span class="tool-badge" id="slCountBadge" style="display:'+(count>0?'inline':'none')+'">'+count+'</span>';
@@ -4680,8 +4720,13 @@ function closeOtherTools(keep){
 }
 
 function toggleShortlistFilter() {
-  if(!_slActive && getShortlist().length===0){
-    alert('No universities saved yet! Click the 🤍 button on any card to save it.'); return;
+  // Gate: shortlist requires sign-in
+  if(!currentUser){
+    if(typeof openAuthModal === 'function') openAuthModal('login');
+    return;
+  }
+  if(!_slActive && _shortlistIds.size===0){
+    alert('Your shortlist is empty. Tap the 🤍 button on any university card to save it.'); return;
   }
   closeOtherTools('shortlist');
   _slActive = !_slActive;
@@ -5883,6 +5928,8 @@ function refreshAuthUI(){
   if(btn) btn.textContent = desktopText;
   const mBtn = document.getElementById('authNavBtnMobile');
   if(mBtn) mBtn.textContent = currentUser ? ('👤 '+userDisplayName(currentUser)+' · Logout') : '🔐 Login / Sign Up';
+  // Sync shortlist from DB whenever auth state changes
+  if(typeof loadShortlistFromDB === 'function') loadShortlistFromDB();
 }
 async function initAuth(){
   if(!sbClient) return;
