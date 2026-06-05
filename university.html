@@ -307,14 +307,14 @@
 <body>
 
 <nav>
-  <a href="index.html" class="nav-logo">🎓 Taleem<span>PK</span></a>
+  <a href="/" class="nav-logo">🎓 Taleem<span>PK</span></a>
   <div class="nav-search-wrap">
     <input type="search" id="navSearch" placeholder="🔍 Search university…" autocomplete="off" onkeydown="if(event.key==='Enter')doNavSearch()">
     <div class="nav-sug" id="navSug"></div>
   </div>
   <div class="nav-actions">
     <button class="nav-search-toggle" id="mobileSearchToggle" aria-label="Search universities" onclick="toggleMobileSearch()">🔍</button>
-    <a href="index.html" class="nav-btn" title="All Universities"><span class="full">← All</span><span class="short">←</span></a>
+    <a href="/" class="nav-btn" title="All Universities"><span class="full">← All</span><span class="short">←</span></a>
     <button class="nav-btn solid" id="authBtn" onclick="onAuthBtn()">Login</button>
   </div>
 </nav>
@@ -331,7 +331,7 @@
   <button class="btn navyb" onclick="shareUni()" style="flex:1;">🔗 Share</button>
 </div>
 
-<footer>© <span id="yr"></span> TaleemPK · <a href="index.html">Compare Universities in Pakistan</a></footer>
+<footer>© <span id="yr"></span> TaleemPK · <a href="/">Compare Universities in Pakistan</a></footer>
 
 <!-- Auth modal -->
 <div class="ov" id="authOv" onclick="if(event.target===this)closeAuth()">
@@ -524,16 +524,16 @@ async function loadSimilar(){
 
 async function load(){
   let id = getId();
-  if(!id){ $('content').innerHTML='<div class="loading">University not found. <a href="index.html">Go back</a></div>'; return; }
+  if(!id){ $('content').innerHTML='<div class="loading">University not found. <a href="/">Go back</a></div>'; return; }
   // Slug-based lookup
   if(typeof id === 'string' && isNaN(id)){
     await preloadUnis();
     const match = ALL_UNIS_CACHE.find(u => toSlug(u.name)===id || toSlug(u.full_name||'')===id);
-    if(!match){ $('content').innerHTML='<div class="loading">University not found. <a href="index.html">Go back</a></div>'; return; }
+    if(!match){ $('content').innerHTML='<div class="loading">University not found. <a href="/">Go back</a></div>'; return; }
     id = match.id;
   }
   const { data, error } = await sb.from('institutions').select('*,fee_details(label,value,sort_order)').eq('id',id).single();
-  if(error || !data){ $('content').innerHTML='<div class="loading">University not found. <a href="index.html">Go back</a></div>'; return; }
+  if(error || !data){ $('content').innerHTML='<div class="loading">University not found. <a href="/">Go back</a></div>'; return; }
   UNI = data;
   render();
   setSEO();
@@ -757,7 +757,7 @@ function render(){
   $('content').innerHTML = `
   <div class="hero-band">
     <div class="hero-inner">
-      <div class="crumbs"><a href="index.html">Universities</a> &nbsp;›&nbsp; ${esc(u.name)}</div>
+      <div class="crumbs"><a href="/">Universities</a> &nbsp;›&nbsp; ${esc(u.name)}</div>
       <div class="hero-top">
         <div class="hero-logo">${logo}</div>
         <div class="hero-tags">
