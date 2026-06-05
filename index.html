@@ -4252,24 +4252,48 @@ const ADMISSION_DATES = [
 ];
 
 // Study group → which tags are eligible
-const STUDY_ELIGIBLE = {
-  engineering: ['engineering','cs','business','sciences','arts','education',''],
-  medical:     ['medical','sciences','business','arts','education',''],
-  general:     ['business','cs','arts','education','sciences',''],
-  alevels:     ['engineering','medical','cs','business','sciences','arts','education','']
+// Match program names to broad eligibility categories — used by the Admission Predictor.
+// We check the REAL programs the university offers, not just tags.
+const PROG_REGEX = {
+  medical:      /mbbs|bds|pharm|nursing|dpt|physiotherapy|medicine|medical|dental|dvm|allied health|radiology|optometry/i,
+  engineering:  /\b(b[es]|bachelor|bs)\b.*\bengineering\b|\bbe\b|chemical|mechanical|electrical|civil|electronic|mechatronics|aerospace|biomedical engineering|petroleum|mining|metallurg|materials engineering|software engineering|computer engineering|telecommunication/i,
+  cs:           /computer science|software engineer|cyber|artificial intelligence|data science|information tech|\bbscs\b|\bbsse\b|\bit\b/i,
+  business:     /\b(bba|mba|business|accounting|finance|economics|commerce|management|marketing)\b/i,
+  arts:         /\b(arts|design|architecture|fashion|media|literature|english|urdu|history|philosophy|psychology|sociology|anthropology|fine art|llb|law)\b/i,
+  sciences:     /\b(physics|chemistry|mathematics|biology|biotechnology|microbiology|botany|zoology|biochem|environmental|geology|food science|statistics)\b/i
 };
-// Pure-type exclusion: engineering students can't apply to pure-medical unis (and vice versa)
+
+function hasProgramIn(u, category){
+  const re = PROG_REGEX[category];
+  if(!re) return false;
+  return (u.programs || []).some(p => re.test(p));
+}
+
+// Returns true if the university actually offers something relevant to this student's background.
+// Logic: each FSc / A-Level group has its OWN set of accessible categories. The uni must offer
+// at least one program in those categories.
 function isEligible(u, studyGroup) {
-  if(studyGroup === 'alevels') return true;
+  if(studyGroup === 'alevels') return true;   // A-Level students can apply nearly anywhere
   const tags = u.tags || [];
-  if(studyGroup === 'engineering') {
-    // Exclude unis that are tagged ONLY medical with no other program
-    if(tags.includes('medical') && !tags.includes('engineering') && !tags.includes('business') && u.type !== 'public') return false;
+
+  // Engineering (Pre-Engineering) → engineering, CS, sciences, business
+  if(studyGroup === 'engineering'){
+    return hasProgramIn(u,'engineering') || hasProgramIn(u,'cs') || hasProgramIn(u,'sciences')
+        || hasProgramIn(u,'business') || tags.includes('engineering') || tags.includes('cs')
+        || tags.includes('business') || tags.includes('sciences');
   }
-  if(studyGroup === 'medical') {
-    // Exclude unis that are tagged ONLY engineering with no other program
-    if(tags.includes('engineering') && !tags.includes('medical') && !tags.includes('business') && u.type !== 'public') return false;
+
+  // Medical (Pre-Medical) → must have medical/health programs; sciences also OK
+  if(studyGroup === 'medical'){
+    return hasProgramIn(u,'medical') || hasProgramIn(u,'sciences') || tags.includes('medical');
   }
+
+  // General / FA / ICS / ICom → business, CS, arts, social, education
+  if(studyGroup === 'general'){
+    return hasProgramIn(u,'business') || hasProgramIn(u,'cs') || hasProgramIn(u,'arts')
+        || tags.includes('business') || tags.includes('arts');
+  }
+
   return true;
 }
 
