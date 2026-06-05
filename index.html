@@ -2056,10 +2056,10 @@
 <!-- ADMISSION PREDICTOR BANNER -->
 <div class="predictor-banner" style="margin-top:20px;">
   <div class="predictor-banner-text">
-    <h3>🎯 Admission Predictor — Find Your Best Match</h3>
+    <h3 style="display:flex;align-items:center;gap:8px;"><span data-icon="target" data-size="18"></span> Admission Predictor — Find Your Best Match</h3>
     <p>Enter your percentage & study group — we'll show which universities you can get into</p>
   </div>
-  <button class="predictor-open-btn" onclick="openPredictor()">Start Predictor →</button>
+  <button class="predictor-open-btn" onclick="openPredictor()" style="display:inline-flex;align-items:center;gap:6px;">Start Predictor <span data-icon="arrowRight" data-size="16"></span></button>
 </div>
 <div class="predictor-active-bar" id="predictorActiveBar">
   <span class="predictor-active-info" id="predictorActiveInfo"></span>
@@ -2069,8 +2069,8 @@
 <!-- PREDICTOR MODAL -->
 <div class="predictor-overlay" id="predictorOverlay" onclick="if(event.target===this)closePredictor()">
   <div class="predictor-modal" style="position:relative">
-    <button class="predictor-close" onclick="closePredictor()">✕</button>
-    <h2>🎯 Admission Predictor</h2>
+    <button class="predictor-close" onclick="closePredictor()"><span data-icon="x" data-size="16"></span></button>
+    <h2><span data-icon="target" data-size="22"></span> Admission Predictor</h2>
     <p>Tell us about yourself — we'll recommend the best universities for your profile</p>
 
     <div class="pred-section">
@@ -2415,7 +2415,7 @@
 </div>
 
 <!-- BACK TO TOP -->
-<button id="backToTop" class="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">↑</button>
+<button id="backToTop" class="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top"><span data-icon="arrowUp" data-size="20"></span></button>
 
 <!-- FOOTER -->
 <footer>
@@ -2509,8 +2509,8 @@
 <!-- FEE CALCULATOR MODAL -->
 <div class="fee-overlay" id="feeOverlay" onclick="if(event.target===this)closeFeeCalc()">
   <div class="fee-modal">
-    <button class="predictor-close" onclick="closeFeeCalc()">✕</button>
-    <h2>🧮 Degree Fee Calculator</h2>
+    <button class="predictor-close" onclick="closeFeeCalc()"><span data-icon="x" data-size="16"></span></button>
+    <h2><span data-icon="calculator" data-size="22"></span> Degree Fee Calculator</h2>
     <p>Total cost estimate including tuition, hostel & living</p>
     <div class="fee-field">
       <label>Select University</label>
@@ -2646,8 +2646,8 @@
 </style>
 <div class="fee-overlay" id="scholMatchOverlay" onclick="if(event.target===this)closeScholMatch()">
   <div class="fee-modal">
-    <button class="predictor-close" onclick="closeScholMatch()">✕</button>
-    <h2>🎁 Scholarship Auto-Matcher</h2>
+    <button class="predictor-close" onclick="closeScholMatch()"><span data-icon="x" data-size="16"></span></button>
+    <h2><span data-icon="gift" data-size="22"></span> Scholarship Auto-Matcher</h2>
     <p>4 questions answer karo — best matching scholarships dekho with personalized score</p>
 
     <!-- Progress -->
@@ -2657,7 +2657,7 @@
 
     <!-- Step 1: Education Level -->
     <div class="sm-step active" data-step="1">
-      <h3 class="sm-step-title">📚 Your Current Education Level</h3>
+      <h3 class="sm-step-title"><span data-icon="bookOpen"></span> Your Current Education Level</h3>
       <p class="sm-step-sub">Which stage are you applying from?</p>
       <div class="sm-opts">
         <button class="sm-opt" data-val="fsc" onclick="smPick(this,'level')"><span class="sm-opt-icon">🎒</span><span>FSc / A-Levels Student<span class="sm-opt-sub">Looking for undergraduate scholarship</span></span></button>
@@ -2669,7 +2669,7 @@
 
     <!-- Step 2: Field -->
     <div class="sm-step" data-step="2">
-      <h3 class="sm-step-title">🎯 Field of Study</h3>
+      <h3 class="sm-step-title"><span data-icon="target"></span> Field of Study</h3>
       <p class="sm-step-sub">Kis field me apply karna chahte ho?</p>
       <div class="sm-opts cols2">
         <button class="sm-opt" data-val="engineering" onclick="smPick(this,'field')"><span class="sm-opt-icon">⚙️</span><span>Engineering</span></button>
@@ -2684,7 +2684,7 @@
 
     <!-- Step 3: Profile (CGPA / Income) -->
     <div class="sm-step" data-step="3">
-      <h3 class="sm-step-title">💰 Financial Need vs Merit</h3>
+      <h3 class="sm-step-title"><span data-icon="dollarSign"></span> Financial Need vs Merit</h3>
       <p class="sm-step-sub">Konsi category par focus karein?</p>
       <div class="sm-opts">
         <button class="sm-opt" data-val="need"  onclick="smPick(this,'priority')"><span class="sm-opt-icon">🏠</span><span>Need-Based (Family Income Low)<span class="sm-opt-sub">Ehsaas, USAT, Pakistan Baitul Maal</span></span></button>
@@ -2695,7 +2695,7 @@
 
     <!-- Step 4: Region -->
     <div class="sm-step" data-step="4">
-      <h3 class="sm-step-title">🌍 Where do you want to study?</h3>
+      <h3 class="sm-step-title"><span data-icon="globe"></span> Where do you want to study?</h3>
       <p class="sm-step-sub">Domestic ya foreign scholarships?</p>
       <div class="sm-opts">
         <button class="sm-opt" data-val="domestic" onclick="smPick(this,'region')"><span class="sm-opt-icon">🇵🇰</span><span>Inside Pakistan<span class="sm-opt-sub">HEC, NUST, LUMS, etc.</span></span></button>
@@ -2855,8 +2855,8 @@
 </style>
 <div class="fee-overlay" id="meritCalcOverlay" onclick="if(event.target===this)closeMeritCalc()">
   <div class="fee-modal">
-    <button class="predictor-close" onclick="closeMeritCalc()">✕</button>
-    <h2>📐 Merit Aggregate Calculator</h2>
+    <button class="predictor-close" onclick="closeMeritCalc()"><span data-icon="x" data-size="16"></span></button>
+    <h2><span data-icon="ruler" data-size="22"></span> Merit Aggregate Calculator</h2>
     <p>Apni Matric, FSc & Entry Test marks daalo — exact aggregate dekho per university</p>
     <div class="fee-field">
       <label>Select University Formula</label>
@@ -2865,33 +2865,33 @@
       </select>
     </div>
     <div id="mcFormulaBox">
-      <strong>📋 Formula:</strong> <span id="mcFormulaText"></span>
+      <strong><span data-icon="scroll" data-size="14"></span> Formula:</strong> <span id="mcFormulaText"></span>
     </div>
     <div class="mc-input-card" id="mcMatricRow" style="display:none;">
-      <label>📘 Matric Marks <span class="mc-max">/ <span id="mcMatricMax">1100</span></span></label>
+      <label><span data-icon="bookOpen" data-size="14"></span> Matric Marks <span class="mc-max">/ <span id="mcMatricMax">1100</span></span></label>
       <input type="number" id="mcMatricInput" min="0" placeholder="e.g. 950" oninput="calculateMerit()">
       <div class="mc-pct"><b id="mcMatricPctTxt">0%</b> of total</div>
       <div class="mc-bar"><span id="mcMatricBar" style="width:0%"></span></div>
     </div>
     <div class="mc-input-card" id="mcFscRow" style="display:none;">
-      <label>📗 FSc / Intermediate Marks <span class="mc-max">/ <span id="mcFscMax">1100</span></span></label>
+      <label><span data-icon="bookOpen" data-size="14"></span> FSc / Intermediate Marks <span class="mc-max">/ <span id="mcFscMax">1100</span></span></label>
       <input type="number" id="mcFscInput" min="0" placeholder="e.g. 920" oninput="calculateMerit()">
       <div class="mc-pct"><b id="mcFscPctTxt">0%</b> of total</div>
       <div class="mc-bar"><span id="mcFscBar" style="width:0%"></span></div>
     </div>
     <div class="mc-input-card" id="mcTestRow" style="display:none;">
-      <label>📝 <span id="mcTestLabel">Entry Test</span> Marks <span class="mc-max">/ <span id="mcTestMax">200</span></span></label>
+      <label><span data-icon="scroll" data-size="14"></span> <span id="mcTestLabel">Entry Test</span> Marks <span class="mc-max">/ <span id="mcTestMax">200</span></span></label>
       <input type="number" id="mcTestInput" min="0" placeholder="e.g. 150" oninput="calculateMerit()">
       <div class="mc-pct"><b id="mcTestPctTxt">0%</b> of total</div>
       <div class="mc-bar"><span id="mcTestBar" style="width:0%"></span></div>
     </div>
     <div class="mc-input-card" id="mcSatRow" style="display:none;">
-      <label>🎯 SAT Score <span class="mc-max">/ 1600</span></label>
+      <label><span data-icon="target" data-size="14"></span> SAT Score <span class="mc-max">/ 1600</span></label>
       <input type="number" id="mcSatInput" min="400" max="1600" placeholder="e.g. 1200" oninput="calculateMerit()">
       <div class="mc-pct"><b id="mcSatPctTxt">0%</b> of total</div>
       <div class="mc-bar"><span id="mcSatBar" style="width:0%"></span></div>
     </div>
-    <button class="fee-calc-btn" onclick="calculateMerit()" style="margin-top:8px;">📊 Calculate My Aggregate</button>
+    <button class="fee-calc-btn" onclick="calculateMerit()" style="margin-top:8px;"><span data-icon="trendingUp" data-size="16"></span> Calculate My Aggregate</button>
     <div class="mc-result" id="meritResult">
       <div class="mc-result-head">
         <div class="mc-result-lbl">Your Aggregate</div>
@@ -4888,6 +4888,7 @@ let assessData = null;
 
 function openPredictor() {
   document.getElementById('predictorOverlay').classList.add('open');
+  if (typeof hydrateIcons === 'function') hydrateIcons(document.getElementById('predictorOverlay'));
 }
 function closePredictor() {
   document.getElementById('predictorOverlay').classList.remove('open');
@@ -5384,6 +5385,7 @@ function parseFeeNumeric(s) {
 }
 
 function openFeeCalc() {
+  setTimeout(()=>{ if (typeof hydrateIcons === 'function') hydrateIcons(document.getElementById('feeOverlay')); }, 0);
   closeOtherTools('fee');
   const sel = document.getElementById('fcUni');
   if(sel.options.length <= 1) {
@@ -5454,6 +5456,7 @@ function openScholMatch(){
   // Ensure scholarships are loaded
   if(!SCHOLARSHIPS.length) loadScholarships();
   document.getElementById('scholMatchOverlay').classList.add('open');
+  if (typeof hydrateIcons === 'function') hydrateIcons(document.getElementById('scholMatchOverlay'));
 }
 function closeScholMatch(){ document.getElementById('scholMatchOverlay').classList.remove('open'); }
 
@@ -5719,6 +5722,7 @@ function openMeritCalc() {
     }
   }
   document.getElementById('meritCalcOverlay').classList.add('open');
+  if (typeof hydrateIcons === 'function') hydrateIcons(document.getElementById('meritCalcOverlay'));
 }
 function closeMeritCalc(){ document.getElementById('meritCalcOverlay').classList.remove('open'); }
 
@@ -5820,7 +5824,7 @@ function calculateMerit() {
   const rows = [];
   if(w.matric){
     rows.push(`<div class="mc-bd-row">
-      <div class="mc-bd-icon matric">📘</div>
+      <div class="mc-bd-icon matric">${icon('bookOpen',{size:20})}</div>
       <div class="mc-bd-info">
         <div class="mc-bd-name">Matric / SSC</div>
         <div class="mc-bd-detail">${matricObt} / ${f.matric} &nbsp;·&nbsp; weight ${(w.matric*100).toFixed(0)}%</div>
@@ -5830,7 +5834,7 @@ function calculateMerit() {
   }
   if(w.fsc){
     rows.push(`<div class="mc-bd-row">
-      <div class="mc-bd-icon fsc">📗</div>
+      <div class="mc-bd-icon fsc">${icon('graduationCap',{size:20})}</div>
       <div class="mc-bd-info">
         <div class="mc-bd-name">FSc / Intermediate</div>
         <div class="mc-bd-detail">${fscObt} / ${f.fsc} &nbsp;·&nbsp; weight ${(w.fsc*100).toFixed(0)}%</div>
@@ -5840,7 +5844,7 @@ function calculateMerit() {
   }
   if(w.test){
     rows.push(`<div class="mc-bd-row">
-      <div class="mc-bd-icon test">📝</div>
+      <div class="mc-bd-icon test">${icon('scroll',{size:20})}</div>
       <div class="mc-bd-info">
         <div class="mc-bd-name">${f.test.name}</div>
         <div class="mc-bd-detail">${testObt} / ${testMax} &nbsp;·&nbsp; weight ${(w.test*100).toFixed(0)}%</div>
@@ -5852,9 +5856,10 @@ function calculateMerit() {
   document.getElementById('meritBreakdown').innerHTML = `
     <div class="mc-bd-title">Breakdown of your aggregate</div>
     ${rows.join('')}
-    <div class="mc-last-merit">📊 Last year closing merit at <b>${f.uni}</b>: <b>${f.lastMerit}</b></div>
+    <div class="mc-last-merit">${icon('trendingUp',{size:14})} Last year closing merit at <b>${f.uni}</b>: <b>${f.lastMerit}</b></div>
   `;
   document.getElementById('meritResult').classList.add('show');
+  if (typeof hydrateIcons === 'function') hydrateIcons(document.getElementById('meritCalcOverlay'));
 }
 
 // ════════════════════════════════════════════
