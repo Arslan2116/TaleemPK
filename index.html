@@ -4255,37 +4255,53 @@ const ADMISSION_DATES = [
 // Match program names to broad eligibility categories — used by the Admission Predictor.
 // We check the REAL programs the university offers, not just tags.
 const PROG_REGEX = {
-  medical:      /mbbs|bds|pharm|nursing|dpt|physiotherapy|medicine|medical|dental|dvm|allied health|radiology|optometry/i,
-  engineering:  /\b(b[es]|bachelor|bs)\b.*\bengineering\b|\bbe\b|chemical|mechanical|electrical|civil|electronic|mechatronics|aerospace|biomedical engineering|petroleum|mining|metallurg|materials engineering|software engineering|computer engineering|telecommunication/i,
-  cs:           /computer science|software engineer|cyber|artificial intelligence|data science|information tech|\bbscs\b|\bbsse\b|\bit\b/i,
-  business:     /\b(bba|mba|business|accounting|finance|economics|commerce|management|marketing)\b/i,
-  arts:         /\b(arts|design|architecture|fashion|media|literature|english|urdu|history|philosophy|psychology|sociology|anthropology|fine art|llb|law)\b/i,
-  sciences:     /\b(physics|chemistry|mathematics|biology|biotechnology|microbiology|botany|zoology|biochem|environmental|geology|food science|statistics)\b/i
+  // Strictly health-track programs Pre-Medical students apply for
+  medical:      /\bmbbs\b|\bbds\b|\bpharm|\bnursing\b|\bdpt\b|physiotherapy|\bmedicine\b|\bdental\b|\bdvm\b|allied health|radiology|optometry|veterinary|public health|paramedic|(?<!bio)medical(?!\s+engineering)/i,
+  // Biological / life sciences — valid Pre-Medical fallbacks (NOT physics/maths)
+  bioSciences:  /\b(biology|biotech|biotechnology|biochem|microbiology|zoology|botany|life sciences|biological|food science|nutrition|environmental science|biosciences|genetics|molecular)\b|\bbiomedical(?!\s+engineering)/i,
+  // Engineering — catches "Engineering", "Engg" abbrev, and named disciplines
+  engineering:  /engineering|\bengg\b|\b(civil|mechanical|electrical|chemical|aerospace|avionics|mechatronic|petroleum|mining|metallurg|telecommunication|architectural)\b|\b(biomedical|industrial|materials)\s+engineering\b|\bbs\s*ee\b|\bbs\s*ce\b|\bbs\s*me\b/i,
+  // Computing
+  cs:           /computer science|software engineer|cyber|artificial intelligence|data science|information tech|\bbs\s*cs\b|\bbs\s*se\b|\bbs\s*it\b|\bbscs\b|\bbsse\b|\bbsit\b|\bit\b|\bai\b/i,
+  // Business
+  business:     /\b(bba|mba|business|accounting|finance|economics|commerce|management|marketing|fintech|entrepreneur)\b/i,
+  // Arts / humanities / law
+  arts:         /\b(arts|design|architecture|fashion|media|literature|english|urdu|history|philosophy|psychology|sociology|anthropology|fine art|llb|law|education|journalism|mass comm|linguistics|islamic studies)\b/i,
+  // Physical sciences (NOT a Pre-Medical fallback — those students don't typically pick BS Physics)
+  physicalSciences: /\b(physics|chemistry|mathematics|maths|statistics|geology|astronomy|space science)\b/i
 };
 
+// Detect undergraduate programs only — predictor is for FSc/A-Level admission seekers,
+// so MS/MPhil/PhD/MA/MSc/Master programs must NOT count toward eligibility.
+function isUndergrad(p){
+  // Exclude obvious grad-level prefixes
+  if(/^\s*(MS|MSc|MPhil|MA|MBA|EMBA|Master|PhD|Post[- ])/i.test(p)) return false;
+  // Include obvious undergrad prefixes
+  if(/^\s*(BS|BSc|BA|BBA|BE|BTech|Bachelor|MBBS|BDS|Pharm[- ]?D|DPT|DVM|LLB|BFA|B\.Ed|BEd|B\.Com|BCom)/i.test(p)) return true;
+  // Programs without a prefix (like "MBBS", "CS", "Civil Engg") — assume undergrad
+  return true;
+}
 function hasProgramIn(u, category){
   const re = PROG_REGEX[category];
   if(!re) return false;
-  return (u.programs || []).some(p => re.test(p));
+  return (u.programs || []).some(p => isUndergrad(p) && re.test(p));
 }
 
 // Returns true if the university actually offers something relevant to this student's background.
-// Logic: each FSc / A-Level group has its OWN set of accessible categories. The uni must offer
-// at least one program in those categories.
 function isEligible(u, studyGroup) {
-  if(studyGroup === 'alevels') return true;   // A-Level students can apply nearly anywhere
+  if(studyGroup === 'alevels') return true;
   const tags = u.tags || [];
 
-  // Engineering (Pre-Engineering) → engineering, CS, sciences, business
+  // Pre-Engineering → engineering, CS, sciences, business
   if(studyGroup === 'engineering'){
-    return hasProgramIn(u,'engineering') || hasProgramIn(u,'cs') || hasProgramIn(u,'sciences')
+    return hasProgramIn(u,'engineering') || hasProgramIn(u,'cs') || hasProgramIn(u,'physicalSciences')
         || hasProgramIn(u,'business') || tags.includes('engineering') || tags.includes('cs')
-        || tags.includes('business') || tags.includes('sciences');
+        || tags.includes('business');
   }
 
-  // Medical (Pre-Medical) → must have medical/health programs; sciences also OK
+  // Pre-Medical → MBBS/BDS/Pharm/Nursing/DPT OR bio-sciences (Biotech etc.) — NOT generic BS Chemistry
   if(studyGroup === 'medical'){
-    return hasProgramIn(u,'medical') || hasProgramIn(u,'sciences') || tags.includes('medical');
+    return hasProgramIn(u,'medical') || hasProgramIn(u,'bioSciences') || tags.includes('medical');
   }
 
   // General / FA / ICS / ICom → business, CS, arts, social, education
@@ -4330,20 +4346,33 @@ function runPredictor() {
   assessData = { pct, study, field, province, uniType, maxFee };
   closePredictor();
 
+  // Field-specific eligibility — strict, based on actual programs (not "public" fallback)
+  const FIELD_CHECK = {
+    medical:     u => hasProgramIn(u,'medical') || hasProgramIn(u,'bioSciences') || u.tags.includes('medical'),
+    engineering: u => hasProgramIn(u,'engineering') || u.tags.includes('engineering'),
+    cs:          u => hasProgramIn(u,'cs') || u.tags.includes('cs') || u.tags.includes('computing'),
+    business:    u => hasProgramIn(u,'business') || u.tags.includes('business'),
+    sciences:    u => hasProgramIn(u,'physicalSciences') || hasProgramIn(u,'bioSciences') || u.tags.includes('sciences'),
+    arts:        u => hasProgramIn(u,'arts') || u.tags.includes('arts')
+  };
+
   // Filter + sort
   let results = UNIVERSITIES.filter(u => {
     if(!isEligible(u, study)) return false;
     if(province && u.province !== province) return false;
     if(uniType && u.type !== uniType) return false;
     if(maxFee !== Infinity && u.feeNum > maxFee) return false;
-    if(field === 'cs') {
-      if(!u.tags.includes('engineering') && !u.name.toLowerCase().includes('cs') &&
-         !(u.programs||[]).some(p=>p.toLowerCase().includes('cs')||p.toLowerCase().includes('computer')||p.toLowerCase().includes('it'))) {
-        // Still include unis with CS programs implicitly for major unis
-      }
-    } else if(field && field !== 'cs') {
-      if(!u.tags.includes(field) && u.type !== 'public') return false;
-    }
+    if(field && FIELD_CHECK[field] && !FIELD_CHECK[field](u)) return false;
+
+    // Cross-check: study group + field combo sanity
+    // FSc Pre-Engineering wants Medical → only show unis with MBBS/BDS/Pharm (Pre-Eng can shift via NTS/MDCAT to some)
+    if(study === 'engineering' && field === 'medical' && !hasProgramIn(u,'medical')) return false;
+    // FSc Pre-Medical wants Engineering → only show unis with actual engineering
+    if(study === 'medical' && field === 'engineering' && !hasProgramIn(u,'engineering')) return false;
+    // FA/ICS/ICom students cannot pursue MBBS/BDS (need Pre-Medical with Biology) or BE/Engineering (need Pre-Engineering)
+    if(study === 'general' && field === 'medical') return false;
+    if(study === 'general' && field === 'engineering') return false;
+
     return true;
   });
 
