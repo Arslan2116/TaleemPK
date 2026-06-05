@@ -1043,9 +1043,16 @@
     margin-bottom:32px; transition:all 0.2s; border:none; font-family:'Sora',sans-serif;
   }
   .about-back:hover { background:rgba(255,255,255,0.1); color:var(--white); }
-  .about-hero h1 { font-size:clamp(2rem,4vw,3.2rem); font-weight:800; color:var(--white); margin-bottom:16px; }
-  .about-hero h1 span { color:var(--green); }
-  .about-hero p { color:rgba(255,255,255,0.55); font-size:1rem; max-width:520px; margin:0 auto; line-height:1.75; }
+  .about-hero h1, .about-hero h2 {
+    font-size:clamp(2rem,4vw,3.2rem); font-weight:800;
+    color:#FFFFFF; margin-bottom:18px; line-height:1.15;
+    letter-spacing:-0.02em;
+  }
+  .about-hero h1 span, .about-hero h2 span { color:var(--green); }
+  .about-hero p {
+    color:rgba(255,255,255,0.78); font-size:1.05rem;
+    max-width:560px; margin:0 auto; line-height:1.7;
+  }
   .about-body { padding: 80px 5%; max-width:1100px; margin:0 auto; }
   .about-mission {
     display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center;
