@@ -131,6 +131,23 @@
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   html { scroll-behavior: smooth; }
+
+  /* ──── Icon system (Lucide-derived) ──── */
+  .tpk-ic {
+    display: inline-block;
+    vertical-align: -3px;
+    flex-shrink: 0;
+    line-height: 0;
+  }
+  .tpk-ic-lg { vertical-align: -4px; }
+  /* Brand-coloured icon variants */
+  .tpk-ic-green { color: var(--green); }
+  .tpk-ic-navy  { color: var(--navy); }
+  .tpk-ic-gold  { color: var(--gold); }
+  /* When used inside a coloured tag, inherit the tag's text colour */
+  .nav-dropdown-menu .tpk-ic,
+  .tool-btn .tpk-ic { vertical-align: -3px; margin-right: 7px; }
+  .uni-tag .tpk-ic { vertical-align: -2px; margin-right: 4px; }
   body {
     font-family: 'Sora', sans-serif;
     background: var(--white);
@@ -525,11 +542,20 @@
   .uni-location {
     font-size:0.8rem; color:var(--gray-400); margin-bottom:14px;
   }
-  .uni-location::before { content:'📍 '; }
+  .uni-location { display: inline-flex; align-items: center; gap: 4px; }
+  .uni-location::before {
+    content: '';
+    display: inline-block; width: 12px; height: 12px;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E") center/contain no-repeat;
+    flex-shrink: 0;
+  }
   .uni-tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
   .tag {
     font-size:0.72rem; font-weight:600; padding:3px 10px;
     border-radius:20px; background:var(--gray-100); color:var(--gray-600);
+    display: inline-flex; align-items: center; gap: 4px;
   }
   .tag.public { background:#E3F2FD; color:#1565C0; }
   .tag.private { background:#FCE4EC; color:#C62828; }
@@ -1930,32 +1956,16 @@
         Tools <span class="chevron">▼</span>
       </button>
       <div class="nav-dropdown-menu" id="navDropdownMenu">
-        <button onclick="openFeeCalc();closeNavDropdown()">
-          <span class="ndm-icon">🧮</span> Fee Calculator
-        </button>
-        <button onclick="openMeritCalc();closeNavDropdown()">
-          <span class="ndm-icon">📐</span> Merit Calculator
-        </button>
-        <button onclick="openScholMatch();closeNavDropdown()">
-          <span class="ndm-icon">🎁</span> Scholarship Matcher
-        </button>
-        <button onclick="toggleCalendar();closeNavDropdown()">
-          <span class="ndm-icon">📅</span> Admission Dates
-        </button>
-        <button onclick="toggleMapView();closeNavDropdown()">
-          <span class="ndm-icon">🗺️</span> Map View
-        </button>
-        <button onclick="openPredictor();closeNavDropdown()">
-          <span class="ndm-icon">🎯</span> Merit Predictor
-        </button>
+        <button onclick="openFeeCalc();closeNavDropdown()"><span class="ndm-icon" data-icon="calculator"></span> Fee Calculator</button>
+        <button onclick="openMeritCalc();closeNavDropdown()"><span class="ndm-icon" data-icon="ruler"></span> Merit Calculator</button>
+        <button onclick="openScholMatch();closeNavDropdown()"><span class="ndm-icon" data-icon="gift"></span> Scholarship Matcher</button>
+        <button onclick="toggleCalendar();closeNavDropdown()"><span class="ndm-icon" data-icon="calendar"></span> Admission Dates</button>
+        <button onclick="toggleMapView();closeNavDropdown()"><span class="ndm-icon" data-icon="map"></span> Map View</button>
+        <button onclick="openPredictor();closeNavDropdown()"><span class="ndm-icon" data-icon="target"></span> Merit Predictor</button>
         <div class="nav-dropdown-divider"></div>
-        <button onclick="toggleShortlistFilter();closeNavDropdown()">
-          <span class="ndm-icon">❤️</span> My Shortlist
-        </button>
+        <button onclick="toggleShortlistFilter();closeNavDropdown()"><span class="ndm-icon" data-icon="heart"></span> My Shortlist</button>
         <div class="nav-dropdown-divider"></div>
-        <button id="tpkInstallBtn" onclick="tpkInstall();closeNavDropdown()">
-          <span class="ndm-icon">📲</span> Install App
-        </button>
+        <button id="tpkInstallBtn" onclick="tpkInstall();closeNavDropdown()"><span class="ndm-icon" data-icon="download"></span> Install App</button>
       </div>
     </li>
 
@@ -2064,7 +2074,7 @@
     <p>Tell us about yourself — we'll recommend the best universities for your profile</p>
 
     <div class="pred-section">
-      <label>📊 Your Aggregate Percentage</label>
+      <label><span data-icon="trendingUp"></span> Your Aggregate Percentage</label>
       <div class="pred-pct-display">
         <input type="range" min="45" max="100" value="70" id="predPct" oninput="document.getElementById('predPctVal').textContent=this.value+'%'">
         <div class="pred-pct-val" id="predPctVal">70%</div>
@@ -2072,7 +2082,7 @@
     </div>
 
     <div class="pred-section">
-      <label>📚 Previous Education</label>
+      <label><span data-icon="bookOpen"></span> Previous Education</label>
       <div class="pred-options">
         <button class="pred-opt selected" data-study="engineering" onclick="selectStudy(this)">FSc Pre-Engineering</button>
         <button class="pred-opt" data-study="medical" onclick="selectStudy(this)">FSc Pre-Medical</button>
@@ -2082,7 +2092,7 @@
     </div>
 
     <div class="pred-section">
-      <label>🏫 Preferences (Optional)</label>
+      <label><span data-icon="building2"></span> Preferences (Optional)</label>
       <div class="pred-selects">
         <div class="pred-select-wrap">
           <label>Preferred Field</label>
@@ -2135,12 +2145,12 @@
 
 <!-- STUDENT TOOLS BAR -->
 <div class="tools-bar">
-  <button class="tool-btn" id="slToolBtn" onclick="toggleShortlistFilter()">🤍 My Shortlist <span class="tool-badge" id="slCountBadge" style="display:none">0</span></button>
-  <button class="tool-btn" onclick="openFeeCalc()">🧮 Fee Calculator</button>
-  <button class="tool-btn" onclick="openMeritCalc()">📐 Merit Calculator</button>
-  <button class="tool-btn" onclick="openScholMatch()">🎁 Scholarship Matcher</button>
-  <button class="tool-btn" id="calToolBtn" onclick="toggleCalendar()">📅 Admission Dates</button>
-  <button class="tool-btn" id="mapToolBtn" onclick="toggleMapView()">🗺️ Map View</button>
+  <button class="tool-btn" id="slToolBtn" onclick="toggleShortlistFilter()"><span data-icon="heart"></span> My Shortlist <span class="tool-badge" id="slCountBadge" style="display:none">0</span></button>
+  <button class="tool-btn" onclick="openFeeCalc()"><span data-icon="calculator"></span> Fee Calculator</button>
+  <button class="tool-btn" onclick="openMeritCalc()"><span data-icon="ruler"></span> Merit Calculator</button>
+  <button class="tool-btn" onclick="openScholMatch()"><span data-icon="gift"></span> Scholarship Matcher</button>
+  <button class="tool-btn" id="calToolBtn" onclick="toggleCalendar()"><span data-icon="calendar"></span> Admission Dates</button>
+  <button class="tool-btn" id="mapToolBtn" onclick="toggleMapView()"><span data-icon="map"></span> Map View</button>
 </div>
 
 <!-- ADMISSION CALENDAR -->
@@ -6366,7 +6376,7 @@ function renderCards(unis) {
       <div class="uni-location">${u.city}</div>
       ${cardRating(u.id)}
       <div class="uni-tags">
-        <span class="tag ${u.type}">${u.type==='public'?t('tag_public'):t('tag_private')}</span>
+        <span class="tag ${u.type}"><span data-icon="${u.type==='public'?'building2':'briefcase'}" data-size="12"></span>${u.type==='public'?t('tag_public'):t('tag_private')}</span>
         ${u.tags.filter(tg=>tg!=='public'&&tg!=='private'&&!['federal','punjab','sindh','kpk','balochistan','ajk','gilgitbaltistan'].includes(tg)).map(tg=>`<span class="tag ${tg}">${tg}</span>`).join('')}
       </div>
       <div class="uni-info">
@@ -6390,6 +6400,9 @@ function renderCards(unis) {
   `;}).join('');
 
   renderPagination(totalPages);
+
+  // Convert any new data-icon spans inside the freshly-rendered cards
+  if (typeof hydrateIcons === 'function') hydrateIcons(grid);
 
   setTimeout(()=>{
     document.querySelectorAll('.fade-in').forEach((el,i)=>{
@@ -6939,16 +6952,16 @@ function openCompareModal() {
   // Group rows into categories
   const cats = [
     {
-      title: '🏛️ Overview',
+      title: icon('building2',{size:18,cls:'tpk-ic-green'}) + ' Overview',
       rows: [
         { label:'Full Name',       vals: list.map(u=>u.full || u.name) },
-        { label:'City',            vals: list.map(u=>`📍 ${u.city||'—'}`) },
-        { label:'Type',            vals: list.map(u=>u.type==='public'?'🏛️ Public':'🏢 Private') },
+        { label:'City',            vals: list.map(u=>`<span style="display:inline-flex;align-items:center;gap:4px;">${icon('mapPin',{size:14})} ${u.city||'—'}</span>`) },
+        { label:'Type',            vals: list.map(u=>u.type==='public'? `<span style="display:inline-flex;align-items:center;gap:4px;color:#1565C0;">${icon('building2',{size:14})} Public</span>` : `<span style="display:inline-flex;align-items:center;gap:4px;color:#C62828;">${icon('briefcase',{size:14})} Private</span>`) },
         { label:'Established',     vals: list.map(u=>u.established||'—'), winnerIdx: oldest!==null ? list.findIndex(u=>parseInt(u.established)===oldest) : -1, winnerLabel:'Oldest' },
       ]
     },
     {
-      title: '💰 Cost',
+      title: icon('dollarSign',{size:18,cls:'tpk-ic-green'}) + ' Cost',
       rows: [
         { label:'Fee per Semester', vals: list.map(u=>u.fee||'—'), winnerIdx: minFee!==null ? list.findIndex(u=>u.feeNum===minFee) : -1, winnerLabel:'Cheapest', bars: list.map(u=>u.feeNum||0), barLowerBetter:true },
         { label:'Scholarships',     vals: list.map(u=>u.scholarships||'—') },
@@ -6956,7 +6969,7 @@ function openCompareModal() {
       ]
     },
     {
-      title: '📝 Admission',
+      title: icon('scroll',{size:18,cls:'tpk-ic-green'}) + ' Admission',
       rows: [
         { label:'Entry Test',  vals: list.map(u=>u.entry||'—') },
         { label:'Merit / Cutoff', vals: list.map(u=>u.merit||'—'), winnerIdx: topMerit!==null ? list.findIndex(u=>_meritNum(u.merit)===topMerit) : -1, winnerLabel:'Most Competitive' },
@@ -6964,17 +6977,17 @@ function openCompareModal() {
       ]
     },
     {
-      title: '📚 Programs',
+      title: icon('bookOpen',{size:18,cls:'tpk-ic-green'}) + ' Programs',
       rows: [
         { label:'Top Programs', vals: list.map(u=>(u.programs||[]).slice(0,5).map(p=>`<span class="cmp-chip">${p}</span>`).join('')) },
         { label:'Total Programs', vals: list.map(u=>(u.programs||[]).length||'—'), winnerIdx: (()=>{ const counts=list.map(u=>(u.programs||[]).length); const m=Math.max(...counts); return counts.indexOf(m); })(), winnerLabel:'Most Variety' },
       ]
     },
     {
-      title: '🔗 Resources',
+      title: icon('share',{size:18,cls:'tpk-ic-green'}) + ' Resources',
       rows: [
-        { label:'Website', vals: list.map(u=>u.website?`<a href="https://www.${u.website}" target="_blank" rel="noopener" style="color:#00A040;font-weight:700;">${u.website}</a>`:'—') },
-        { label:'Details', vals: list.map(u=>`<a href="/university/${toSlugSafe(u.name)}" style="color:#00A040;font-weight:700;">View Profile →</a>`) },
+        { label:'Website', vals: list.map(u=>u.website? `<a href="https://www.${u.website}" target="_blank" rel="noopener" style="color:#00A040;font-weight:700;display:inline-flex;align-items:center;gap:4px;">${icon('globe',{size:14})} ${u.website}</a>` : '—') },
+        { label:'Details', vals: list.map(u=>`<a href="/university/${toSlugSafe(u.name)}" style="color:#00A040;font-weight:700;display:inline-flex;align-items:center;gap:4px;">View Profile ${icon('arrowRight',{size:14})}</a>`) },
       ]
     }
   ];
@@ -6987,12 +7000,12 @@ function openCompareModal() {
     <!-- HEADER -->
     <div class="cmp-header">
       <div>
-        <div class="cmp-eyebrow">⚖️ SIDE-BY-SIDE COMPARISON</div>
+        <div class="cmp-eyebrow">SIDE-BY-SIDE COMPARISON</div>
         <h2 class="cmp-h2">Comparing ${list.length} Universities</h2>
       </div>
       <div class="cmp-actions">
-        <button class="cmp-action-btn" onclick="shareCompareUrl()" title="Copy share link">🔗 Share</button>
-        <button class="cmp-action-btn" onclick="printCompare()" title="Print or Save as PDF">🖨️ Print/PDF</button>
+        <button class="cmp-action-btn" onclick="shareCompareUrl()" title="Copy share link">${icon('share',{size:15})} Share</button>
+        <button class="cmp-action-btn" onclick="printCompare()" title="Print or Save as PDF">${icon('printer',{size:15})} Print/PDF</button>
       </div>
     </div>
 
@@ -7000,15 +7013,15 @@ function openCompareModal() {
     <div class="cmp-cards">
       ${list.map((u,i)=>`
         <div class="cmp-card ${i===overallWinnerIdx&&maxScore>0?'cmp-overall-winner':''}">
-          ${i===overallWinnerIdx&&maxScore>0?`<div class="cmp-crown" title="Wins ${maxScore} of ${4} measurable categories — not a quality verdict">👑 Most Wins (${maxScore}/4)</div>`:''}
-          <div class="cmp-logo">${u.icon||'🏛️'}</div>
+          ${i===overallWinnerIdx&&maxScore>0?`<div class="cmp-crown" title="Wins ${maxScore} of 4 measurable categories — not a quality verdict">${icon('crown',{size:14})} Most Wins (${maxScore}/4)</div>`:''}
+          <div class="cmp-logo">${u.icon||icon('building2',{size:36,cls:'tpk-ic-navy'})}</div>
           <div class="cmp-name">${u.name}</div>
-          <div class="cmp-loc">📍 ${u.city||'—'}</div>
+          <div class="cmp-loc">${icon('mapPin',{size:13})} ${u.city||'—'}</div>
           <div class="cmp-tags">
             <span class="cmp-tag ${u.type==='public'?'pub':'priv'}">${u.type==='public'?'Public':'Private'}</span>
             <span class="cmp-tag est">Est. ${u.established||'—'}</span>
           </div>
-          <button class="cmp-remove" onclick="removeFromCompare(${u.id});closeCompareModal();setTimeout(openCompareModal,100);" title="Remove">✕ Remove</button>
+          <button class="cmp-remove" onclick="removeFromCompare(${u.id});closeCompareModal();setTimeout(openCompareModal,100);" title="Remove">${icon('x',{size:12})} Remove</button>
         </div>
       `).join('')}
     </div>
@@ -7045,7 +7058,8 @@ function openCompareModal() {
 
     <!-- TIP FOOTER -->
     <div class="cmp-tip">
-      💡 <strong>What "Most Wins" means:</strong> it just counts how many of the 4 measurable categories
+      <span style="display:inline-flex;align-items:center;gap:6px;color:#FFA726;">${icon('lightbulb',{size:16})}</span>
+      <strong>What "Most Wins" means:</strong> it just counts how many of the 4 measurable categories
       (cheapest fee, highest cutoff merit, most seats, oldest, most variety) a university leads in.
       It is <em>not</em> an overall "best" verdict — visit each profile for the full picture before deciding.
       Share this comparison with friends or save it as PDF for offline review.
@@ -7056,6 +7070,7 @@ function openCompareModal() {
   `;
 
   document.getElementById('compareModalOverlay').classList.add('show');
+  if (typeof hydrateIcons === 'function') hydrateIcons(modal);
 
   // Update URL without reload
   try{ history.replaceState(null,'',`?compare=${list.map(u=>u.id).join(',')}`); }catch(e){}
@@ -7171,6 +7186,92 @@ const SUPABASE = {
 // ════════════════════════════════════════════════════════
 //  XSS PROTECTION — escape every interpolated DB string
 // ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+//  ICON SYSTEM — Lucide-style stroke icons (MIT licensed paths)
+//  Use icon('name') instead of emojis for UI elements.
+//  Emojis stay only in welcome/verdict/celebratory copy.
+// ════════════════════════════════════════════════════════════
+const TPK_ICONS = {
+  calculator:    '<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/>',
+  ruler:         '<path d="M21.3 8.7 8.7 21.3a2.4 2.4 0 0 1-3.4 0L2.7 18.7a2.4 2.4 0 0 1 0-3.4L15.3 2.7a2.4 2.4 0 0 1 3.4 0l2.6 2.6a2.4 2.4 0 0 1 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/>',
+  gift:          '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>',
+  calendar:      '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>',
+  map:           '<polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/>',
+  target:        '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  heart:         '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/>',
+  download:      '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+  smartphone:    '<rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/>',
+  building2:     '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/>',
+  briefcase:     '<rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  shield:        '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+  bookOpen:      '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  trendingUp:    '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+  dollarSign:    '<line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  mapPin:        '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+  users:         '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  award:         '<path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"/><circle cx="12" cy="8" r="6"/>',
+  home:          '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  globe:         '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+  share:         '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/>',
+  printer:       '<path d="M6 18h-1a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/>',
+  x:             '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  plus:          '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  check:         '<path d="M20 6 9 17l-5-5"/>',
+  chevronDown:   '<path d="m6 9 6 6 6-6"/>',
+  chevronRight:  '<path d="m9 18 6-6-6-6"/>',
+  arrowRight:    '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  search:        '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  messageCircle: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  helpCircle:    '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+  thumbsUp:      '<path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L15 2a1.5 1.5 0 0 1 1.49 1.46Z"/>',
+  arrowUp:       '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
+  star:          '<polygon points="12 17.27 18.18 21 16.54 13.97 22 9.24 14.81 8.62 12 2 9.19 8.62 2 9.24 7.46 13.97 5.82 21"/>',
+  graduationCap: '<path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>',
+  flask:         '<path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/>',
+  palette:       '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2a10 10 0 1 0 0 20 1.5 1.5 0 0 0 1.06-2.56l-.61-.62a1.5 1.5 0 0 1 1.06-2.56H17a5 5 0 0 0 5-5 10 10 0 0 0-10-10z"/>',
+  code:          '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+  wrench:        '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  stethoscope:   '<path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/><path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/>',
+  lightbulb:     '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+  crown:         '<path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/>',
+  filter:        '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+  user:          '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  logOut:        '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>',
+  logIn:         '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/>',
+  bell:          '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  trophy:        '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0z"/>',
+  scroll:        '<path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M22 17H4a2 2 0 0 0-2 2v0a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v0a2 2 0 0 0-2-2z"/><path d="M2 17v0a2 2 0 0 0 2 2v0"/><path d="M22 17v0a2 2 0 0 0-2-2v0a2 2 0 0 1 0-4v0a2 2 0 0 0 2-2V9"/>',
+  rocket:        '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
+  flame:         '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  flag:          '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>'
+};
+
+// Render an icon. Optional class string, size (px), and stroke width.
+window.icon = function(name, opts){
+  const svg = TPK_ICONS[name];
+  if (!svg) return '';
+  const o = opts || {};
+  const size = o.size || 18;
+  const sw = o.sw || 2;
+  const cls = (o.cls || '') + ' tpk-ic';
+  return `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${svg}</svg>`;
+};
+
+// Replace every <span data-icon="name"></span> in a subtree with its SVG.
+// Call after innerHTML updates that contain new data-icon spans.
+window.hydrateIcons = function(root){
+  (root || document).querySelectorAll('[data-icon]:not([data-icon-done])').forEach(el => {
+    const name = el.getAttribute('data-icon');
+    const size = parseInt(el.getAttribute('data-size') || '18', 10);
+    el.innerHTML = icon(name, { size });
+    el.setAttribute('data-icon-done', '1');
+  });
+};
+// Run once at parse end so static markup gets icons immediately
+document.addEventListener('DOMContentLoaded', () => hydrateIcons());
+// Also schedule one early frame in case scripts run before DCL
+requestAnimationFrame(() => hydrateIcons());
+
 window.escHTML = function(s){
   return String(s==null?'':s).replace(/[&<>"']/g,
     c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
