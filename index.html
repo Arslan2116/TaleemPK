@@ -622,7 +622,140 @@
   .modal-close:hover { background:var(--gray-200); }
   .modal { position:relative; }
 
-  /* Compare Modal */
+  /* ═══════════════════════════════════════
+     COMPARE MODE v2 — Premium Styling
+     ═══════════════════════════════════════ */
+  .cmp-header{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    gap:16px; flex-wrap:wrap; margin-bottom:20px;
+    padding-bottom:18px; border-bottom:2px solid #E8ECF2;
+  }
+  .cmp-eyebrow{ font-size:.72rem; font-weight:800; letter-spacing:.15em; color:#00A040; margin-bottom:6px; }
+  .cmp-h2{ font-size:1.6rem; font-weight:900; color:#0A1628; margin:0; line-height:1.1; }
+  .cmp-actions{ display:flex; gap:8px; }
+  .cmp-action-btn{
+    background:#0A1628; color:#fff; border:none; cursor:pointer;
+    padding:9px 16px; border-radius:10px; font-weight:700; font-size:.82rem;
+    font-family:inherit; transition:transform .2s, background .2s;
+  }
+  .cmp-action-btn:hover{ background:#00A040; transform:translateY(-1px); }
+
+  /* University Cards Row */
+  .cmp-cards{
+    display:grid; gap:14px; margin-bottom:28px;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  }
+  .cmp-card{
+    background:linear-gradient(135deg,#F8FAFC 0%,#FFF 100%);
+    border:2px solid #E8ECF2; border-radius:16px;
+    padding:22px 18px 16px; text-align:center; position:relative;
+    transition:transform .2s, border-color .2s, box-shadow .2s;
+  }
+  .cmp-card:hover{ transform:translateY(-3px); box-shadow:0 8px 20px rgba(10,22,40,.08); }
+  .cmp-overall-winner{
+    border-color:#00C853; background:linear-gradient(135deg,#E8F8EE 0%,#FFF 100%);
+    box-shadow:0 0 0 4px rgba(0,200,83,.12), 0 8px 20px rgba(0,200,83,.15);
+  }
+  .cmp-crown{
+    position:absolute; top:-12px; left:50%; transform:translateX(-50%);
+    background:linear-gradient(135deg,#FFD54F,#FFA726);
+    color:#0A1628; padding:5px 14px; border-radius:20px;
+    font-size:.72rem; font-weight:900; white-space:nowrap;
+    box-shadow:0 4px 12px rgba(255,167,38,.4);
+  }
+  .cmp-logo{ font-size:2.4rem; margin-bottom:6px; }
+  .cmp-name{ font-size:1.05rem; font-weight:900; color:#0A1628; }
+  .cmp-loc{ font-size:.78rem; color:#5A6478; margin-top:2px; }
+  .cmp-tags{ display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+  .cmp-tag{
+    font-size:.68rem; font-weight:800; padding:3px 9px; border-radius:12px;
+    letter-spacing:.03em;
+  }
+  .cmp-tag.pub{ background:#E3F2FD; color:#1976D2; }
+  .cmp-tag.priv{ background:#FFF3E0; color:#E67E22; }
+  .cmp-tag.est{ background:#F5F7FA; color:#5A6478; }
+  .cmp-remove{
+    margin-top:12px; background:transparent; border:1px solid #E8ECF2;
+    color:#9BA5B5; padding:5px 12px; border-radius:8px;
+    font-size:.72rem; cursor:pointer; font-family:inherit; font-weight:600;
+    transition:color .2s, border-color .2s;
+  }
+  .cmp-remove:hover{ color:#EF5350; border-color:#EF5350; }
+
+  /* Category sections */
+  .cmp-cat{ margin-bottom:24px; }
+  .cmp-cat-title{
+    font-size:1.05rem; font-weight:900; color:#0A1628;
+    padding:8px 0 12px; border-bottom:2px solid #E8ECF2; margin-bottom:8px;
+  }
+  .cmp-row{
+    display:grid; gap:8px; padding:10px 0;
+    border-bottom:1px dashed #F0F2F5; align-items:stretch;
+  }
+  .cmp-row:last-child{ border-bottom:none; }
+  .cmp-row-label{
+    font-weight:800; color:#5A6478; font-size:.84rem;
+    padding:10px 14px; background:#F8FAFC; border-radius:8px;
+    display:flex; align-items:center;
+  }
+  .cmp-cell{
+    background:#FFF; padding:12px 14px; border-radius:8px;
+    border:1.5px solid #E8ECF2; position:relative;
+    text-align:center; display:flex; flex-direction:column; justify-content:center;
+    gap:6px; min-height:54px;
+  }
+  .cmp-cell-winner{
+    background:linear-gradient(135deg,#E8F8EE,#FFF);
+    border-color:#00C853;
+  }
+  .cmp-win-badge{
+    position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+    background:linear-gradient(135deg,#00C853,#00A040); color:#fff;
+    font-size:.62rem; font-weight:900; padding:2px 10px;
+    border-radius:12px; white-space:nowrap; letter-spacing:.03em;
+    box-shadow:0 3px 8px rgba(0,200,83,.3);
+  }
+  .cmp-val{ font-size:.88rem; font-weight:600; color:#0A1628; line-height:1.4; }
+  .cmp-cell-winner .cmp-val{ color:#00723B; font-weight:800; }
+  .cmp-chip{
+    display:inline-block; background:#F5F7FA; border:1px solid #E8ECF2;
+    color:#5A6478; font-size:.7rem; font-weight:700;
+    padding:3px 8px; border-radius:10px; margin:2px;
+  }
+  .cmp-bar{ height:5px; background:#F0F2F5; border-radius:3px; overflow:hidden; }
+  .cmp-bar > span{
+    display:block; height:100%;
+    background:linear-gradient(90deg,#00C853,#00A040);
+    border-radius:3px; transition:width .4s ease;
+  }
+  .cmp-tip{
+    margin-top:24px; padding:16px 18px;
+    background:linear-gradient(135deg,#FFF3E0,#FFF);
+    border-left:4px solid #FFA726; border-radius:10px;
+    font-size:.82rem; color:#5A6478; line-height:1.6;
+  }
+  .cmp-tip strong{ color:#0A1628; }
+
+  /* Mobile responsive */
+  @media(max-width:720px){
+    .cmp-cards{ grid-template-columns:1fr; }
+    .cmp-row{ grid-template-columns:1fr !important; }
+    .cmp-row-label{ background:#0A1628; color:#fff; font-size:.78rem; }
+    .cmp-cell{ min-height:auto; }
+    .cmp-h2{ font-size:1.25rem; }
+  }
+
+  /* Print / PDF styling */
+  @media print{
+    nav, footer, .modal-close, .cmp-actions, .cmp-remove, .nav-actions, .tools-bar,
+    .predictor-banner, .compare-bar, .filter-section, .tpk-chat-fab, .tpk-chat-panel { display:none !important; }
+    .modal-overlay{ position:static !important; background:#fff !important; }
+    .modal{ box-shadow:none !important; max-width:none !important; width:100% !important; padding:20px !important; }
+    .cmp-card{ break-inside:avoid; }
+    .cmp-cat{ break-inside:avoid; }
+  }
+
+  /* Legacy compare grid kept for fallback */
   .compare-grid {
     display:grid;
     gap:24px;
@@ -6243,58 +6376,204 @@ function closeDetailModal(e) {
   }
 }
 
+// ════════════════════════════════════════════
+//  COMPARE MODE v2 — beautiful side-by-side with winner highlights
+// ════════════════════════════════════════════
+function _meritNum(m){
+  if(!m) return null;
+  const nums = String(m).match(/(\d+(?:\.\d+)?)/g);
+  if(!nums) return null;
+  return Math.max(...nums.map(Number)); // higher merit = harder = better signal
+}
+function _seatsNum(s){
+  if(!s) return null;
+  const nums = String(s).match(/(\d+(?:,\d+)?)/g);
+  if(!nums) return null;
+  return parseInt(nums[0].replace(/,/g,''));
+}
+
 function openCompareModal() {
   if(compareList.length < 2) { alert(t('alert_min')); return; }
+  const list = compareList;
   const modal = document.getElementById('compareModal');
-  const gridStyle = `grid-template-columns: 160px ${compareList.map(()=>'1fr').join(' ')}`;
-  const rows = [
-    {key:t('row_university'), vals:compareList.map(u=>`${u.icon} ${u.full}`)},
-    {key:t('row_city'), vals:compareList.map(u=>u.city)},
-    {key:t('row_type'), vals:compareList.map(u=>u.type==='public'?t('tag_public'):t('tag_private'))},
-    {key:t('row_fee'), vals:compareList.map(u=>u.fee)},
-    {key:t('row_entry'), vals:compareList.map(u=>u.entry)},
-    {key:t('row_merit'), vals:compareList.map(u=>u.merit)},
-    {key:t('row_programs'), vals:compareList.map(u=>u.programs.slice(0,3).join(', '))},
-    {key:t('row_seats'), vals:compareList.map(u=>u.seats)},
-    {key:t('row_scholarships'), vals:compareList.map(u=>u.scholarships)},
-    {key:t('row_hostel'), vals:compareList.map(u=>u.hostel)},
-    {key:t('row_established'), vals:compareList.map(u=>u.established)},
-    {key:t('row_website'), vals:compareList.map(u=>u.website?`<a href="https://www.${u.website}" target="_blank" style="color:var(--green);font-weight:700;">${u.website}</a>`:'—')},
+
+  // Compute winners per metric
+  const fees    = list.map(u=>u.feeNum||0).filter(x=>x>0);
+  const minFee  = fees.length ? Math.min(...fees) : null;
+  const ests    = list.map(u=>parseInt(u.established)||0).filter(x=>x>0);
+  const oldest  = ests.length ? Math.min(...ests) : null;
+  const merits  = list.map(u=>_meritNum(u.merit)).filter(x=>x!==null);
+  const topMerit= merits.length ? Math.max(...merits) : null;
+  const seats   = list.map(u=>_seatsNum(u.seats)).filter(x=>x!==null);
+  const maxSeat = seats.length ? Math.max(...seats) : null;
+
+  // Overall score: who wins most categories?
+  const scores = list.map(u=>{
+    let s=0;
+    if(minFee!==null && u.feeNum===minFee) s++;
+    if(oldest!==null && parseInt(u.established)===oldest) s++;
+    if(topMerit!==null && _meritNum(u.merit)===topMerit) s++;
+    if(maxSeat!==null && _seatsNum(u.seats)===maxSeat) s++;
+    return s;
+  });
+  const maxScore = Math.max(...scores);
+  const overallWinnerIdx = scores.indexOf(maxScore);
+
+  // Group rows into categories
+  const cats = [
+    {
+      title: '🏛️ Overview',
+      rows: [
+        { label:'Full Name',       vals: list.map(u=>u.full || u.name) },
+        { label:'City',            vals: list.map(u=>`📍 ${u.city||'—'}`) },
+        { label:'Type',            vals: list.map(u=>u.type==='public'?'🏛️ Public':'🏢 Private') },
+        { label:'Established',     vals: list.map(u=>u.established||'—'), winnerIdx: oldest!==null ? list.findIndex(u=>parseInt(u.established)===oldest) : -1, winnerLabel:'Oldest' },
+      ]
+    },
+    {
+      title: '💰 Cost',
+      rows: [
+        { label:'Fee per Semester', vals: list.map(u=>u.fee||'—'), winnerIdx: minFee!==null ? list.findIndex(u=>u.feeNum===minFee) : -1, winnerLabel:'Cheapest', bars: list.map(u=>u.feeNum||0), barLowerBetter:true },
+        { label:'Scholarships',     vals: list.map(u=>u.scholarships||'—') },
+        { label:'Hostel',           vals: list.map(u=>u.hostel||'—') },
+      ]
+    },
+    {
+      title: '📝 Admission',
+      rows: [
+        { label:'Entry Test',  vals: list.map(u=>u.entry||'—') },
+        { label:'Merit / Cutoff', vals: list.map(u=>u.merit||'—'), winnerIdx: topMerit!==null ? list.findIndex(u=>_meritNum(u.merit)===topMerit) : -1, winnerLabel:'Most Competitive' },
+        { label:'Total Seats', vals: list.map(u=>u.seats||'—'), winnerIdx: maxSeat!==null ? list.findIndex(u=>_seatsNum(u.seats)===maxSeat) : -1, winnerLabel:'Most Seats' },
+      ]
+    },
+    {
+      title: '📚 Programs',
+      rows: [
+        { label:'Top Programs', vals: list.map(u=>(u.programs||[]).slice(0,5).map(p=>`<span class="cmp-chip">${p}</span>`).join('')) },
+        { label:'Total Programs', vals: list.map(u=>(u.programs||[]).length||'—'), winnerIdx: (()=>{ const counts=list.map(u=>(u.programs||[]).length); const m=Math.max(...counts); return counts.indexOf(m); })(), winnerLabel:'Most Variety' },
+      ]
+    },
+    {
+      title: '🔗 Resources',
+      rows: [
+        { label:'Website', vals: list.map(u=>u.website?`<a href="https://www.${u.website}" target="_blank" rel="noopener" style="color:#00A040;font-weight:700;">${u.website}</a>`:'—') },
+        { label:'Details', vals: list.map(u=>`<a href="/university/${toSlugSafe(u.name)}" style="color:#00A040;font-weight:700;">View Profile →</a>`) },
+      ]
+    }
   ];
 
-  const minFee = Math.min(...compareList.map(u=>u.feeNum));
+  const shareUrl = `${location.origin}/?compare=${list.map(u=>u.id).join(',')}`;
 
   modal.innerHTML = `
     <button class="modal-close" onclick="closeCompareModal()">×</button>
-    <div style="margin-bottom:24px;">
-      <div class="section-label">${t('compare_modal_label')}</div>
-      <div class="section-title" style="font-size:1.5rem;">${t('compare_modal_title')}</div>
+
+    <!-- HEADER -->
+    <div class="cmp-header">
+      <div>
+        <div class="cmp-eyebrow">⚖️ SIDE-BY-SIDE COMPARISON</div>
+        <h2 class="cmp-h2">Comparing ${list.length} Universities</h2>
+      </div>
+      <div class="cmp-actions">
+        <button class="cmp-action-btn" onclick="shareCompareUrl()" title="Copy share link">🔗 Share</button>
+        <button class="cmp-action-btn" onclick="window.print()" title="Print or Save as PDF">🖨️ Print/PDF</button>
+      </div>
     </div>
-    <div style="overflow-x:auto;">
-      <div style="min-width:500px;">
-        <div style="display:grid;${gridStyle};gap:2px;background:var(--gray-200);border-radius:12px;overflow:hidden;margin-bottom:2px;">
-          <div class="compare-cell label" style="background:var(--navy);"></div>
-          ${compareList.map(u=>`<div class="compare-cell header">${u.icon} ${u.name}</div>`).join('')}
+
+    <!-- UNIVERSITY CARDS ROW -->
+    <div class="cmp-cards">
+      ${list.map((u,i)=>`
+        <div class="cmp-card ${i===overallWinnerIdx&&maxScore>0?'cmp-overall-winner':''}">
+          ${i===overallWinnerIdx&&maxScore>0?'<div class="cmp-crown">👑 Overall Winner</div>':''}
+          <div class="cmp-logo">${u.icon||'🏛️'}</div>
+          <div class="cmp-name">${u.name}</div>
+          <div class="cmp-loc">📍 ${u.city||'—'}</div>
+          <div class="cmp-tags">
+            <span class="cmp-tag ${u.type==='public'?'pub':'priv'}">${u.type==='public'?'Public':'Private'}</span>
+            <span class="cmp-tag est">Est. ${u.established||'—'}</span>
+          </div>
+          <button class="cmp-remove" onclick="removeFromCompare(${u.id});closeCompareModal();setTimeout(openCompareModal,100);" title="Remove">✕ Remove</button>
         </div>
-        ${rows.map(row=>`
-          <div style="display:grid;${gridStyle};gap:2px;background:var(--gray-200);border-radius:8px;overflow:hidden;margin-bottom:2px;">
-            <div class="compare-cell label">${row.key}</div>
-            ${row.vals.map((val,i)=>{
-              let cls = '';
-              if(row.key===t('row_fee') && compareList[i].feeNum===minFee) cls='winner';
-              if(row.key===t('row_established') && parseInt(val)===Math.min(...compareList.map(u=>u.established))) cls='winner';
-              return `<div class="compare-cell" style="text-align:center;"><span class="${cls}">${val}</span></div>`;
+      `).join('')}
+    </div>
+
+    <!-- COMPARISON CATEGORIES -->
+    ${cats.map(cat=>`
+      <div class="cmp-cat">
+        <div class="cmp-cat-title">${cat.title}</div>
+        ${cat.rows.map(row=>`
+          <div class="cmp-row" style="grid-template-columns:160px repeat(${list.length},1fr);">
+            <div class="cmp-row-label">${row.label}</div>
+            ${row.vals.map((v,i)=>{
+              const isWinner = row.winnerIdx===i;
+              let bar = '';
+              if(row.bars && row.bars[i]>0){
+                const max = Math.max(...row.bars);
+                const min = Math.min(...row.bars.filter(x=>x>0));
+                const pct = row.barLowerBetter
+                  ? (1 - ((row.bars[i]-min)/(max-min||1))) * 100
+                  : ((row.bars[i]-min)/(max-min||1)) * 100;
+                bar = `<div class="cmp-bar"><span style="width:${Math.max(15,pct)}%"></span></div>`;
+              }
+              return `
+                <div class="cmp-cell ${isWinner?'cmp-cell-winner':''}">
+                  ${isWinner?`<div class="cmp-win-badge">✨ ${row.winnerLabel||'Best'}</div>`:''}
+                  <div class="cmp-val">${v}</div>
+                  ${bar}
+                </div>`;
             }).join('')}
           </div>
         `).join('')}
       </div>
+    `).join('')}
+
+    <!-- TIP FOOTER -->
+    <div class="cmp-tip">
+      💡 <strong>Tip:</strong> Click "👑 Overall Winner" with caution — it only counts wins across measurable categories.
+      Visit each university's detail page for the full picture. Share this comparison with friends or save as PDF for offline review.
     </div>
-    <div style="margin-top:20px;padding:16px;background:var(--green-light);border-radius:12px;font-size:0.85rem;color:var(--green-dark);">
-      ${t('compare_tip')}
-    </div>
+
+    <!-- HIDDEN INPUT FOR SHARE -->
+    <input id="cmpShareUrl" type="hidden" value="${shareUrl}">
   `;
+
   document.getElementById('compareModalOverlay').classList.add('show');
+
+  // Update URL without reload
+  try{ history.replaceState(null,'',`?compare=${list.map(u=>u.id).join(',')}`); }catch(e){}
 }
+
+// Helper: safe slug
+function toSlugSafe(name){
+  return (name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+// Share comparison link
+function shareCompareUrl(){
+  const url = document.getElementById('cmpShareUrl')?.value || location.href;
+  if(navigator.share){
+    navigator.share({ title:'TaleemPK Compare', text:'Check out this university comparison on TaleemPK', url }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(url).then(()=>{
+      const btn = event.target.closest('.cmp-action-btn');
+      if(btn){ const orig=btn.innerHTML; btn.innerHTML='✅ Link Copied!'; setTimeout(()=>btn.innerHTML=orig,2000); }
+    }).catch(()=>alert('Share link: '+url));
+  }
+}
+
+// Load comparison from URL on page load
+function loadCompareFromURL(){
+  const params = new URLSearchParams(location.search);
+  const ids = params.get('compare');
+  if(!ids) return;
+  const idArr = ids.split(',').map(Number).filter(Boolean);
+  const found = idArr.map(id=>UNIVERSITIES.find(u=>u.id===id)).filter(Boolean);
+  if(found.length >= 2){
+    compareList = found.slice(0,3);
+    updateCompareBar();
+    setTimeout(openCompareModal, 400);
+  }
+}
+window.addEventListener('load', ()=>setTimeout(loadCompareFromURL, 600));
 
 function closeCompareModal(e) {
   if(!e || e.target.id==='compareModalOverlay' || e.target.classList.contains('modal-close')) {
