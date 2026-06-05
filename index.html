@@ -1768,6 +1768,9 @@
         <button onclick="openFeeCalc();closeNavDropdown()">
           <span class="ndm-icon">🧮</span> Fee Calculator
         </button>
+        <button onclick="openMeritCalc();closeNavDropdown()">
+          <span class="ndm-icon">📐</span> Merit Calculator
+        </button>
         <button onclick="toggleCalendar();closeNavDropdown()">
           <span class="ndm-icon">📅</span> Admission Dates
         </button>
@@ -1962,6 +1965,7 @@
 <div class="tools-bar">
   <button class="tool-btn" id="slToolBtn" onclick="toggleShortlistFilter()">🤍 My Shortlist <span class="tool-badge" id="slCountBadge" style="display:none">0</span></button>
   <button class="tool-btn" onclick="openFeeCalc()">🧮 Fee Calculator</button>
+  <button class="tool-btn" onclick="openMeritCalc()">📐 Merit Calculator</button>
   <button class="tool-btn" id="calToolBtn" onclick="toggleCalendar()">📅 Admission Dates</button>
   <button class="tool-btn" id="mapToolBtn" onclick="toggleMapView()">🗺️ Map View</button>
 </div>
@@ -2255,6 +2259,7 @@
         <a href="#" onclick="closeAboutPage();openBlogPage();return false">Blog &amp; News</a>
         <a href="#" onclick="openScholarshipsPage();return false">Scholarships</a>
         <a href="#" onclick="openFeeCalc();return false">Fee Calculator</a>
+        <a href="#" onclick="openMeritCalc();return false">Merit Calculator</a>
         <a href="#" onclick="toggleCalendar();return false">Admission Calendar</a>
         <a href="#" onclick="toggleMapView();return false">Map View</a>
       </div>
@@ -2351,6 +2356,46 @@
       <div class="fee-result-lbl">Estimated Total Degree Cost</div>
       <div class="fee-result-total" id="feeTotal">—</div>
       <div class="fee-breakdown" id="feeBreakdown"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MERIT AGGREGATE CALCULATOR -->
+<div class="fee-overlay" id="meritCalcOverlay" onclick="if(event.target===this)closeMeritCalc()">
+  <div class="fee-modal">
+    <button class="predictor-close" onclick="closeMeritCalc()">✕</button>
+    <h2>📐 Merit Aggregate Calculator</h2>
+    <p>Apni Matric, FSc & Entry Test marks daalo — exact aggregate dekho per university</p>
+    <div class="fee-field">
+      <label>Select University Formula</label>
+      <select class="fee-select" id="mcUni" onchange="updateMeritCalc()">
+        <option value="">— Choose a university —</option>
+      </select>
+    </div>
+    <div id="mcFormulaBox" style="display:none;background:#F5F7FA;border-left:3px solid #00C853;padding:10px 14px;border-radius:6px;margin:0 0 16px;font-size:.82rem;color:#5A6478;">
+      <strong style="color:#0A1628;">Formula:</strong> <span id="mcFormulaText"></span>
+    </div>
+    <div class="fee-field" id="mcMatricRow" style="display:none;">
+      <label>Matric Marks <span class="fee-val"><span id="mcMatricObt">0</span> / <span id="mcMatricMax">1100</span></span></label>
+      <input type="number" id="mcMatricInput" min="0" placeholder="e.g. 950" oninput="document.getElementById('mcMatricObt').textContent=this.value||0; calculateMerit();">
+    </div>
+    <div class="fee-field" id="mcFscRow" style="display:none;">
+      <label>FSc / Intermediate Marks <span class="fee-val"><span id="mcFscObt">0</span> / <span id="mcFscMax">1100</span></span></label>
+      <input type="number" id="mcFscInput" min="0" placeholder="e.g. 920" oninput="document.getElementById('mcFscObt').textContent=this.value||0; calculateMerit();">
+    </div>
+    <div class="fee-field" id="mcTestRow" style="display:none;">
+      <label><span id="mcTestLabel">Entry Test</span> Marks <span class="fee-val"><span id="mcTestObt">0</span> / <span id="mcTestMax">200</span></span></label>
+      <input type="number" id="mcTestInput" min="0" placeholder="e.g. 150" oninput="document.getElementById('mcTestObt').textContent=this.value||0; calculateMerit();">
+    </div>
+    <div class="fee-field" id="mcSatRow" style="display:none;">
+      <label>SAT Score <span class="fee-val"><span id="mcSatObt">0</span> / 1600</span></label>
+      <input type="number" id="mcSatInput" min="400" max="1600" placeholder="e.g. 1200" oninput="document.getElementById('mcSatObt').textContent=this.value||0; calculateMerit();">
+    </div>
+    <button class="fee-calc-btn" onclick="calculateMerit()">📊 Calculate My Aggregate</button>
+    <div class="fee-result" id="meritResult">
+      <div class="fee-result-lbl">Your Aggregate</div>
+      <div class="fee-result-total" id="meritTotal">—</div>
+      <div class="fee-breakdown" id="meritBreakdown"></div>
     </div>
   </div>
 </div>
@@ -4863,6 +4908,149 @@ function calculateFee() {
       <div class="fee-bline-k">Per Semester (all-in)</div><div class="fee-bline-v">${fmt(total/sems)}</div>
     </div>`;
   document.getElementById('feeResult').classList.add('show');
+}
+
+// ════════════════════════════════════════════
+//  MERIT AGGREGATE CALCULATOR
+//  Real formulas used by Pakistani universities (2024-25 official policies)
+// ════════════════════════════════════════════
+const MERIT_FORMULAS = [
+  // ─── Engineering ───
+  { uni:'NUST',              field:'engineering', test:{name:'NUST NET', max:200},  matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.15, test:0.75}, lastMerit:'160-170 (NET)' },
+  { uni:'UET Lahore',        field:'engineering', test:{name:'ECAT',     max:400},  matric:1100, fsc:1100, weights:{matric:0.17, fsc:0.50, test:0.33}, lastMerit:'78-82%' },
+  { uni:'UET Taxila',        field:'engineering', test:{name:'ECAT',     max:400},  matric:1100, fsc:1100, weights:{matric:0.17, fsc:0.50, test:0.33}, lastMerit:'72-78%' },
+  { uni:'UET Peshawar',      field:'engineering', test:{name:'ETEA',     max:200},  matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'70-80%' },
+  { uni:'GIKI',              field:'engineering', test:{name:'GIKI Test',max:100},  matric:1100, fsc:1100, weights:{matric:0.05, fsc:0.10, test:0.85}, lastMerit:'80-85%' },
+  { uni:'PIEAS',             field:'engineering', test:{name:'PIEAS Test',max:100}, matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.15, test:0.75}, lastMerit:'85-90%' },
+  { uni:'NED University',    field:'engineering', test:{name:'NED Test', max:100},  matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.50, test:0.40}, lastMerit:'80-87%' },
+  { uni:'MUET Jamshoro',     field:'engineering', test:{name:'MUET Test',max:100},  matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'72-80%' },
+  { uni:'QUEST Nawabshah',   field:'engineering', test:{name:'QUEST Test',max:100}, matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'68-75%' },
+  { uni:'KFUEIT',            field:'engineering', test:{name:'KFUEIT Test',max:100},matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'70-76%' },
+  { uni:'Air University',    field:'engineering', test:{name:'AU Test',  max:100},  matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'72-78%' },
+  { uni:'Bahria University', field:'engineering', test:{name:'Bahria Test',max:100},matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'68-75%' },
+  { uni:'HITEC University',  field:'engineering', test:{name:'HITEC Test',max:100}, matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'65-72%' },
+
+  // ─── Computing / Tech ───
+  { uni:'FAST NUCES',        field:'cs',          test:{name:'NU Test',  max:100},  matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'78-85%' },
+  { uni:'COMSATS',           field:'cs',          test:{name:'NTS/Test', max:100},  matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'70-80%' },
+  { uni:'ITU Lahore',        field:'cs',          test:{name:'ITU Test', max:100},  matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'72-80%' },
+  { uni:'NUST (CS/AI)',      field:'cs',          test:{name:'NUST NET', max:200},  matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.15, test:0.75}, lastMerit:'170-180 (NET)' },
+
+  // ─── Medical (PMC Unified Formula) ───
+  { uni:'King Edward Medical (KEMU)',  field:'medical', test:{name:'MDCAT', max:200}, matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'92-95%' },
+  { uni:'Allama Iqbal Medical (AIMC)', field:'medical', test:{name:'MDCAT', max:200}, matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'90-93%' },
+  { uni:'Nishtar Medical (NMU)',       field:'medical', test:{name:'MDCAT', max:200}, matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'88-92%' },
+  { uni:'Dow Medical (DUHS)',          field:'medical', test:{name:'MDCAT', max:200}, matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'85-90%' },
+  { uni:'Aga Khan Medical (AKU)',      field:'medical', test:{name:'AKU Test',max:100},matric:1100,fsc:1100, weights:{matric:0.10, fsc:0.30, test:0.60}, lastMerit:'Top 10% nationally' },
+  { uni:'NUMS / AMC',                  field:'medical', test:{name:'MDCAT', max:200}, matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'87-92%' },
+  { uni:'Rawalpindi Medical (RMU)',    field:'medical', test:{name:'MDCAT', max:200}, matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'89-93%' },
+  { uni:'Fatima Jinnah Medical (FJMU)',field:'medical', test:{name:'MDCAT', max:200}, matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'90-93%' },
+
+  // ─── Business / SAT-Based ───
+  { uni:'IBA Karachi',  field:'business', test:{name:'IBA Aptitude', max:100}, matric:1100, fsc:1100, weights:{matric:0.00, fsc:0.30, test:0.70}, lastMerit:'Aptitude-based' },
+  { uni:'LUMS',         field:'business', test:{name:'SAT',     max:1600},     matric:0,    fsc:1100, weights:{matric:0.00, fsc:0.30, test:0.70}, lastMerit:'SAT 1300+ / A-Level AAB+' },
+  { uni:'IBA Sukkur',   field:'business', test:{name:'SIBA Test',max:100},     matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'72-80%' },
+];
+
+let _meritUniData = null;
+
+function openMeritCalc() {
+  // Populate uni select
+  const sel = document.getElementById('mcUni');
+  if(sel.options.length <= 1){
+    // Group by field
+    const groups = { engineering:'🛠️ Engineering', cs:'💻 Computer Science', medical:'🏥 Medical (MBBS)', business:'💼 Business' };
+    for(const [g, label] of Object.entries(groups)){
+      const og = document.createElement('optgroup'); og.label = label;
+      MERIT_FORMULAS.filter(f=>f.field===g).forEach((f,i)=>{
+        const opt = document.createElement('option');
+        opt.value = MERIT_FORMULAS.indexOf(f);
+        opt.textContent = f.uni;
+        og.appendChild(opt);
+      });
+      sel.appendChild(og);
+    }
+  }
+  document.getElementById('meritCalcOverlay').classList.add('open');
+}
+function closeMeritCalc(){ document.getElementById('meritCalcOverlay').classList.remove('open'); }
+
+function updateMeritCalc() {
+  const idx = document.getElementById('mcUni').value;
+  if(idx === ''){ _meritUniData=null; ['mcMatricRow','mcFscRow','mcTestRow','mcSatRow','mcFormulaBox'].forEach(id=>document.getElementById(id).style.display='none'); return; }
+  const f = MERIT_FORMULAS[parseInt(idx)];
+  _meritUniData = f;
+
+  // Show formula
+  const w = f.weights;
+  const parts = [];
+  if(w.matric) parts.push(`${(w.matric*100).toFixed(0)}% Matric`);
+  if(w.fsc)    parts.push(`${(w.fsc*100).toFixed(0)}% FSc`);
+  if(w.test)   parts.push(`${(w.test*100).toFixed(0)}% ${f.test.name}`);
+  document.getElementById('mcFormulaText').innerHTML =
+    `${parts.join(' + ')} &nbsp;·&nbsp; <em>Last year merit: ${f.lastMerit}</em>`;
+  document.getElementById('mcFormulaBox').style.display = 'block';
+
+  // Toggle input rows based on weights
+  document.getElementById('mcMatricRow').style.display = w.matric > 0 ? 'block' : 'none';
+  document.getElementById('mcFscRow').style.display    = w.fsc > 0    ? 'block' : 'none';
+  // Use SAT row if test name is SAT, else regular Test row
+  const isSat = /SAT/i.test(f.test.name);
+  document.getElementById('mcTestRow').style.display = (w.test > 0 && !isSat) ? 'block' : 'none';
+  document.getElementById('mcSatRow').style.display  = (w.test > 0 && isSat)  ? 'block' : 'none';
+
+  if(!isSat){
+    document.getElementById('mcTestLabel').textContent = f.test.name;
+    document.getElementById('mcTestMax').textContent = f.test.max;
+  }
+  document.getElementById('mcMatricMax').textContent = f.matric || 1100;
+  document.getElementById('mcFscMax').textContent    = f.fsc    || 1100;
+}
+
+function calculateMerit() {
+  if(!_meritUniData){ alert('Pehle university select karo.'); return; }
+  const f = _meritUniData;
+  const w = f.weights;
+  const matricObt = parseFloat(document.getElementById('mcMatricInput').value) || 0;
+  const fscObt    = parseFloat(document.getElementById('mcFscInput').value)    || 0;
+  const isSat = /SAT/i.test(f.test.name);
+  const testObt   = parseFloat(document.getElementById(isSat?'mcSatInput':'mcTestInput').value) || 0;
+
+  // Sanity: cap at max
+  const matricPct = f.matric ? Math.min(matricObt / f.matric, 1) : 0;
+  const fscPct    = f.fsc    ? Math.min(fscObt    / f.fsc,    1) : 0;
+  const testMax   = isSat ? 1600 : f.test.max;
+  const testPct   = Math.min(testObt   / testMax,   1);
+
+  const agg = (w.matric * matricPct + w.fsc * fscPct + w.test * testPct) * 100;
+
+  // Verdict
+  let verdictColor='#5A6478', verdictLabel='Calculate', verdictIcon='📊';
+  const mlr = f.lastMerit.match(/(\d+(?:\.\d+)?)/g); // extract first number
+  if(mlr){
+    const meritThreshold = parseFloat(mlr[0]);
+    // For NUST NET it's out of 200, scale our % for fair compare
+    const scaled = (f.test.name.includes('NET') && /NET/.test(f.lastMerit))
+      ? (testObt) // already absolute NET score
+      : agg;
+    const target = meritThreshold;
+    if(scaled >= target+5)      { verdictColor='#00C853'; verdictLabel='🎯 Strong Match — Likely Admission'; verdictIcon='✅'; }
+    else if(scaled >= target)   { verdictColor='#42A5F5'; verdictLabel='👍 Good Match — Within Range'; verdictIcon='👍'; }
+    else if(scaled >= target-5) { verdictColor='#FFA726'; verdictLabel='⚠️ Borderline — Apply but Have Backups'; verdictIcon='⚠️'; }
+    else                         { verdictColor='#EF5350'; verdictLabel='📚 Reach — Need Higher Marks';      verdictIcon='📚'; }
+  }
+
+  // Display
+  document.getElementById('meritTotal').innerHTML = `<span style="color:${verdictColor}">${agg.toFixed(2)}%</span>`;
+  const breakdown = [
+    w.matric ? `<div>📘 <b>Matric</b>: ${matricObt}/${f.matric} × ${(w.matric*100).toFixed(0)}% = <b>${(w.matric*matricPct*100).toFixed(2)}</b></div>` : '',
+    w.fsc    ? `<div>📗 <b>FSc</b>: ${fscObt}/${f.fsc} × ${(w.fsc*100).toFixed(0)}% = <b>${(w.fsc*fscPct*100).toFixed(2)}</b></div>` : '',
+    w.test   ? `<div>📝 <b>${f.test.name}</b>: ${testObt}/${testMax} × ${(w.test*100).toFixed(0)}% = <b>${(w.test*testPct*100).toFixed(2)}</b></div>` : '',
+    `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #E8ECF2;color:${verdictColor};font-weight:800;font-size:.95rem;">${verdictLabel}</div>`,
+    `<div style="margin-top:8px;font-size:.78rem;color:#9BA5B5;"><em>Last year closing merit: ${f.lastMerit}</em></div>`
+  ].join('');
+  document.getElementById('meritBreakdown').innerHTML = breakdown;
+  document.getElementById('meritResult').classList.add('show');
 }
 
 // ════════════════════════════════════════════
