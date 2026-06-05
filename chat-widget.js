@@ -7,7 +7,9 @@
   const CHAT_API = (window.TPK_CONFIG && window.TPK_CONFIG.CHAT_API)
     || 'https://api.taleempk.pk/';
 
-  const STORAGE_KEY = 'tpk_chat_msgs';
+  const STORAGE_KEY  = 'tpk_chat_msgs';
+  const MAX_HISTORY  = 8;     // last N turns kept in memory + storage
+  const MAX_CHARS    = 1500;  // per-message char cap when persisting
   let messages = [];
   try{ messages = JSON.parse(sessionStorage.getItem(STORAGE_KEY)||'[]'); }catch(e){}
 
@@ -177,7 +179,21 @@
 
   function addMsg(role, content){
     messages.push({role, content});
-    try{ sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-30))); }catch(e){}
+    // Trim per-message + total history before persisting to avoid quota exceptions.
+    // sessionStorage has a ~5 MB total budget shared with the whole site.
+    try{
+      const compact = messages.slice(-MAX_HISTORY).map(m => ({
+        role: m.role,
+        content: String(m.content||'').slice(0, MAX_CHARS)
+      }));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(compact));
+    }catch(e){
+      // Quota or disabled storage — drop oldest and retry once
+      try{
+        const compact = messages.slice(-4).map(m => ({ role:m.role, content: String(m.content||'').slice(0,500) }));
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(compact));
+      }catch(_){}
+    }
     renderAll();
   }
 

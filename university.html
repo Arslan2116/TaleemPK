@@ -348,10 +348,12 @@
       <button class="btn" style="flex:1;background:var(--navy);color:#fff" id="tabL" onclick="aTab('login')">Login</button>
       <button class="btn" style="flex:1;background:var(--gray-200);color:var(--navy)" id="tabS" onclick="aTab('signup')">Sign Up</button>
     </div>
-    <div id="nameWrap" style="display:none"><label>Name</label><input id="aName" placeholder="Your name"></div>
-    <label>Email</label><input id="aEmail" type="email" autocomplete="username">
-    <label>Password</label><input id="aPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAuth()">
-    <button class="btn" style="width:100%;margin-top:16px" id="aBtn" onclick="submitAuth()">Login</button>
+    <form onsubmit="event.preventDefault(); submitAuth();" autocomplete="on">
+      <div id="nameWrap" style="display:none"><label for="aName">Name</label><input id="aName" name="name" placeholder="Your name" autocomplete="name" maxlength="80"></div>
+      <label for="aEmail">Email</label><input id="aEmail" name="email" type="email" autocomplete="username" required maxlength="120">
+      <label for="aPass">Password</label><input id="aPass" name="password" type="password" autocomplete="current-password" required minlength="6" maxlength="200">
+      <button class="btn" style="width:100%;margin-top:16px" id="aBtn" type="submit">Login</button>
+    </form>
     <div class="amsg" id="aMsg"></div>
   </div>
 </div>

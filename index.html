@@ -2389,13 +2389,15 @@
       <button class="auth-tab active" id="authTabLogin" onclick="switchAuthTab('login')">Login</button>
       <button class="auth-tab" id="authTabSignup" onclick="switchAuthTab('signup')">Sign Up</button>
     </div>
-    <div id="authNameWrap" style="display:none"><label class="auth-label">Name</label>
-      <input class="auth-input" id="authName" placeholder="Your name"></div>
-    <label class="auth-label">Email</label>
-    <input class="auth-input" id="authEmail" type="email" placeholder="you@example.com" autocomplete="username">
-    <label class="auth-label">Password</label>
-    <input class="auth-input" id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAuth()">
-    <button class="auth-submit" id="authSubmitBtn" onclick="submitAuth()">Login</button>
+    <form onsubmit="event.preventDefault(); submitAuth();" autocomplete="on">
+      <div id="authNameWrap" style="display:none"><label class="auth-label" for="authName">Name</label>
+        <input class="auth-input" id="authName" name="name" placeholder="Your name" autocomplete="name" maxlength="80"></div>
+      <label class="auth-label" for="authEmail">Email</label>
+      <input class="auth-input" id="authEmail" name="email" type="email" placeholder="you@example.com" autocomplete="username" required maxlength="120">
+      <label class="auth-label" for="authPassword">Password</label>
+      <input class="auth-input" id="authPassword" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required minlength="6" maxlength="200">
+      <button class="auth-submit" id="authSubmitBtn" type="submit">Login</button>
+    </form>
     <div class="auth-msg" id="authMsg"></div>
   </div>
 </div>
@@ -4623,11 +4625,22 @@ function copyMeritData() {
 function notifyAdmin(subject, payload) {
   const endpoint = window._formspreeEndpoint || SITE_CONFIG.formspree_endpoint || '';
   if (!endpoint) return; // Not configured yet — skip silently
+  // Neutralise any HTML so Formspree's email viewer can't render injected script
+  function neutralise(v){
+    if (v == null) return '';
+    if (typeof v === 'object') return JSON.stringify(v).slice(0, 4000);
+    return String(v).replace(/[<>]/g, c => ({'<':'⟨','>':'⟩'}[c])).slice(0, 4000);
+  }
+  const safePayload = {};
+  for (const [k, v] of Object.entries(payload || {})) safePayload[k] = neutralise(v);
   try {
     fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(Object.assign({ _subject: subject, _replyto: 'noreply@taleempk.pk' }, payload))
+      body: JSON.stringify(Object.assign(
+        { _subject: neutralise(subject).slice(0, 200), _replyto: 'noreply@taleempk.pk' },
+        safePayload
+      ))
     }).catch(()=>{});
   } catch(e) {}
 }
@@ -6011,7 +6024,8 @@ function toggleReviewForm(uniId) {
 async function submitReview(uniId) {
   if(!currentUser){ openAuthModal('login'); return; }
   const txt = document.getElementById('rvTxt-'+uniId).value.trim();
-  if(!txt){ alert('Please write your review first.'); return; }
+  if(txt.length < 5){ alert('Review must be at least 5 characters.'); return; }
+  if(txt.length > 2000){ alert('Review is too long (max 2000 characters).'); return; }
   if(!_rvStar){ alert('Please select a star rating.'); return; }
   const row = { institution_id: uniId, rating: _rvStar, category: _rvCat||'General', body: txt, author: userDisplayName(currentUser) };
   const { error } = await sbClient.from('reviews').insert(row);
@@ -6072,7 +6086,7 @@ function buildReviewsHTML(uniId) {
       <div class="review-cat-row" id="rvCatRow-${uniId}">
         ${cats.map(c=>`<button class="review-cat" data-cat="${c}" onclick="rvPickCat('${c}',${uniId})">${c}</button>`).join('')}
       </div>
-      <textarea id="rvTxt-${uniId}" rows="3" placeholder="Share your experience — campus life, faculty, hostel, placements..."></textarea>
+      <textarea id="rvTxt-${uniId}" rows="3" maxlength="2000" minlength="5" placeholder="Share your experience — campus life, faculty, hostel, placements... (5–2000 characters)"></textarea>
       <div style="margin-top:10px;display:flex;gap:8px;">
         <button class="review-submit-btn" onclick="submitReview(${uniId})">✓ Post Review</button>
         <button class="review-submit-btn" style="background:var(--gray-200);color:var(--navy);" onclick="toggleReviewForm(${uniId})">Cancel</button>
@@ -6190,7 +6204,8 @@ function toggleQAForm(uniId) {
 async function submitQuestion(uniId) {
   if(!currentUser){ openAuthModal('login'); return; }
   const txt = document.getElementById('qaInput-'+uniId).value.trim();
-  if(!txt){ alert('Please write your question first.'); return; }
+  if(txt.length < 5){ alert('Question must be at least 5 characters.'); return; }
+  if(txt.length > 500){ alert('Question is too long (max 500 characters).'); return; }
   const { error } = await sbClient.from('questions').insert({ institution_id:uniId, question:txt, author:userDisplayName(currentUser) });
   if(error){ alert('Could not post question: '+error.message); return; }
   const uni = UNIVERSITIES.find(u=>u.id===uniId);
@@ -6207,7 +6222,8 @@ function toggleQAItem(qId) {
 async function submitAnswer(uniId, qId) {
   if(!currentUser){ openAuthModal('login'); return; }
   const txt = document.getElementById('qaAnsTxt-'+qId).value.trim();
-  if(!txt){ alert('Please write your answer first.'); return; }
+  if(txt.length < 2){ alert('Please write your answer first.'); return; }
+  if(txt.length > 2000){ alert('Answer is too long (max 2000 characters).'); return; }
   const { error } = await sbClient.from('answers').insert({ question_id:qId, body:txt, author:userDisplayName(currentUser) });
   if(error){ alert('Could not post answer: '+error.message); return; }
   await loadQA(uniId);
@@ -6244,7 +6260,7 @@ function buildQAHTML(uniId) {
       <button class="comm-add-btn" onclick="toggleQAForm(${uniId})">+ Ask Question</button>
     </div>
     <div class="qa-ask-form" id="qaAskForm-${uniId}">
-      <input id="qaInput-${uniId}" placeholder="Type your question... e.g. Does NUST offer lateral entry?">
+      <input id="qaInput-${uniId}" maxlength="500" minlength="5" placeholder="Type your question... e.g. Does NUST offer lateral entry? (5–500 chars)">
       <div style="margin-top:8px;display:flex;gap:8px;">
         <button class="review-submit-btn" onclick="submitQuestion(${uniId})">✓ Post Question</button>
         <button class="review-submit-btn" style="background:var(--gray-200);color:var(--navy);" onclick="toggleQAForm(${uniId})">Cancel</button>
@@ -6272,7 +6288,7 @@ function buildQAHTML(uniId) {
               </div>
             `).join('') : `<div style="padding:10px 0;font-size:0.79rem;color:var(--gray-400);">No answers yet — be the first to respond!</div>`}
             <div class="qa-answer-form">
-              <textarea id="qaAnsTxt-${q.id}" rows="2" placeholder="Write your answer..."></textarea>
+              <textarea id="qaAnsTxt-${q.id}" rows="2" maxlength="2000" minlength="2" placeholder="Write your answer... (max 2000 chars)"></textarea>
               <button class="qa-post-ans-btn" onclick="submitAnswer(${uniId},${q.id})">✓ Post Answer</button>
             </div>
           </div>
@@ -7190,14 +7206,17 @@ async function submitAuth(){
   }
 }
 async function doLogout(){ if(sbClient){ await sbClient.auth.signOut(); } currentUser=null; refreshAuthUI(); }
-function refreshAuthUI(){
+async function refreshAuthUI(){
   const btn=document.getElementById('authNavBtn');
   const desktopText = currentUser ? ('👤 '+userDisplayName(currentUser)+' · Logout') : 'Login / Sign Up';
   if(btn) btn.textContent = desktopText;
   const mBtn = document.getElementById('authNavBtnMobile');
   if(mBtn) mBtn.textContent = currentUser ? ('👤 '+userDisplayName(currentUser)+' · Logout') : '🔐 Login / Sign Up';
-  // Sync shortlist from DB whenever auth state changes
-  if(typeof loadShortlistFromDB === 'function') loadShortlistFromDB();
+  // Sync shortlist from DB whenever auth state changes — awaited so the UI never lags one render behind
+  if(typeof loadShortlistFromDB === 'function'){
+    try{ await loadShortlistFromDB(); }catch(e){}
+    if(typeof applyFilters === 'function') applyFilters();
+  }
 }
 async function initAuth(){
   if(!sbClient) return;

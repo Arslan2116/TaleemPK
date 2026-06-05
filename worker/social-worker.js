@@ -556,7 +556,12 @@ async function postToInstagram(env, caption, imageUrl) {
   return { ok: true, id };
 }
 
-async function postToTwitter(env, text) {
+// NOTE: Twitter API v2 free tier does NOT include media uploads.
+// We post text-only tweets here. The image lives at imageUrl and is shown via the
+// Twitter Card link preview (set up an og:image on the linked taleempk.pk page).
+// If you upgrade to paid API access, add a v1.1 media/upload INIT/APPEND/FINALIZE
+// flow before this call and pass media_ids in the tweet body.
+async function postToTwitter(env, text /*, imageUrl */) {
   const url     = 'https://api.twitter.com/2/tweets';
   const authHdr = await buildOAuth(env, 'POST', url);
   const res     = await fetch(url, {
@@ -565,7 +570,7 @@ async function postToTwitter(env, text) {
     body    : JSON.stringify({ text: text.slice(0, 280) })
   });
   const json = await res.json();
-  if (json.data?.id) return { ok: true, id: json.data.id };
+  if (json.data?.id) return { ok: true, id: json.data.id, note: 'text-only — image via link preview' };
   throw new Error(`Twitter: ${json.detail || JSON.stringify(json.errors || json)}`);
 }
 

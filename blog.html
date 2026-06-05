@@ -254,31 +254,37 @@ function setSEO(p){
   document.head.appendChild(bs);
 }
 
+// Basic HTML escape for fields we control (title, category, author).
+// Body is intentionally rendered as HTML because admins use formatting tags —
+// we sanitise on save in admin.html and rely on RLS to prevent any non-admin writes.
+function bEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
 function renderPost(p){
   setSEO(p);
   document.getElementById('articleContent').innerHTML = `
     <article class="article-card">
       <div class="article-header">
-        <div class="article-cat">${p.category||'Article'}</div>
-        <h1 class="article-title">${p.title}</h1>
+        <div class="article-cat">${bEsc(p.category||'Article')}</div>
+        <h1 class="article-title">${bEsc(p.title)}</h1>
         <div class="article-meta">
-          <span>✍️ ${p.author||'TaleemPK'}</span>
-          <span>📅 ${fmtDate(p.date)}</span>
-          <span>${p.icon||'📰'} ${p.category||''}</span>
+          <span>✍️ ${bEsc(p.author||'TaleemPK')}</span>
+          <span>📅 ${bEsc(fmtDate(p.date))}</span>
+          <span>${bEsc(p.icon||'📰')} ${bEsc(p.category||'')}</span>
         </div>
       </div>
-      <div class="article-body">${p.body||'<p>'+p.excerpt+'</p>'}</div>
+      <div class="article-body">${p.body||'<p>'+bEsc(p.excerpt||'')+'</p>'}</div>
     </article>`;
 
-  // Related posts
-  const related = POSTS.filter(x=>x.id!==p.id).slice(0,3);
+  // Related posts — pull from in-memory ALL_POSTS (loaded async)
+  const pool = (window.ALL_POSTS && window.ALL_POSTS.length) ? window.ALL_POSTS : POSTS;
+  const related = pool.filter(x => (x.id||x.title) !== (p.id||p.title)).slice(0,3);
   if(related.length){
     document.getElementById('relatedSection').style.display='';
     document.getElementById('relatedGrid').innerHTML = related.map(r=>`
       <a href="/blog/${toSlug(r.title)}" class="related-card">
-        <div class="related-card-cat">${r.category||'Article'}</div>
-        <div class="related-card-title">${r.icon} ${r.title}</div>
-        <div class="related-card-date">${fmtDate(r.date)}</div>
+        <div class="related-card-cat">${bEsc(r.category||'Article')}</div>
+        <div class="related-card-title">${bEsc(r.icon||'📰')} ${bEsc(r.title)}</div>
+        <div class="related-card-date">${bEsc(fmtDate(r.date))}</div>
       </a>`).join('');
   }
 }
@@ -293,14 +299,45 @@ function notFound(){
   document.getElementById('breadcrumbTitle').textContent = 'Not Found';
 }
 
+// Fetch admin-published posts from Supabase (falls back to hard-coded POSTS)
+window.ALL_POSTS = POSTS.slice();
+async function fetchSupabasePosts(){
+  if(!(window.TPK_CONFIG && window.TPK_CONFIG.SUPABASE_URL)) return [];
+  try{
+    const url = window.TPK_CONFIG.SUPABASE_URL + '/rest/v1/blog_posts?select=id,title,category,icon,author,excerpt,body,created_at&published=eq.true&order=created_at.desc';
+    const r = await fetch(url, { headers: {
+      apikey: window.TPK_CONFIG.SUPABASE_ANON_KEY,
+      Authorization: 'Bearer ' + window.TPK_CONFIG.SUPABASE_ANON_KEY
+    }});
+    if(!r.ok) return [];
+    const rows = await r.json();
+    return (rows||[]).map(p => ({
+      id: p.id, title: p.title, category: p.category, icon: p.icon || '📰',
+      date: p.created_at ? p.created_at.split('T')[0] : '',
+      author: p.author || 'TaleemPK Team',
+      excerpt: p.excerpt, body: p.body
+    }));
+  }catch(e){ return []; }
+}
+
 // Read slug from URL path: /blog/ecat-preparation-guide
-function init(){
+async function init(){
   const pathMatch = location.pathname.match(/\/blog\/([^/?#]+)/);
   if(!pathMatch){ notFound(); return; }
   const slug = pathMatch[1];
-  const post = POSTS.find(p => toSlug(p.title) === slug);
-  if(post) renderPost(post);
-  else notFound();
+  // Try hard-coded first (instant for the curated SEO posts)
+  let post = POSTS.find(p => toSlug(p.title) === slug);
+  if(post){ renderPost(post); }
+  // Then merge in DB posts in the background (also enables related-post variety)
+  const dbPosts = await fetchSupabasePosts();
+  if(dbPosts.length){
+    window.ALL_POSTS = [...POSTS, ...dbPosts];
+    if(!post){
+      const dbPost = dbPosts.find(p => toSlug(p.title) === slug);
+      if(dbPost){ renderPost(dbPost); return; }
+    }
+  }
+  if(!post) notFound();
 }
 
 init();
