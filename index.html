@@ -148,6 +148,9 @@
   .nav-dropdown-menu .tpk-ic,
   .tool-btn .tpk-ic { vertical-align: -3px; margin-right: 7px; }
   .uni-tag .tpk-ic { vertical-align: -2px; margin-right: 4px; }
+  .filter-with-icon { display: inline-flex; align-items: center; gap: 5px; }
+  .filter-with-icon .tpk-ic { vertical-align: 0; }
+  .hero-chip { display: inline-flex; align-items: center; gap: 5px; }
   body {
     font-family: 'Sora', sans-serif;
     background: var(--white);
@@ -912,7 +915,13 @@
     font-size:0.75rem; font-weight:800; color:var(--green);
     letter-spacing:2px; margin-bottom:16px;
   }
-  .step-icon { font-size:2rem; margin-bottom:12px; }
+  .step-icon {
+    font-size:2rem; margin-bottom:12px;
+    width: 56px; height: 56px; display:flex; align-items:center; justify-content:center;
+    background: rgba(0,200,83,0.1); border-radius: 14px;
+    color: var(--green);
+  }
+  .step-icon .tpk-ic { vertical-align: 0; }
   .step-title { font-size:1rem; font-weight:700; color:var(--white); margin-bottom:8px; }
   .step-desc { font-size:0.85rem; color:rgba(255,255,255,0.5); line-height:1.6; }
 
@@ -1992,16 +2001,16 @@
              oninput="onSearchInput(this.value)"
              onkeydown="if(event.key==='Enter'){hideSuggestions();searchHero(true)}"
              onfocus="onSearchInput(this.value)">
-      <button onclick="hideSuggestions();searchHero(true)" aria-label="Search">🔍 <span class="search-btn-label">Search</span></button>
+      <button onclick="hideSuggestions();searchHero(true)" aria-label="Search" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><span data-icon="search" data-size="16"></span> <span class="search-btn-label">Search</span></button>
     </div>
     <div class="search-suggestions" id="searchSuggestions"></div>
   </div>
   <div class="hero-chips">
-    <button class="hero-chip" onclick="filterUnis('engineering',document.querySelector('.filter-btn:nth-child(5)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})">⚙️ Engineering</button>
-    <button class="hero-chip" onclick="filterUnis('medical',document.querySelector('.filter-btn:nth-child(6)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})">🏥 Medical</button>
-    <button class="hero-chip" onclick="filterUnis('business',document.querySelector('.filter-btn:nth-child(7)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})">💼 Business</button>
-    <button class="hero-chip" onclick="filterUnis('public',document.querySelector('.filter-btn:nth-child(3)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})">🏛️ Public</button>
-    <button class="hero-chip" onclick="filterUnis('private',document.querySelector('.filter-btn:nth-child(4)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})">🏢 Private</button>
+    <button class="hero-chip" onclick="filterUnis('engineering',document.querySelector('.filter-btn:nth-child(5)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="wrench" data-size="14"></span> Engineering</button>
+    <button class="hero-chip" onclick="filterUnis('medical',document.querySelector('.filter-btn:nth-child(6)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="stethoscope" data-size="14"></span> Medical</button>
+    <button class="hero-chip" onclick="filterUnis('business',document.querySelector('.filter-btn:nth-child(7)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="briefcase" data-size="14"></span> Business</button>
+    <button class="hero-chip" onclick="filterUnis('public',document.querySelector('.filter-btn:nth-child(3)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="building2" data-size="14"></span> Public</button>
+    <button class="hero-chip" onclick="filterUnis('private',document.querySelector('.filter-btn:nth-child(4)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="briefcase" data-size="14"></span> Private</button>
   </div>
   <div class="hero-stats">
     <div class="stat"><div class="stat-icon">🏫</div><div class="stat-num" id="statUnis">218</div><div class="stat-label">HEC Universities</div></div>
@@ -2017,12 +2026,12 @@
   <div class="filters">
     <span class="filter-label" data-i18n="filter_label">Filter:</span>
     <button class="filter-btn active" onclick="filterUnis('all', this)" data-i18n="filter_all">All (218)</button>
-    <button class="filter-btn" onclick="filterUnis('public', this)" data-i18n="filter_public">🏛️ Public</button>
-    <button class="filter-btn" onclick="filterUnis('private', this)" data-i18n="filter_private">🏢 Private</button>
-    <button class="filter-btn" onclick="filterUnis('engineering', this)" data-i18n="filter_engineering">⚙️ Engineering</button>
-    <button class="filter-btn" onclick="filterUnis('medical', this)" data-i18n="filter_medical">🏥 Medical</button>
-    <button class="filter-btn" onclick="filterUnis('business', this)" data-i18n="filter_business">💼 Business</button>
-    <button class="filter-btn" onclick="filterUnis('federal', this)" data-i18n="filter_federal">🏙️ Federal</button>
+    <button class="filter-btn filter-with-icon" onclick="filterUnis('public', this)" data-i18n="filter_public" data-prefix-icon="building2">Public</button>
+    <button class="filter-btn filter-with-icon" onclick="filterUnis('private', this)" data-i18n="filter_private" data-prefix-icon="briefcase">Private</button>
+    <button class="filter-btn filter-with-icon" onclick="filterUnis('engineering', this)" data-i18n="filter_engineering" data-prefix-icon="wrench">Engineering</button>
+    <button class="filter-btn filter-with-icon" onclick="filterUnis('medical', this)" data-i18n="filter_medical" data-prefix-icon="stethoscope">Medical</button>
+    <button class="filter-btn filter-with-icon" onclick="filterUnis('business', this)" data-i18n="filter_business" data-prefix-icon="briefcase">Business</button>
+    <button class="filter-btn filter-with-icon" onclick="filterUnis('federal', this)" data-i18n="filter_federal" data-prefix-icon="shield">Federal</button>
     <button class="filter-btn" onclick="filterUnis('punjab', this)" data-i18n="filter_punjab">🌾 Punjab</button>
     <button class="filter-btn" onclick="filterUnis('sindh', this)" data-i18n="filter_sindh">🌊 Sindh</button>
     <button class="filter-btn" onclick="filterUnis('kpk', this)" data-i18n="filter_kpk">🏔️ KPK</button>
@@ -2191,25 +2200,25 @@
   <div class="hiw-steps">
     <div class="hiw-step fade-in">
       <div class="step-num" data-i18n="step1_num">STEP 01</div>
-      <div class="step-icon">🔍</div>
+      <div class="step-icon"><span data-icon="search" data-size="32"></span></div>
       <div class="step-title" data-i18n="step1_title">Search</div>
       <div class="step-desc" data-i18n="step1_desc">Find universities by city, program, or fee range. 218 HEC-recognized institutions listed.</div>
     </div>
     <div class="hiw-step fade-in" style="transition-delay:0.1s">
       <div class="step-num" data-i18n="step2_num">STEP 02</div>
-      <div class="step-icon">⚖️</div>
+      <div class="step-icon"><span data-icon="filter" data-size="32"></span></div>
       <div class="step-title" data-i18n="step2_title">Compare</div>
       <div class="step-desc" data-i18n="step2_desc">Compare 2–3 universities side-by-side — fees, merit, programs, and location all at once.</div>
     </div>
     <div class="hiw-step fade-in" style="transition-delay:0.2s">
       <div class="step-num" data-i18n="step3_num">STEP 03</div>
-      <div class="step-icon">✅</div>
+      <div class="step-icon"><span data-icon="check" data-size="32"></span></div>
       <div class="step-title" data-i18n="step3_title">Decide</div>
       <div class="step-desc" data-i18n="step3_desc">Make a confident decision with complete information. No guessing, no confusion.</div>
     </div>
     <div class="hiw-step fade-in" style="transition-delay:0.3s">
       <div class="step-num" data-i18n="step4_num">COMING SOON</div>
-      <div class="step-icon">🤖</div>
+      <div class="step-icon"><span data-icon="rocket" data-size="32"></span></div>
       <div class="step-title" data-i18n="step4_title">AI Predictor</div>
       <div class="step-desc" data-i18n="step4_desc">Enter your aggregate — AI will predict your admission chances at each university.</div>
     </div>
@@ -2495,10 +2504,10 @@
 <!-- COMPARE BAR -->
 <div class="compare-bar" id="compareBar">
   <div class="compare-bar-left">
-    <span class="compare-bar-title" data-i18n="compare_bar_title">⚖️ Compare List:</span>
+    <span class="compare-bar-title" data-i18n="compare_bar_title" data-prefix-icon="filter">Compare List:</span>
     <div class="compare-chips" id="compareChips"></div>
   </div>
-  <button class="btn-start-compare" onclick="openCompareModal()" data-i18n="compare_bar_btn">Compare Now →</button>
+  <button class="btn-start-compare" onclick="openCompareModal()" data-i18n="compare_bar_btn" style="display:inline-flex;align-items:center;gap:6px;">Compare Now <span data-icon="arrowRight" data-size="16"></span></button>
 </div>
 
 <!-- DETAIL MODAL -->
@@ -3180,15 +3189,15 @@ const T = {
     hero_urdu:'فیس، میرٹ، پروگرام — سب کچھ ایک جگہ',
     hero_sub:'Data on 218 HEC-recognized universities in Pakistan — fees, merit, programs. Compare side-by-side and decide your future.',
     hero_search_placeholder:'Search university or program…',
-    hero_search_btn:'🔍 Search',
+    hero_search_btn:'Search',
     stat1_label:'Top Universities', stat2_label:'Programs Listed', stat3_label:'Students Helped', stat4_label:'Cities Covered',
-    filter_label:'Filter:', filter_all:'All (218)', filter_public:'🏛️ Public', filter_private:'🏢 Private',
-    filter_engineering:'⚙️ Engineering', filter_medical:'🏥 Medical', filter_business:'💼 Business',
-    filter_federal:'🏙️ Federal', filter_punjab:'🌾 Punjab', filter_sindh:'🌊 Sindh',
+    filter_label:'Filter:', filter_all:'All (218)', filter_public:'Public', filter_private:'Private',
+    filter_engineering:'Engineering', filter_medical:'Medical', filter_business:'Business',
+    filter_federal:'Federal', filter_punjab:'🌾 Punjab', filter_sindh:'🌊 Sindh',
     filter_kpk:'🏔️ KPK', filter_balochistan:'🏜️ Balochistan', filter_ajk:'🏞️ AJK', filter_gb:'⛰️ GB',
     fee_label:'FEE/SEMESTER', merit_label:'MERIT / ENTRY',
     btn_compare:'+ Compare', btn_added:'✓ Added', btn_details:'Details →',
-    tag_public:'🏛️ Public', tag_private:'🏢 Private',
+    tag_public:'Public', tag_private:'Private',
     hiw_label:'Simple Process', hiw_title:'Make the Right<br>Decision in 3 Steps',
     hiw_sub:'Comprehensive university data for Pakistan — all in one place',
     step1_num:'STEP 01', step1_title:'Search', step1_desc:'Find universities by city, program, or fee range. 218 HEC-recognized institutions listed.',
@@ -7270,6 +7279,13 @@ window.hydrateIcons = function(root){
     const size = parseInt(el.getAttribute('data-size') || '18', 10);
     el.innerHTML = icon(name, { size });
     el.setAttribute('data-icon-done', '1');
+  });
+  // For elements that want an icon prepended to their text (used with data-i18n
+  // so the icon survives translation), prepend once.
+  (root || document).querySelectorAll('[data-prefix-icon]:not([data-prefix-done])').forEach(el => {
+    const name = el.getAttribute('data-prefix-icon');
+    el.innerHTML = icon(name, { size: 14 }) + ' ' + el.innerHTML;
+    el.setAttribute('data-prefix-done', '1');
   });
 };
 // Run once at parse end so static markup gets icons immediately
