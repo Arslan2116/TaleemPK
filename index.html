@@ -6996,11 +6996,15 @@ function shareCompareUrl(){
   }
 }
 
-// Load comparison from URL on page load
+// Load comparison from URL on page load — only ONCE per param value
 function loadCompareFromURL(){
   const params = new URLSearchParams(location.search);
   const ids = params.get('compare');
   if(!ids) return;
+  // Don't auto-open if user already saw this exact comparison in this session
+  const seenKey = 'tpk_seen_compare_' + ids;
+  if(sessionStorage.getItem(seenKey)) return;
+  sessionStorage.setItem(seenKey, '1');
   const idArr = ids.split(',').map(Number).filter(Boolean);
   const found = idArr.map(id=>UNIVERSITIES.find(u=>u.id===id)).filter(Boolean);
   if(found.length >= 2){
@@ -7014,6 +7018,15 @@ window.addEventListener('load', ()=>setTimeout(loadCompareFromURL, 600));
 function closeCompareModal(e) {
   if(!e || e.target.id==='compareModalOverlay' || e.target.classList.contains('modal-close')) {
     document.getElementById('compareModalOverlay').classList.remove('show');
+    document.body.classList.remove('printing-compare');
+    // Clear ?compare=... from URL so it doesn't auto-reopen on next visit
+    try{
+      const url = new URL(location.href);
+      if(url.searchParams.has('compare')){
+        url.searchParams.delete('compare');
+        history.replaceState(null, '', url.pathname + (url.search ? url.search : '') + url.hash);
+      }
+    }catch(err){}
   }
 }
 
