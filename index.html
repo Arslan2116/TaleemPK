@@ -1927,6 +1927,9 @@
         <button onclick="openMeritCalc();closeNavDropdown()">
           <span class="ndm-icon">📐</span> Merit Calculator
         </button>
+        <button onclick="openScholMatch();closeNavDropdown()">
+          <span class="ndm-icon">🎁</span> Scholarship Matcher
+        </button>
         <button onclick="toggleCalendar();closeNavDropdown()">
           <span class="ndm-icon">📅</span> Admission Dates
         </button>
@@ -2122,6 +2125,7 @@
   <button class="tool-btn" id="slToolBtn" onclick="toggleShortlistFilter()">🤍 My Shortlist <span class="tool-badge" id="slCountBadge" style="display:none">0</span></button>
   <button class="tool-btn" onclick="openFeeCalc()">🧮 Fee Calculator</button>
   <button class="tool-btn" onclick="openMeritCalc()">📐 Merit Calculator</button>
+  <button class="tool-btn" onclick="openScholMatch()">🎁 Scholarship Matcher</button>
   <button class="tool-btn" id="calToolBtn" onclick="toggleCalendar()">📅 Admission Dates</button>
   <button class="tool-btn" id="mapToolBtn" onclick="toggleMapView()">🗺️ Map View</button>
 </div>
@@ -2416,6 +2420,7 @@
         <a href="#" onclick="openScholarshipsPage();return false">Scholarships</a>
         <a href="#" onclick="openFeeCalc();return false">Fee Calculator</a>
         <a href="#" onclick="openMeritCalc();return false">Merit Calculator</a>
+        <a href="#" onclick="openScholMatch();return false">Scholarship Matcher</a>
         <a href="#" onclick="toggleCalendar();return false">Admission Calendar</a>
         <a href="#" onclick="toggleMapView();return false">Map View</a>
       </div>
@@ -2512,6 +2517,182 @@
       <div class="fee-result-lbl">Estimated Total Degree Cost</div>
       <div class="fee-result-total" id="feeTotal">—</div>
       <div class="fee-breakdown" id="feeBreakdown"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCHOLARSHIP AUTO-MATCHER -->
+<style>
+  #scholMatchOverlay .fee-modal{ max-width: 620px; }
+  .sm-progress{ display:flex; gap:6px; margin-bottom:22px; }
+  .sm-progress > div{ flex:1; height:5px; border-radius:3px; background:#E8ECF2; transition:background .3s; }
+  .sm-progress > div.done{ background:#00C853; }
+  .sm-progress > div.active{ background:linear-gradient(90deg,#00C853,#00A040); }
+  .sm-step{ display:none; animation:smFade .3s; }
+  .sm-step.active{ display:block; }
+  @keyframes smFade{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+  .sm-step-title{ font-size:1.15rem; font-weight:900; color:#0A1628; margin:0 0 6px; }
+  .sm-step-sub{ font-size:.85rem; color:#5A6478; margin-bottom:20px; }
+  .sm-opts{ display:grid; gap:10px; }
+  .sm-opts.cols2{ grid-template-columns:1fr 1fr; }
+  .sm-opt{
+    background:#F8FAFC; border:2px solid #E5EAF0;
+    padding:14px 16px; border-radius:12px; cursor:pointer;
+    display:flex; align-items:center; gap:12px;
+    font-weight:700; color:#0A1628; font-size:.92rem;
+    transition:all .2s; font-family:inherit; text-align:left;
+  }
+  .sm-opt:hover{ border-color:#00C853; background:#fff; transform:translateY(-1px); }
+  .sm-opt.selected{ border-color:#00C853; background:linear-gradient(135deg,#E8F8EE,#fff); box-shadow:0 0 0 3px rgba(0,200,83,.12); }
+  .sm-opt .sm-opt-icon{ font-size:1.4rem; flex-shrink:0; }
+  .sm-opt .sm-opt-sub{ display:block; font-size:.72rem; color:#5A6478; font-weight:600; margin-top:2px; }
+  .sm-nav{ display:flex; justify-content:space-between; gap:12px; margin-top:24px; }
+  .sm-nav-btn{
+    padding:11px 22px; border-radius:10px; font-weight:800;
+    font-family:inherit; cursor:pointer; font-size:.9rem;
+    border:none; transition:transform .2s;
+  }
+  .sm-nav-btn.prev{ background:#F5F7FA; color:#5A6478; }
+  .sm-nav-btn.next{ background:linear-gradient(135deg,#00C853,#00A040); color:#fff; margin-left:auto; }
+  .sm-nav-btn:hover{ transform:translateY(-1px); }
+  .sm-nav-btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  /* Results */
+  .sm-results{ display:none; }
+  .sm-results.show{ display:block; animation:smFade .4s; }
+  .sm-result-head{
+    text-align:center; padding:20px;
+    background:linear-gradient(135deg,#0A1628,#1a2942);
+    color:#fff; border-radius:14px; margin-bottom:20px;
+    position:relative; overflow:hidden;
+  }
+  .sm-result-head::before{
+    content:''; position:absolute; top:-50%; right:-20%;
+    width:200px; height:200px;
+    background:radial-gradient(circle,rgba(0,200,83,.25),transparent 70%);
+  }
+  .sm-result-count{ font-size:2.4rem; font-weight:900; line-height:1; background:linear-gradient(135deg,#00E66E,#00C853); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .sm-result-lbl{ font-size:.85rem; opacity:.85; margin-top:4px; }
+  .sm-result-card{
+    background:#fff; border:1.5px solid #E8ECF2; border-radius:12px;
+    padding:16px 18px; margin-bottom:12px; position:relative;
+    transition:transform .2s, box-shadow .2s, border-color .2s;
+  }
+  .sm-result-card:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(10,22,40,.08); border-color:#00C853; }
+  .sm-result-rank{
+    position:absolute; top:-10px; left:14px;
+    background:linear-gradient(135deg,#FFD54F,#FFA726);
+    color:#0A1628; padding:3px 12px; border-radius:14px;
+    font-size:.7rem; font-weight:900; letter-spacing:.05em;
+  }
+  .sm-result-rank.good{ background:linear-gradient(135deg,#00C853,#00A040); color:#fff; }
+  .sm-result-rank.fair{ background:linear-gradient(135deg,#64B5F6,#42A5F5); color:#fff; }
+  .sm-result-top{ display:flex; gap:12px; align-items:start; margin-top:6px; }
+  .sm-result-icon{
+    width:48px; height:48px; flex-shrink:0; border-radius:12px;
+    background:linear-gradient(135deg,#F0FBF4,#E8F8EE);
+    display:flex; align-items:center; justify-content:center; font-size:1.7rem;
+  }
+  .sm-result-info{ flex:1; min-width:0; }
+  .sm-result-title{ font-weight:900; color:#0A1628; font-size:1.05rem; line-height:1.2; }
+  .sm-result-provider{ font-size:.78rem; color:#5A6478; margin-top:2px; }
+  .sm-result-score{ flex-shrink:0; text-align:right; }
+  .sm-result-score-num{ font-size:1.4rem; font-weight:900; color:#00A040; line-height:1; }
+  .sm-result-score-lbl{ font-size:.65rem; color:#9BA5B5; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  .sm-result-tags{ display:flex; flex-wrap:wrap; gap:5px; margin:10px 0; }
+  .sm-result-tag{ font-size:.7rem; font-weight:700; padding:3px 9px; border-radius:10px; background:#F5F7FA; color:#5A6478; }
+  .sm-result-tag.match{ background:#E8F8EE; color:#00723B; }
+  .sm-result-reasons{ font-size:.78rem; color:#5A6478; line-height:1.5; padding:8px 12px; background:#F8FAFC; border-radius:8px; margin-top:8px; }
+  .sm-result-reasons b{ color:#00723B; }
+  .sm-result-actions{ display:flex; gap:8px; margin-top:10px; }
+  .sm-result-btn{
+    background:#00C853; color:#fff; padding:7px 14px;
+    border-radius:8px; font-weight:800; font-size:.78rem;
+    text-decoration:none; display:inline-block;
+  }
+  .sm-result-btn.outline{ background:#fff; color:#5A6478; border:1.5px solid #E8ECF2; }
+  .sm-no-results{ text-align:center; padding:30px; color:#5A6478; }
+  @media(max-width:520px){
+    .sm-opts.cols2{ grid-template-columns:1fr; }
+    .sm-result-card{ padding:14px; }
+    .sm-result-icon{ width:40px; height:40px; font-size:1.4rem; }
+    .sm-result-score-num{ font-size:1.15rem; }
+  }
+</style>
+<div class="fee-overlay" id="scholMatchOverlay" onclick="if(event.target===this)closeScholMatch()">
+  <div class="fee-modal">
+    <button class="predictor-close" onclick="closeScholMatch()">✕</button>
+    <h2>🎁 Scholarship Auto-Matcher</h2>
+    <p>4 questions answer karo — best matching scholarships dekho with personalized score</p>
+
+    <!-- Progress -->
+    <div class="sm-progress" id="smProgress">
+      <div class="active"></div><div></div><div></div><div></div>
+    </div>
+
+    <!-- Step 1: Education Level -->
+    <div class="sm-step active" data-step="1">
+      <h3 class="sm-step-title">📚 Your Current Education Level</h3>
+      <p class="sm-step-sub">Which stage are you applying from?</p>
+      <div class="sm-opts">
+        <button class="sm-opt" data-val="fsc" onclick="smPick(this,'level')"><span class="sm-opt-icon">🎒</span><span>FSc / A-Levels Student<span class="sm-opt-sub">Looking for undergraduate scholarship</span></span></button>
+        <button class="sm-opt" data-val="ug"  onclick="smPick(this,'level')"><span class="sm-opt-icon">🎓</span><span>Undergraduate (BS / BBA / BE)<span class="sm-opt-sub">Currently doing or starting bachelor's</span></span></button>
+        <button class="sm-opt" data-val="pg"  onclick="smPick(this,'level')"><span class="sm-opt-icon">📜</span><span>Graduate (MS / MPhil / MBA)<span class="sm-opt-sub">Master's level scholarship</span></span></button>
+        <button class="sm-opt" data-val="phd" onclick="smPick(this,'level')"><span class="sm-opt-icon">🔬</span><span>PhD / Doctoral<span class="sm-opt-sub">Research-level funding</span></span></button>
+      </div>
+    </div>
+
+    <!-- Step 2: Field -->
+    <div class="sm-step" data-step="2">
+      <h3 class="sm-step-title">🎯 Field of Study</h3>
+      <p class="sm-step-sub">Kis field me apply karna chahte ho?</p>
+      <div class="sm-opts cols2">
+        <button class="sm-opt" data-val="engineering" onclick="smPick(this,'field')"><span class="sm-opt-icon">⚙️</span><span>Engineering</span></button>
+        <button class="sm-opt" data-val="medical"     onclick="smPick(this,'field')"><span class="sm-opt-icon">🏥</span><span>Medical / MBBS</span></button>
+        <button class="sm-opt" data-val="cs"          onclick="smPick(this,'field')"><span class="sm-opt-icon">💻</span><span>Computer Science</span></button>
+        <button class="sm-opt" data-val="business"    onclick="smPick(this,'field')"><span class="sm-opt-icon">💼</span><span>Business / BBA</span></button>
+        <button class="sm-opt" data-val="sciences"    onclick="smPick(this,'field')"><span class="sm-opt-icon">🔬</span><span>Pure Sciences</span></button>
+        <button class="sm-opt" data-val="arts"        onclick="smPick(this,'field')"><span class="sm-opt-icon">🎨</span><span>Arts / Humanities</span></button>
+        <button class="sm-opt" data-val="any"         onclick="smPick(this,'field')"><span class="sm-opt-icon">📚</span><span>Any Field</span></button>
+      </div>
+    </div>
+
+    <!-- Step 3: Profile (CGPA / Income) -->
+    <div class="sm-step" data-step="3">
+      <h3 class="sm-step-title">💰 Financial Need vs Merit</h3>
+      <p class="sm-step-sub">Konsi category par focus karein?</p>
+      <div class="sm-opts">
+        <button class="sm-opt" data-val="need"  onclick="smPick(this,'priority')"><span class="sm-opt-icon">🏠</span><span>Need-Based (Family Income Low)<span class="sm-opt-sub">Ehsaas, USAT, Pakistan Baitul Maal</span></span></button>
+        <button class="sm-opt" data-val="merit" onclick="smPick(this,'priority')"><span class="sm-opt-icon">🏆</span><span>Merit-Based (Strong Academics)<span class="sm-opt-sub">HEC merit, fellowships, top scorer awards</span></span></button>
+        <button class="sm-opt" data-val="both"  onclick="smPick(this,'priority')"><span class="sm-opt-icon">⚖️</span><span>Both — Show Me All<span class="sm-opt-sub">Need + Merit combinations</span></span></button>
+      </div>
+    </div>
+
+    <!-- Step 4: Region -->
+    <div class="sm-step" data-step="4">
+      <h3 class="sm-step-title">🌍 Where do you want to study?</h3>
+      <p class="sm-step-sub">Domestic ya foreign scholarships?</p>
+      <div class="sm-opts">
+        <button class="sm-opt" data-val="domestic" onclick="smPick(this,'region')"><span class="sm-opt-icon">🇵🇰</span><span>Inside Pakistan<span class="sm-opt-sub">HEC, NUST, LUMS, etc.</span></span></button>
+        <button class="sm-opt" data-val="foreign"  onclick="smPick(this,'region')"><span class="sm-opt-icon">✈️</span><span>Abroad (Foreign Universities)<span class="sm-opt-sub">Fulbright, Chevening, Erasmus, etc.</span></span></button>
+        <button class="sm-opt" data-val="both"     onclick="smPick(this,'region')"><span class="sm-opt-icon">🌐</span><span>Both — Anywhere<span class="sm-opt-sub">Show me everything</span></span></button>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="sm-nav" id="smNav">
+      <button class="sm-nav-btn prev" id="smPrev" onclick="smGo(-1)" style="display:none;">← Back</button>
+      <button class="sm-nav-btn next" id="smNext" onclick="smGo(1)" disabled>Next →</button>
+    </div>
+
+    <!-- Results -->
+    <div class="sm-results" id="smResults">
+      <div class="sm-result-head">
+        <div class="sm-result-count" id="smCount">—</div>
+        <div class="sm-result-lbl">Matching Scholarships Found</div>
+      </div>
+      <div id="smList"></div>
+      <button class="sm-nav-btn prev" onclick="smRestart()" style="display:block;margin:20px auto 0;background:#F5F7FA;color:#0A1628;">🔄 Start Over</button>
     </div>
   </div>
 </div>
@@ -5205,6 +5386,224 @@ function calculateFee() {
       <div class="fee-bline-k">Per Semester (all-in)</div><div class="fee-bline-v">${fmt(total/sems)}</div>
     </div>`;
   document.getElementById('feeResult').classList.add('show');
+}
+
+// ════════════════════════════════════════════
+//  SCHOLARSHIP AUTO-MATCHER
+//  Multi-step wizard → keyword-weighted matching against Supabase scholarships
+// ════════════════════════════════════════════
+let _smProfile = { level:null, field:null, priority:null, region:null };
+let _smCurrentStep = 1;
+const SM_TOTAL_STEPS = 4;
+
+function openScholMatch(){
+  _smProfile = { level:null, field:null, priority:null, region:null };
+  _smCurrentStep = 1;
+  smRender();
+  // Ensure scholarships are loaded
+  if(!SCHOLARSHIPS.length) loadScholarships();
+  document.getElementById('scholMatchOverlay').classList.add('open');
+}
+function closeScholMatch(){ document.getElementById('scholMatchOverlay').classList.remove('open'); }
+
+function smPick(btn, key){
+  // Clear other selected on same step
+  btn.parentElement.querySelectorAll('.sm-opt').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  _smProfile[key] = btn.dataset.val;
+  document.getElementById('smNext').disabled = false;
+}
+
+function smGo(dir){
+  _smCurrentStep += dir;
+  if(_smCurrentStep < 1) _smCurrentStep = 1;
+  if(_smCurrentStep > SM_TOTAL_STEPS){
+    smShowResults();
+    return;
+  }
+  smRender();
+}
+
+function smRender(){
+  // Hide all steps + results
+  document.querySelectorAll('#scholMatchOverlay .sm-step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('smResults').classList.remove('show');
+  document.getElementById('smNav').style.display='flex';
+  // Show current step
+  const step = document.querySelector(`#scholMatchOverlay .sm-step[data-step="${_smCurrentStep}"]`);
+  if(step) step.classList.add('active');
+  // Update progress bar
+  const progress = document.getElementById('smProgress');
+  Array.from(progress.children).forEach((d,i)=>{
+    d.classList.remove('active','done');
+    if(i+1 < _smCurrentStep) d.classList.add('done');
+    else if(i+1 === _smCurrentStep) d.classList.add('active');
+  });
+  // Update nav buttons
+  document.getElementById('smPrev').style.display = _smCurrentStep > 1 ? 'inline-block' : 'none';
+  const nextBtn = document.getElementById('smNext');
+  // Enable Next only if current step has selection
+  const keys = ['level','field','priority','region'];
+  const currentKey = keys[_smCurrentStep-1];
+  nextBtn.disabled = !_smProfile[currentKey];
+  nextBtn.textContent = _smCurrentStep === SM_TOTAL_STEPS ? '🎯 Find My Scholarships' : 'Next →';
+}
+
+function smRestart(){
+  _smProfile = { level:null, field:null, priority:null, region:null };
+  _smCurrentStep = 1;
+  // Clear all selections
+  document.querySelectorAll('#scholMatchOverlay .sm-opt').forEach(b=>b.classList.remove('selected'));
+  smRender();
+}
+
+// Match a single scholarship against profile, return score + reasons
+function smScoreScholarship(s, profile){
+  let score = 0;
+  const reasons = [];
+  const matchTags = [];
+
+  // Combine all searchable text
+  const txt = `${s.title||''} ${s.provider||''} ${s.type||''} ${s.level||''} ${s.eligibility||''} ${s.coverage||''} ${s.description||''}`.toLowerCase();
+
+  // ─── LEVEL match (heavy weight: ±25) ───
+  const levelKeywords = {
+    fsc:  ['fsc','intermediate','undergraduate','bachelor','bs ','bba','be ','mbbs','ssc','hssc','a-level','12th'],
+    ug:   ['undergraduate','bachelor','bs ','bba','be ','mbbs'],
+    pg:   ['graduate','master','ms ','mba','mphil','postgraduate'],
+    phd:  ['phd','doctoral','doctorate']
+  };
+  const userLevelKW = levelKeywords[profile.level] || [];
+  const levelMatch = userLevelKW.some(k=>txt.includes(k));
+  if(levelMatch){ score += 25; matchTags.push('✓ Level match'); reasons.push(`Matches your <b>${profile.level.toUpperCase()}</b> education level`); }
+  else if(s.level){
+    // If scholarship explicitly mentions a different level, penalize
+    const otherLevels = Object.keys(levelKeywords).filter(k=>k!==profile.level);
+    const otherMatch = otherLevels.some(k=>levelKeywords[k].some(kw=>(s.level||'').toLowerCase().includes(kw)));
+    if(otherMatch) score -= 15;
+  }
+
+  // ─── FIELD match (medium weight: +20) ───
+  if(profile.field && profile.field !== 'any'){
+    const fieldKeywords = {
+      engineering: ['engineering','engg','ecat','technical','technology'],
+      medical:     ['medical','mbbs','bds','mdcat','health','medicine','pharmacy','nursing','dental'],
+      cs:          ['computer','software','it ','information technology','tech','cs ','data science','ai','programming'],
+      business:    ['business','bba','mba','commerce','management','finance','accounting'],
+      sciences:    ['science','physics','chemistry','biology','mathematics','research'],
+      arts:        ['arts','humanities','social','design','literature','law','llb']
+    };
+    const kw = fieldKeywords[profile.field] || [];
+    const fieldMatch = kw.some(k=>txt.includes(k));
+    if(fieldMatch){ score += 20; matchTags.push(`✓ ${profile.field}`); reasons.push(`Specifically for <b>${profile.field}</b> students`); }
+    // "All fields" / "any discipline" scholarships still get small bonus
+    else if(/all field|any discipline|all program|cross-disciplinary/i.test(txt)){ score += 8; reasons.push('Open to all fields'); }
+  } else {
+    score += 5; // Any-field user gets baseline
+  }
+
+  // ─── PRIORITY match: need-based vs merit-based (+25) ───
+  const needKW  = ['need','need-based','need based','low income','poverty','ehsaas','baitul mal','undeserved','financially weak','poor'];
+  const meritKW = ['merit','high achiever','top scorer','distinction','gold medal','excellence','outstanding','academic award'];
+  const hasNeed  = needKW.some(k=>txt.includes(k));
+  const hasMerit = meritKW.some(k=>txt.includes(k));
+  if(profile.priority === 'need' && hasNeed){ score += 25; matchTags.push('✓ Need-based'); reasons.push('Need-based — for financially deserving students'); }
+  else if(profile.priority === 'merit' && hasMerit){ score += 25; matchTags.push('✓ Merit-based'); reasons.push('Merit-based — for top academic achievers'); }
+  else if(profile.priority === 'both'){
+    if(hasNeed){ score += 12; matchTags.push('✓ Need-based'); }
+    if(hasMerit){ score += 12; matchTags.push('✓ Merit-based'); }
+  }
+  else if(profile.priority === 'need' && hasMerit){ score -= 5; } // mismatch
+  else if(profile.priority === 'merit' && hasNeed){ score -= 5; }
+
+  // ─── REGION match (+15) ───
+  const foreignKW  = ['foreign','abroad','international','overseas','usa','uk ','australia','europe','china','germany','japan','fulbright','chevening','erasmus','daad','commonwealth'];
+  const domesticKW = ['pakistan','hec','domestic','local','within pakistan'];
+  const isForeign  = foreignKW.some(k=>txt.includes(k));
+  const isDomestic = domesticKW.some(k=>txt.includes(k));
+  if(profile.region === 'foreign' && isForeign){ score += 15; matchTags.push('✓ Foreign'); reasons.push('Foreign / international scholarship'); }
+  else if(profile.region === 'domestic' && (isDomestic || !isForeign)){ score += 12; matchTags.push('✓ Domestic'); reasons.push('Available within Pakistan'); }
+  else if(profile.region === 'both'){ score += 8; }
+  else if(profile.region === 'domestic' && isForeign){ score -= 10; }
+  else if(profile.region === 'foreign' && isDomestic && !isForeign){ score -= 8; }
+
+  // ─── Featured / Active bonus ───
+  if(s.featured) score += 8;
+
+  // ─── Deadline penalty (past dates lose points) ───
+  if(s.deadline){
+    const d = new Date(s.deadline);
+    if(!isNaN(d) && d < new Date()){ score -= 20; reasons.push('⚠️ Deadline already passed'); }
+  }
+
+  return { score, reasons, matchTags };
+}
+
+function smShowResults(){
+  document.querySelectorAll('#scholMatchOverlay .sm-step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('smNav').style.display='none';
+  // Mark all progress as done
+  Array.from(document.getElementById('smProgress').children).forEach(d=>{ d.classList.remove('active'); d.classList.add('done'); });
+
+  const results = document.getElementById('smResults');
+  results.classList.add('show');
+  const list = document.getElementById('smList');
+
+  if(!SCHOLARSHIPS.length){
+    list.innerHTML = '<div class="sm-no-results">⏳ Scholarships loading... Please try again in a moment.</div>';
+    document.getElementById('smCount').textContent = '0';
+    return;
+  }
+
+  // Score everything
+  const scored = SCHOLARSHIPS.map(s=>{
+    const { score, reasons, matchTags } = smScoreScholarship(s, _smProfile);
+    return { s, score, reasons, matchTags };
+  }).filter(x=>x.score > 0).sort((a,b)=>b.score-a.score);
+
+  document.getElementById('smCount').textContent = scored.length;
+
+  if(!scored.length){
+    list.innerHTML = '<div class="sm-no-results">😔 Koi matching scholarship nahi mili. Filter relax karke try karo — All Fields ya Both option pick karo.</div>';
+    return;
+  }
+
+  list.innerHTML = scored.slice(0, 15).map((x,i)=>{
+    const { s, score, reasons, matchTags } = x;
+    // Normalize score to percentage (cap at 100)
+    const matchPct = Math.min(Math.round((score / 110) * 100), 100);
+    const rankClass = matchPct >= 75 ? 'good' : matchPct >= 50 ? 'fair' : 'low';
+    const rankLabel = matchPct >= 75 ? '🎯 Top Match' : matchPct >= 50 ? '👍 Good Fit' : '👀 Worth a Look';
+
+    return `
+      <div class="sm-result-card">
+        <div class="sm-result-rank ${rankClass}">#${i+1} · ${rankLabel}</div>
+        <div class="sm-result-top">
+          <div class="sm-result-icon">${s.icon || '🎁'}</div>
+          <div class="sm-result-info">
+            <div class="sm-result-title">${s.title}</div>
+            <div class="sm-result-provider">${s.provider||''}</div>
+          </div>
+          <div class="sm-result-score">
+            <div class="sm-result-score-num">${matchPct}%</div>
+            <div class="sm-result-score-lbl">Match</div>
+          </div>
+        </div>
+        <div class="sm-result-tags">
+          ${s.type    ? `<span class="sm-result-tag">${s.type}</span>` : ''}
+          ${s.level   ? `<span class="sm-result-tag">${s.level}</span>` : ''}
+          ${s.coverage? `<span class="sm-result-tag">${s.coverage}</span>` : ''}
+          ${matchTags.map(t=>`<span class="sm-result-tag match">${t}</span>`).join('')}
+        </div>
+        ${reasons.length ? `<div class="sm-result-reasons"><b>Why this matches:</b> ${reasons.join(' · ')}</div>` : ''}
+        ${s.deadline?`<div style="font-size:.78rem;color:#5A6478;margin-top:8px;">📅 <b>Deadline:</b> ${s.deadline}</div>`:''}
+        <div class="sm-result-actions">
+          ${s.apply_url ? `<a class="sm-result-btn" href="${s.apply_url}" target="_blank" rel="noopener">Apply / Details →</a>` : ''}
+          <button class="sm-result-btn outline" onclick="navigator.clipboard.writeText('${(s.apply_url||s.title).replace(/'/g,'')}').then(()=>{this.textContent='✓ Copied';setTimeout(()=>this.textContent='🔗 Copy Link',1500);})">🔗 Copy Link</button>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ════════════════════════════════════════════
