@@ -2361,6 +2361,136 @@
 </div>
 
 <!-- MERIT AGGREGATE CALCULATOR -->
+<style>
+  /* Khoobsurat Merit Calculator styling */
+  #meritCalcOverlay .fee-modal { max-width: 540px; }
+  #mcFormulaBox{
+    display:none;
+    background:linear-gradient(135deg,#E8F8EE 0%,#F0FBF4 100%);
+    border:1px solid #B8E6C9;
+    border-left:4px solid #00C853;
+    padding:14px 18px; border-radius:10px;
+    margin:0 0 20px; font-size:.85rem; color:#1A4D2E;
+    box-shadow:0 2px 8px rgba(0,200,83,.08);
+  }
+  #mcFormulaBox strong{ color:#00723B; font-weight:800; }
+  #mcFormulaBox em{ color:#5A6478; font-style:italic; }
+  .mc-input-card{
+    background:#F8FAFC; border:1.5px solid #E5EAF0;
+    padding:12px 14px; border-radius:10px; margin-bottom:12px;
+    transition:border-color .2s,background .2s;
+  }
+  .mc-input-card:focus-within{ border-color:#00C853; background:#fff; }
+  .mc-input-card label{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:.78rem; font-weight:700; color:#0A1628;
+    text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px;
+  }
+  .mc-input-card .mc-max{
+    background:#0A1628; color:#00C853; padding:3px 10px;
+    border-radius:20px; font-size:.72rem; font-weight:800; letter-spacing:0;
+  }
+  .mc-input-card input{
+    width:100%; border:none; background:transparent; outline:none;
+    font-size:1.4rem; font-weight:800; color:#0A1628;
+    font-family:inherit; padding:4px 0;
+  }
+  .mc-input-card .mc-pct{
+    font-size:.74rem; color:#5A6478; margin-top:4px;
+  }
+  .mc-input-card .mc-pct b{ color:#00A040; }
+  .mc-input-card .mc-bar{
+    height:4px; background:#E5EAF0; border-radius:2px; margin-top:6px; overflow:hidden;
+  }
+  .mc-input-card .mc-bar > span{
+    display:block; height:100%; background:linear-gradient(90deg,#00C853,#00A040);
+    border-radius:2px; transition:width .3s;
+  }
+
+  /* RESULT card — premium look */
+  .mc-result{
+    margin-top:22px; border-radius:16px; overflow:hidden;
+    box-shadow:0 8px 24px rgba(10,22,40,.12);
+    display:none;
+  }
+  .mc-result.show{ display:block; animation:mcSlideUp .4s ease; }
+  @keyframes mcSlideUp{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+  .mc-result-head{
+    background:linear-gradient(135deg,#0A1628 0%,#1a2942 100%);
+    color:#fff; padding:24px 22px 20px; text-align:center;
+    position:relative; overflow:hidden;
+  }
+  .mc-result-head::before{
+    content:''; position:absolute; top:-40%; right:-20%; width:200px; height:200px;
+    background:radial-gradient(circle,rgba(0,200,83,.25) 0%,transparent 70%); pointer-events:none;
+  }
+  .mc-result-lbl{
+    font-size:.7rem; font-weight:800; letter-spacing:.15em;
+    text-transform:uppercase; color:rgba(255,255,255,.55); margin-bottom:6px;
+  }
+  .mc-result-num{
+    font-size:3.5rem; font-weight:900; line-height:1; letter-spacing:-.02em;
+    background:linear-gradient(135deg,#00E66E,#00C853);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .mc-result-num.borderline{ background:linear-gradient(135deg,#FFB74D,#FFA726); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .mc-result-num.reach{ background:linear-gradient(135deg,#EF5350,#E53935); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .mc-result-num.good{ background:linear-gradient(135deg,#64B5F6,#42A5F5); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .mc-result-suffix{
+    font-size:1rem; color:rgba(255,255,255,.5); margin-top:4px;
+  }
+  .mc-verdict{
+    display:inline-flex; align-items:center; gap:8px;
+    margin-top:14px; padding:8px 18px; border-radius:30px;
+    font-weight:800; font-size:.88rem;
+    background:rgba(255,255,255,.1); backdrop-filter:blur(10px);
+  }
+  .mc-verdict.strong  { background:rgba(0,230,118,.18); color:#00E66E; }
+  .mc-verdict.good    { background:rgba(66,165,245,.18); color:#64B5F6; }
+  .mc-verdict.border  { background:rgba(255,167,38,.18); color:#FFB74D; }
+  .mc-verdict.reach   { background:rgba(239,83,80,.18); color:#EF5350; }
+
+  .mc-breakdown{ background:#fff; padding:20px 22px; }
+  .mc-bd-title{
+    font-size:.7rem; font-weight:800; letter-spacing:.15em;
+    text-transform:uppercase; color:#5A6478; margin-bottom:14px;
+  }
+  .mc-bd-row{
+    display:flex; align-items:center; gap:14px;
+    padding:12px 0; border-bottom:1px dashed #E8ECF2;
+  }
+  .mc-bd-row:last-child{ border-bottom:none; }
+  .mc-bd-icon{
+    width:42px; height:42px; flex-shrink:0;
+    border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:1.3rem;
+  }
+  .mc-bd-icon.matric{ background:linear-gradient(135deg,#E3F2FD,#BBDEFB); }
+  .mc-bd-icon.fsc{    background:linear-gradient(135deg,#E8F5E9,#C8E6C9); }
+  .mc-bd-icon.test{   background:linear-gradient(135deg,#FFF3E0,#FFE0B2); }
+  .mc-bd-info{ flex:1; min-width:0; }
+  .mc-bd-info .mc-bd-name{ font-weight:800; font-size:.92rem; color:#0A1628; }
+  .mc-bd-info .mc-bd-detail{ font-size:.76rem; color:#5A6478; margin-top:2px; }
+  .mc-bd-contrib{
+    font-weight:900; font-size:1.1rem; color:#00A040;
+    flex-shrink:0; text-align:right;
+  }
+  .mc-bd-contrib small{ display:block; font-size:.65rem; color:#9BA5B5; font-weight:600; letter-spacing:.05em; }
+
+  .mc-last-merit{
+    margin-top:16px; padding:12px 14px;
+    background:#F5F7FA; border-radius:10px;
+    font-size:.82rem; color:#5A6478; text-align:center;
+  }
+  .mc-last-merit b{ color:#0A1628; }
+
+  @media(max-width:520px){
+    .mc-result-num{ font-size:2.8rem; }
+    .mc-bd-icon{ width:36px; height:36px; font-size:1.1rem; }
+    .mc-bd-info .mc-bd-name{ font-size:.85rem; }
+    .mc-bd-contrib{ font-size:1rem; }
+  }
+</style>
 <div class="fee-overlay" id="meritCalcOverlay" onclick="if(event.target===this)closeMeritCalc()">
   <div class="fee-modal">
     <button class="predictor-close" onclick="closeMeritCalc()">✕</button>
@@ -2372,30 +2502,41 @@
         <option value="">— Choose a university —</option>
       </select>
     </div>
-    <div id="mcFormulaBox" style="display:none;background:#F5F7FA;border-left:3px solid #00C853;padding:10px 14px;border-radius:6px;margin:0 0 16px;font-size:.82rem;color:#5A6478;">
-      <strong style="color:#0A1628;">Formula:</strong> <span id="mcFormulaText"></span>
+    <div id="mcFormulaBox">
+      <strong>📋 Formula:</strong> <span id="mcFormulaText"></span>
     </div>
-    <div class="fee-field" id="mcMatricRow" style="display:none;">
-      <label>Matric Marks <span class="fee-val"><span id="mcMatricObt">0</span> / <span id="mcMatricMax">1100</span></span></label>
-      <input type="number" id="mcMatricInput" min="0" placeholder="e.g. 950" oninput="document.getElementById('mcMatricObt').textContent=this.value||0; calculateMerit();">
+    <div class="mc-input-card" id="mcMatricRow" style="display:none;">
+      <label>📘 Matric Marks <span class="mc-max">/ <span id="mcMatricMax">1100</span></span></label>
+      <input type="number" id="mcMatricInput" min="0" placeholder="e.g. 950" oninput="calculateMerit()">
+      <div class="mc-pct"><b id="mcMatricPctTxt">0%</b> of total</div>
+      <div class="mc-bar"><span id="mcMatricBar" style="width:0%"></span></div>
     </div>
-    <div class="fee-field" id="mcFscRow" style="display:none;">
-      <label>FSc / Intermediate Marks <span class="fee-val"><span id="mcFscObt">0</span> / <span id="mcFscMax">1100</span></span></label>
-      <input type="number" id="mcFscInput" min="0" placeholder="e.g. 920" oninput="document.getElementById('mcFscObt').textContent=this.value||0; calculateMerit();">
+    <div class="mc-input-card" id="mcFscRow" style="display:none;">
+      <label>📗 FSc / Intermediate Marks <span class="mc-max">/ <span id="mcFscMax">1100</span></span></label>
+      <input type="number" id="mcFscInput" min="0" placeholder="e.g. 920" oninput="calculateMerit()">
+      <div class="mc-pct"><b id="mcFscPctTxt">0%</b> of total</div>
+      <div class="mc-bar"><span id="mcFscBar" style="width:0%"></span></div>
     </div>
-    <div class="fee-field" id="mcTestRow" style="display:none;">
-      <label><span id="mcTestLabel">Entry Test</span> Marks <span class="fee-val"><span id="mcTestObt">0</span> / <span id="mcTestMax">200</span></span></label>
-      <input type="number" id="mcTestInput" min="0" placeholder="e.g. 150" oninput="document.getElementById('mcTestObt').textContent=this.value||0; calculateMerit();">
+    <div class="mc-input-card" id="mcTestRow" style="display:none;">
+      <label>📝 <span id="mcTestLabel">Entry Test</span> Marks <span class="mc-max">/ <span id="mcTestMax">200</span></span></label>
+      <input type="number" id="mcTestInput" min="0" placeholder="e.g. 150" oninput="calculateMerit()">
+      <div class="mc-pct"><b id="mcTestPctTxt">0%</b> of total</div>
+      <div class="mc-bar"><span id="mcTestBar" style="width:0%"></span></div>
     </div>
-    <div class="fee-field" id="mcSatRow" style="display:none;">
-      <label>SAT Score <span class="fee-val"><span id="mcSatObt">0</span> / 1600</span></label>
-      <input type="number" id="mcSatInput" min="400" max="1600" placeholder="e.g. 1200" oninput="document.getElementById('mcSatObt').textContent=this.value||0; calculateMerit();">
+    <div class="mc-input-card" id="mcSatRow" style="display:none;">
+      <label>🎯 SAT Score <span class="mc-max">/ 1600</span></label>
+      <input type="number" id="mcSatInput" min="400" max="1600" placeholder="e.g. 1200" oninput="calculateMerit()">
+      <div class="mc-pct"><b id="mcSatPctTxt">0%</b> of total</div>
+      <div class="mc-bar"><span id="mcSatBar" style="width:0%"></span></div>
     </div>
-    <button class="fee-calc-btn" onclick="calculateMerit()">📊 Calculate My Aggregate</button>
-    <div class="fee-result" id="meritResult">
-      <div class="fee-result-lbl">Your Aggregate</div>
-      <div class="fee-result-total" id="meritTotal">—</div>
-      <div class="fee-breakdown" id="meritBreakdown"></div>
+    <button class="fee-calc-btn" onclick="calculateMerit()" style="margin-top:8px;">📊 Calculate My Aggregate</button>
+    <div class="mc-result" id="meritResult">
+      <div class="mc-result-head">
+        <div class="mc-result-lbl">Your Aggregate</div>
+        <div class="mc-result-num" id="meritTotal">—</div>
+        <div class="mc-verdict" id="meritVerdict"></div>
+      </div>
+      <div class="mc-breakdown" id="meritBreakdown"></div>
     </div>
   </div>
 </div>
@@ -5016,40 +5157,97 @@ function calculateMerit() {
   const isSat = /SAT/i.test(f.test.name);
   const testObt   = parseFloat(document.getElementById(isSat?'mcSatInput':'mcTestInput').value) || 0;
 
-  // Sanity: cap at max
+  // Cap at max
   const matricPct = f.matric ? Math.min(matricObt / f.matric, 1) : 0;
   const fscPct    = f.fsc    ? Math.min(fscObt    / f.fsc,    1) : 0;
   const testMax   = isSat ? 1600 : f.test.max;
   const testPct   = Math.min(testObt   / testMax,   1);
 
-  const agg = (w.matric * matricPct + w.fsc * fscPct + w.test * testPct) * 100;
-
-  // Verdict
-  let verdictColor='#5A6478', verdictLabel='Calculate', verdictIcon='📊';
-  const mlr = f.lastMerit.match(/(\d+(?:\.\d+)?)/g); // extract first number
-  if(mlr){
-    const meritThreshold = parseFloat(mlr[0]);
-    // For NUST NET it's out of 200, scale our % for fair compare
-    const scaled = (f.test.name.includes('NET') && /NET/.test(f.lastMerit))
-      ? (testObt) // already absolute NET score
-      : agg;
-    const target = meritThreshold;
-    if(scaled >= target+5)      { verdictColor='#00C853'; verdictLabel='🎯 Strong Match — Likely Admission'; verdictIcon='✅'; }
-    else if(scaled >= target)   { verdictColor='#42A5F5'; verdictLabel='👍 Good Match — Within Range'; verdictIcon='👍'; }
-    else if(scaled >= target-5) { verdictColor='#FFA726'; verdictLabel='⚠️ Borderline — Apply but Have Backups'; verdictIcon='⚠️'; }
-    else                         { verdictColor='#EF5350'; verdictLabel='📚 Reach — Need Higher Marks';      verdictIcon='📚'; }
+  // Update mini progress bars + % under each input
+  if(w.matric){
+    document.getElementById('mcMatricBar').style.width = (matricPct*100)+'%';
+    document.getElementById('mcMatricPctTxt').textContent = (matricPct*100).toFixed(1)+'%';
+  }
+  if(w.fsc){
+    document.getElementById('mcFscBar').style.width = (fscPct*100)+'%';
+    document.getElementById('mcFscPctTxt').textContent = (fscPct*100).toFixed(1)+'%';
+  }
+  if(w.test){
+    const barId = isSat?'mcSatBar':'mcTestBar';
+    const pctId = isSat?'mcSatPctTxt':'mcTestPctTxt';
+    document.getElementById(barId).style.width = (testPct*100)+'%';
+    document.getElementById(pctId).textContent = (testPct*100).toFixed(1)+'%';
   }
 
-  // Display
-  document.getElementById('meritTotal').innerHTML = `<span style="color:${verdictColor}">${agg.toFixed(2)}%</span>`;
-  const breakdown = [
-    w.matric ? `<div>📘 <b>Matric</b>: ${matricObt}/${f.matric} × ${(w.matric*100).toFixed(0)}% = <b>${(w.matric*matricPct*100).toFixed(2)}</b></div>` : '',
-    w.fsc    ? `<div>📗 <b>FSc</b>: ${fscObt}/${f.fsc} × ${(w.fsc*100).toFixed(0)}% = <b>${(w.fsc*fscPct*100).toFixed(2)}</b></div>` : '',
-    w.test   ? `<div>📝 <b>${f.test.name}</b>: ${testObt}/${testMax} × ${(w.test*100).toFixed(0)}% = <b>${(w.test*testPct*100).toFixed(2)}</b></div>` : '',
-    `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #E8ECF2;color:${verdictColor};font-weight:800;font-size:.95rem;">${verdictLabel}</div>`,
-    `<div style="margin-top:8px;font-size:.78rem;color:#9BA5B5;"><em>Last year closing merit: ${f.lastMerit}</em></div>`
-  ].join('');
-  document.getElementById('meritBreakdown').innerHTML = breakdown;
+  // Aggregate
+  const agg = (w.matric * matricPct + w.fsc * fscPct + w.test * testPct) * 100;
+
+  // Don't show result until at least test is entered
+  const hasInput = matricObt > 0 || fscObt > 0 || testObt > 0;
+  if(!hasInput){ document.getElementById('meritResult').classList.remove('show'); return; }
+
+  // Verdict comparing against last year merit
+  let verdictClass='good', verdictText='Calculating…';
+  const mlr = f.lastMerit.match(/(\d+(?:\.\d+)?)/g);
+  if(mlr){
+    const meritThreshold = parseFloat(mlr[0]);
+    const isNETScore = /NET/.test(f.test.name) && /NET/.test(f.lastMerit);
+    const scaled = isNETScore ? testObt : agg;
+
+    if(scaled >= meritThreshold + 5){ verdictClass='strong'; verdictText='🎯 Strong Match · Likely Admission'; }
+    else if(scaled >= meritThreshold){ verdictClass='good'; verdictText='👍 Good Match · Within Range'; }
+    else if(scaled >= meritThreshold - 5){ verdictClass='border'; verdictText='⚠️ Borderline · Apply with Backups'; }
+    else { verdictClass='reach'; verdictText='📚 Reach · Need Higher Marks'; }
+  }
+
+  // Big number color
+  const numEl = document.getElementById('meritTotal');
+  numEl.className = 'mc-result-num ' + verdictClass;
+  numEl.innerHTML = `${agg.toFixed(2)}<span class="mc-result-suffix">%</span>`;
+
+  // Verdict chip
+  const v = document.getElementById('meritVerdict');
+  v.className = 'mc-verdict ' + verdictClass;
+  v.innerHTML = verdictText;
+
+  // Beautiful breakdown rows
+  const rows = [];
+  if(w.matric){
+    rows.push(`<div class="mc-bd-row">
+      <div class="mc-bd-icon matric">📘</div>
+      <div class="mc-bd-info">
+        <div class="mc-bd-name">Matric / SSC</div>
+        <div class="mc-bd-detail">${matricObt} / ${f.matric} &nbsp;·&nbsp; weight ${(w.matric*100).toFixed(0)}%</div>
+      </div>
+      <div class="mc-bd-contrib">+${(w.matric*matricPct*100).toFixed(2)}<small>POINTS</small></div>
+    </div>`);
+  }
+  if(w.fsc){
+    rows.push(`<div class="mc-bd-row">
+      <div class="mc-bd-icon fsc">📗</div>
+      <div class="mc-bd-info">
+        <div class="mc-bd-name">FSc / Intermediate</div>
+        <div class="mc-bd-detail">${fscObt} / ${f.fsc} &nbsp;·&nbsp; weight ${(w.fsc*100).toFixed(0)}%</div>
+      </div>
+      <div class="mc-bd-contrib">+${(w.fsc*fscPct*100).toFixed(2)}<small>POINTS</small></div>
+    </div>`);
+  }
+  if(w.test){
+    rows.push(`<div class="mc-bd-row">
+      <div class="mc-bd-icon test">📝</div>
+      <div class="mc-bd-info">
+        <div class="mc-bd-name">${f.test.name}</div>
+        <div class="mc-bd-detail">${testObt} / ${testMax} &nbsp;·&nbsp; weight ${(w.test*100).toFixed(0)}%</div>
+      </div>
+      <div class="mc-bd-contrib">+${(w.test*testPct*100).toFixed(2)}<small>POINTS</small></div>
+    </div>`);
+  }
+
+  document.getElementById('meritBreakdown').innerHTML = `
+    <div class="mc-bd-title">Breakdown of your aggregate</div>
+    ${rows.join('')}
+    <div class="mc-last-merit">📊 Last year closing merit at <b>${f.uni}</b>: <b>${f.lastMerit}</b></div>
+  `;
   document.getElementById('meritResult').classList.add('show');
 }
 
