@@ -59,12 +59,33 @@
       padding:0 16px; font-weight:800; cursor:pointer; font-family:inherit; }
     .tpk-chat-input button:disabled{ opacity:.5; cursor:wait; }
     .tpk-disclaimer{ font-size:.65rem; color:#9BA5B5; text-align:center; padding:6px 10px; background:#fff; border-top:1px solid #E8ECF2; }
+    /* Hide FAB when panel is open so it doesn't overlap input */
+    body.tpk-chat-open .tpk-chat-fab,
+    body:has(.tpk-chat-panel.open) .tpk-chat-fab{ display:none; }
+    /* Prevent background scroll when chat fullscreen on mobile */
+    @media(max-width:600px){
+      body.tpk-chat-open{ overflow:hidden; }
+    }
     /* On the university page on mobile a sticky action bar exists at the bottom — lift the FAB above it */
     body.has-sticky .tpk-chat-fab{ bottom:78px; }
     body.has-sticky .tpk-chat-panel{ bottom:148px; }
-    @media(max-width:480px){
-      .tpk-chat-panel{ right:10px; left:10px; bottom:78px; width:auto; max-width:none; height:70vh; }
-      body.has-sticky .tpk-chat-panel{ bottom:140px; height:60vh; }
+    @media(max-width:600px){
+      /* Full-screen chat on mobile — no awkward gaps, no overlap */
+      .tpk-chat-panel{
+        right:0; left:0; bottom:0; top:0;
+        width:100vw; max-width:100vw;
+        height:100vh; max-height:100vh;
+        height:100dvh; max-height:100dvh; /* dynamic viewport — accounts for mobile browser chrome */
+        border-radius:0;
+      }
+      body.has-sticky .tpk-chat-panel{ bottom:0; height:100dvh; }
+      .tpk-chat-head{ padding:12px 14px; padding-top:max(12px, env(safe-area-inset-top)); }
+      .tpk-chat-body{ padding:12px; }
+      .tpk-suggest{ padding:8px 12px; gap:5px; max-height:80px; overflow-x:auto; flex-wrap:nowrap; }
+      .tpk-suggest button{ white-space:nowrap; flex-shrink:0; font-size:.72rem; padding:5px 10px; }
+      .tpk-chat-input{ padding:10px; padding-bottom:max(10px, env(safe-area-inset-bottom)); }
+      .tpk-chat-input textarea{ min-height:40px; font-size:.9rem; }
+      .tpk-disclaimer{ display:none; } /* Save vertical space on mobile */
       .tpk-chat-fab{ right:14px; bottom:14px; width:54px; height:54px; font-size:1.4rem; }
     }
   `;
@@ -112,8 +133,16 @@
   const send  = panel.querySelector('#tpkSend');
   const suggestEl = panel.querySelector('#tpkSuggest');
 
-  function open(){ panel.classList.add('open'); document.getElementById('tpkUnreadBadge').style.display='none'; setTimeout(()=>input.focus(),100); }
-  function close(){ panel.classList.remove('open'); }
+  function open(){
+    panel.classList.add('open');
+    document.body.classList.add('tpk-chat-open');
+    document.getElementById('tpkUnreadBadge').style.display='none';
+    setTimeout(()=>input.focus(),100);
+  }
+  function close(){
+    panel.classList.remove('open');
+    document.body.classList.remove('tpk-chat-open');
+  }
   fab.addEventListener('click', ()=> panel.classList.contains('open') ? close() : open());
   panel.querySelector('.tpk-chat-x').addEventListener('click', close);
 
