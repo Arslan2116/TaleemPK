@@ -745,14 +745,37 @@
     .cmp-h2{ font-size:1.25rem; }
   }
 
-  /* Print / PDF styling */
+  /* Print / PDF styling — only the compare modal, nothing else */
   @media print{
-    nav, footer, .modal-close, .cmp-actions, .cmp-remove, .nav-actions, .tools-bar,
-    .predictor-banner, .compare-bar, .filter-section, .tpk-chat-fab, .tpk-chat-panel { display:none !important; }
-    .modal-overlay{ position:static !important; background:#fff !important; }
-    .modal{ box-shadow:none !important; max-width:none !important; width:100% !important; padding:20px !important; }
-    .cmp-card{ break-inside:avoid; }
-    .cmp-cat{ break-inside:avoid; }
+    /* When printing-compare class is on body, hide everything EXCEPT the compare modal */
+    body.printing-compare > *:not(#compareModalOverlay){ display:none !important; }
+    body.printing-compare{ background:#fff !important; overflow:visible !important; }
+    body.printing-compare #compareModalOverlay{
+      display:block !important; position:static !important;
+      background:#fff !important; padding:0 !important;
+      overflow:visible !important; height:auto !important;
+    }
+    body.printing-compare #compareModal{
+      box-shadow:none !important; max-width:100% !important;
+      width:100% !important; padding:20px !important;
+      margin:0 !important; overflow:visible !important;
+      max-height:none !important; height:auto !important;
+    }
+    body.printing-compare .modal-close,
+    body.printing-compare .cmp-actions,
+    body.printing-compare .cmp-remove,
+    body.printing-compare .tpk-chat-fab,
+    body.printing-compare .tpk-chat-panel{ display:none !important; }
+    body.printing-compare .cmp-card{ break-inside:avoid; page-break-inside:avoid; }
+    body.printing-compare .cmp-cat{ break-inside:avoid; page-break-inside:avoid; }
+    body.printing-compare .cmp-row{ break-inside:avoid; page-break-inside:avoid; }
+    /* Add header for printed page */
+    body.printing-compare #compareModal::before{
+      content:'TaleemPK · University Comparison · taleempk.pk';
+      display:block; text-align:center; font-size:.75rem;
+      color:#5A6478; padding-bottom:14px; margin-bottom:18px;
+      border-bottom:1px solid #E8ECF2;
+    }
   }
 
   /* Legacy compare grid kept for fallback */
@@ -6475,7 +6498,7 @@ function openCompareModal() {
       </div>
       <div class="cmp-actions">
         <button class="cmp-action-btn" onclick="shareCompareUrl()" title="Copy share link">🔗 Share</button>
-        <button class="cmp-action-btn" onclick="window.print()" title="Print or Save as PDF">🖨️ Print/PDF</button>
+        <button class="cmp-action-btn" onclick="printCompare()" title="Print or Save as PDF">🖨️ Print/PDF</button>
       </div>
     </div>
 
@@ -6545,6 +6568,20 @@ function openCompareModal() {
 // Helper: safe slug
 function toSlugSafe(name){
   return (name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+// Print/PDF the comparison — temporarily isolates the modal so nothing else prints
+function printCompare(){
+  document.body.classList.add('printing-compare');
+  // Ensure layout settles before triggering print dialog
+  setTimeout(()=>{
+    window.print();
+    // Remove class after dialog closes (works for both Print and Cancel)
+    setTimeout(()=>document.body.classList.remove('printing-compare'), 200);
+  }, 60);
+  // Safety net: also clean up when window regains focus
+  const cleanup = ()=>{ document.body.classList.remove('printing-compare'); window.removeEventListener('focus', cleanup); };
+  window.addEventListener('focus', cleanup);
 }
 
 // Share comparison link
