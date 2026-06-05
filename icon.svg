@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0A1628"/>
+      <stop offset="100%" stop-color="#112240"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.3" cy="0.3" r="0.7">
+      <stop offset="0%" stop-color="#00C853" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#00C853" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Rounded square background (works as maskable too — keeps important content centred) -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="96" fill="url(#glow)"/>
+
+  <!-- Big T mark -->
+  <g transform="translate(256,256)">
+    <!-- White rounded card behind T -->
+    <rect x="-130" y="-130" width="260" height="260" rx="56" fill="#ffffff"/>
+    <!-- The T -->
+    <text x="0" y="62" text-anchor="middle"
+          font-family="Sora, Inter, Arial, sans-serif"
+          font-weight="900"
+          font-size="240"
+          fill="#0A1628"
+          letter-spacing="-8">T</text>
+    <!-- Green accent under T -->
+    <rect x="-72" y="100" width="144" height="14" rx="7" fill="#00C853"/>
+  </g>
+</svg>

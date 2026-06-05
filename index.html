@@ -1950,6 +1950,10 @@
         <button onclick="toggleShortlistFilter();closeNavDropdown()">
           <span class="ndm-icon">❤️</span> My Shortlist
         </button>
+        <div class="nav-dropdown-divider"></div>
+        <button id="tpkInstallBtn" onclick="tpkInstall();closeNavDropdown()">
+          <span class="ndm-icon">📲</span> Install App
+        </button>
       </div>
     </li>
 
@@ -7334,16 +7338,46 @@ if ('serviceWorker' in navigator) {
 
 // ─── PWA Install Prompt ───
 let _deferredInstallPrompt = null;
+let _isAlreadyInstalled = window.matchMedia('(display-mode: standalone)').matches
+                       || window.navigator.standalone === true;
+
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   _deferredInstallPrompt = e;
-  // Surface a subtle "Install app" button on the page (only once per session)
-  if (!sessionStorage.getItem('tpk_install_dismissed')) {
-    setTimeout(showInstallPrompt, 12000); // after 12s of engagement
+  // Surface a subtle "Install app" toast after some engagement
+  if (!sessionStorage.getItem('tpk_install_dismissed') && !_isAlreadyInstalled) {
+    setTimeout(showInstallPrompt, 8000);
   }
+  // Also reveal the always-on Install button in the nav
+  const btn = document.getElementById('tpkInstallBtn');
+  if (btn) btn.style.display = 'inline-flex';
 });
+window.addEventListener('appinstalled', () => {
+  _deferredInstallPrompt = null;
+  _isAlreadyInstalled = true;
+  const btn = document.getElementById('tpkInstallBtn');
+  if (btn) btn.style.display = 'none';
+  const toast = document.getElementById('tpkInstallToast');
+  if (toast) toast.remove();
+});
+
+// User explicitly clicked an install button somewhere
+window.tpkInstall = async function(){
+  if (_deferredInstallPrompt) {
+    _deferredInstallPrompt.prompt();
+    const { outcome } = await _deferredInstallPrompt.userChoice;
+    if (outcome === 'dismissed') sessionStorage.setItem('tpk_install_dismissed','1');
+    _deferredInstallPrompt = null;
+    const btn = document.getElementById('tpkInstallBtn');
+    if (btn) btn.style.display = 'none';
+  } else {
+    // No native prompt — show "Add to Home Screen" instructions
+    showInstallInstructions();
+  }
+};
+
 function showInstallPrompt(){
-  if (!_deferredInstallPrompt || document.getElementById('tpkInstallToast')) return;
+  if (!_deferredInstallPrompt || document.getElementById('tpkInstallToast') || _isAlreadyInstalled) return;
   const t = document.createElement('div');
   t.id = 'tpkInstallToast';
   t.style.cssText = 'position:fixed;bottom:90px;left:20px;right:20px;max-width:380px;margin:0 auto;background:#0A1628;color:#fff;padding:14px 16px;border-radius:14px;box-shadow:0 12px 30px rgba(10,22,40,.35);z-index:950;display:flex;gap:12px;align-items:center;font-family:Sora,sans-serif;animation:tpkSlide .3s';
@@ -7355,19 +7389,58 @@ function showInstallPrompt(){
     <button id="tpkInstallYes" style="background:#00C853;color:#0A1628;border:none;border-radius:9px;padding:8px 12px;font-weight:800;font-size:.78rem;cursor:pointer;font-family:inherit;">Install</button>
     <button id="tpkInstallNo" style="background:transparent;color:#9BA5B5;border:none;font-size:1.2rem;cursor:pointer;padding:4px;">×</button>`;
   document.body.appendChild(t);
-  document.getElementById('tpkInstallYes').onclick = async () => {
-    t.remove();
-    if (!_deferredInstallPrompt) return;
-    _deferredInstallPrompt.prompt();
-    const { outcome } = await _deferredInstallPrompt.userChoice;
-    if (outcome === 'dismissed') sessionStorage.setItem('tpk_install_dismissed','1');
-    _deferredInstallPrompt = null;
-  };
-  document.getElementById('tpkInstallNo').onclick = () => {
-    t.remove();
-    sessionStorage.setItem('tpk_install_dismissed','1');
-  };
+  document.getElementById('tpkInstallYes').onclick = () => { t.remove(); tpkInstall(); };
+  document.getElementById('tpkInstallNo').onclick = () => { t.remove(); sessionStorage.setItem('tpk_install_dismissed','1'); };
 }
+
+function showInstallInstructions(){
+  if (document.getElementById('tpkInstallHelp')) return;
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  const isAndroid = /Android/.test(ua);
+  const isFirefox = /Firefox/.test(ua);
+  const isSafari = /Safari/.test(ua) && !/Chrome|Chromium|Edg/.test(ua);
+
+  let steps = '';
+  if (isIOS && isSafari) {
+    steps = `<ol style="margin:0 0 0 22px;padding:0;line-height:1.7;">
+      <li>Tap the <b>Share</b> button at the bottom of Safari (▢↑)</li>
+      <li>Scroll and tap <b>"Add to Home Screen"</b></li>
+      <li>Tap <b>"Add"</b> top right</li>
+    </ol>`;
+  } else if (isAndroid) {
+    steps = `<ol style="margin:0 0 0 22px;padding:0;line-height:1.7;">
+      <li>Tap the <b>3-dot menu</b> top-right of Chrome</li>
+      <li>Tap <b>"Install app"</b> or <b>"Add to Home screen"</b></li>
+      <li>Confirm <b>"Install"</b></li>
+    </ol>`;
+  } else if (isFirefox) {
+    steps = `<p>Firefox on desktop doesn't yet show install dialogs.<br>Use <b>Chrome</b>, <b>Edge</b>, or <b>Brave</b> to install TaleemPK as an app, or simply bookmark this page.</p>`;
+  } else {
+    steps = `<ol style="margin:0 0 0 22px;padding:0;line-height:1.7;">
+      <li>Look at the <b>address bar</b> — click the <b>install icon (⊕)</b> on the right</li>
+      <li>Or open the <b>3-dot menu → Install TaleemPK</b></li>
+      <li>Confirm <b>"Install"</b></li>
+    </ol>
+    <p style="margin-top:10px;opacity:.7;font-size:.78rem;">Note: Some browsers only show this option after you've visited the site a couple of times.</p>`;
+  }
+
+  const m = document.createElement('div');
+  m.id = 'tpkInstallHelp';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(10,22,40,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:18px;font-family:Sora,sans-serif;';
+  m.innerHTML = `<div style="background:#fff;border-radius:18px;padding:24px;max-width:420px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <div style="font-size:1.8rem;">📲</div>
+      <h3 style="margin:0;font-size:1.1rem;color:#0A1628;">Install TaleemPK</h3>
+      <button style="margin-left:auto;background:none;border:none;font-size:1.4rem;color:#9BA5B5;cursor:pointer;" onclick="document.getElementById('tpkInstallHelp').remove()">×</button>
+    </div>
+    <p style="color:#5A6478;font-size:.86rem;margin:0 0 14px;">Install us as an app for faster access and offline use:</p>
+    <div style="background:#F5F7FA;border-radius:10px;padding:14px;color:#0A1628;font-size:.86rem;">${steps}</div>
+  </div>`;
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  document.body.appendChild(m);
+}
+
 const _tpkSlideKf = document.createElement('style');
 _tpkSlideKf.textContent = '@keyframes tpkSlide{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}';
 document.head.appendChild(_tpkSlideKf);
