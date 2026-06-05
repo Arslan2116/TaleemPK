@@ -1,0 +1,66 @@
+{
+  "name": "TaleemPK — Pakistan University Comparison",
+  "short_name": "TaleemPK",
+  "description": "Compare fees, merit lists, programs and admissions of 218 Pakistani universities. Free admission predictor, merit calculator, and scholarship matcher.",
+  "start_url": "/?utm_source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0A1628",
+  "theme_color": "#0A1628",
+  "lang": "en-PK",
+  "dir": "ltr",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Admission Predictor",
+      "short_name": "Predictor",
+      "description": "Find universities you can get into based on your percentage",
+      "url": "/?action=predictor&utm_source=pwa_shortcut",
+      "icons": [{ "src": "/favicon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Merit Calculator",
+      "short_name": "Merit",
+      "description": "Calculate your aggregate for any university",
+      "url": "/?action=merit&utm_source=pwa_shortcut",
+      "icons": [{ "src": "/favicon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Scholarships",
+      "short_name": "Scholarships",
+      "description": "Find matching scholarships",
+      "url": "/?action=scholarships&utm_source=pwa_shortcut",
+      "icons": [{ "src": "/favicon.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "label": "TaleemPK homepage with 218 universities"
+    }
+  ],
+  "prefer_related_applications": false
+}

@@ -82,15 +82,18 @@
 <!-- Replace content value with your verification code from Search Console -->
 <!-- <meta name="google-site-verification" content="PASTE_YOUR_CODE_HERE"> -->
 
-<!-- ═══ FAVICON ═══ -->
-<!-- Favicon (square TaleemPK "T" mark, multiple sizes for all browsers + iOS/Android home-screen) -->
+<!-- ═══ FAVICON + PWA ═══ -->
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
 <link rel="shortcut icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="favicon.png">
+<link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0A1628">
 <meta name="msapplication-TileColor" content="#0A1628">
 <meta name="apple-mobile-web-app-title" content="TaleemPK">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 
 <!-- Preconnect for faster font loading -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -5961,13 +5964,29 @@ function buildProgramIndex(){
 async function loadRatingAggregates(){
   if(!sbClient) return;
   try{
-    const { data, error } = await sbClient.from('reviews').select('institution_id,rating');
+    // Fast path: read tiny materialized view (one row per institution).
+    // Old code pulled every review row just to compute averages — O(reviews)
+    // network cost on every homepage hit.
+    const { data, error } = await sbClient.from('review_aggregates')
+      .select('institution_id,review_count,avg_rating');
     if(error) throw error;
-    const agg={};
-    (data||[]).forEach(r=>{ const a=agg[r.institution_id]||(agg[r.institution_id]={sum:0,count:0}); a.sum+=r.rating; a.count++; });
     Object.keys(RATING_AGG).forEach(k=>delete RATING_AGG[k]);
-    Object.assign(RATING_AGG, agg);
-  }catch(e){}
+    (data||[]).forEach(r=>{
+      RATING_AGG[r.institution_id] = {
+        sum: (r.avg_rating || 0) * (r.review_count || 0),
+        count: r.review_count || 0
+      };
+    });
+  }catch(e){
+    // Fallback to direct count if the view isn't deployed yet
+    try{
+      const { data } = await sbClient.from('reviews').select('institution_id,rating');
+      const agg={};
+      (data||[]).forEach(r=>{ const a=agg[r.institution_id]||(agg[r.institution_id]={sum:0,count:0}); a.sum+=r.rating; a.count++; });
+      Object.keys(RATING_AGG).forEach(k=>delete RATING_AGG[k]);
+      Object.assign(RATING_AGG, agg);
+    }catch(_){}
+  }
 }
 
 let _rvStar = 0, _rvCat = '';
@@ -6002,12 +6021,28 @@ async function submitReview(uniId) {
   toggleReviewForm(uniId);
   await loadReviews(uniId);
 }
-function markHelpful(uniId, rvId) {
+async function markHelpful(uniId, rvId) {
+  if(!currentUser){ openAuthModal('login'); return; }
+  // Optimistic update for instant feedback
   const arr = getReviews(uniId);
   const r = arr.find(x=>x.id===rvId);
-  if(r) r.helpful=(r.helpful||0)+1;
+  const prev = r ? (r.helpful||0) : 0;
+  if(r) r.helpful = prev + 1;
   const el = document.getElementById('rvHelpful-'+rvId);
   if(el) el.textContent = '👍 Helpful (' + (r?r.helpful:1) + ')';
+  // Persist via RPC (one vote per user, idempotent)
+  if(sbClient){
+    try{
+      const { data, error } = await sbClient.rpc('mark_helpful', { rv_id: rvId });
+      if(error) throw error;
+      if(r && typeof data === 'number'){ r.helpful = data; }
+      if(el) el.textContent = '👍 Helpful (' + (r?r.helpful:1) + ')';
+    }catch(e){
+      // Roll back the optimistic update so the UI matches reality
+      if(r) r.helpful = prev;
+      if(el) el.textContent = '👍 Helpful' + (prev?' ('+prev+')':'');
+    }
+  }
 }
 function starsHTML(n, total=5) {
   return Array.from({length:total},(_,i)=>i<n?'⭐':'☆').join('');
@@ -6174,12 +6209,28 @@ async function submitAnswer(uniId, qId) {
   await loadQA(uniId);
   const it=document.getElementById('qaItem-'+qId); if(it) it.classList.add('open');
 }
-function voteAnswer(uniId, qId, ansId) {
+async function voteAnswer(uniId, qId, ansId) {
+  if(!currentUser){ openAuthModal('login'); return; }
+  // Optimistic update
   const q = getQA(uniId).find(x=>x.id===qId);
   const ans = q && q.answers.find(a=>a.id===ansId);
-  if(ans){ ans.votes=(ans.votes||0)+1; }
+  const prev = ans ? (ans.votes||0) : 0;
+  if(ans){ ans.votes = prev + 1; }
   const el = document.getElementById('qaVote-'+ansId);
   if(el) el.textContent = '▲ ' + (ans?ans.votes:1);
+  // Persist via RPC
+  if(sbClient){
+    try{
+      const { data, error } = await sbClient.rpc('vote_answer', { ans_id: ansId });
+      if(error) throw error;
+      if(ans && typeof data === 'number'){ ans.votes = data; }
+      if(el) el.textContent = '▲ ' + (ans?ans.votes:1);
+    }catch(e){
+      // Roll back if RPC failed
+      if(ans) ans.votes = prev;
+      if(el) el.textContent = '▲ ' + prev;
+    }
+  }
 }
 function buildQAHTML(uniId) {
   const questions = getQA(uniId);
@@ -7261,6 +7312,65 @@ async function loadInstitutions(){
     return false;
   }
 }
+
+// ─── PWA: register service worker for offline + install ───
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .then(reg => {
+        // Refresh page when a new SW takes over so users see the latest code
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (refreshing) return;
+          refreshing = true;
+          window.location.reload();
+        });
+        // Check for updates every 30 minutes (user keeps tab open)
+        setInterval(() => reg.update().catch(()=>{}), 30 * 60 * 1000);
+      })
+      .catch(err => console.warn('SW registration failed:', err.message));
+  });
+}
+
+// ─── PWA Install Prompt ───
+let _deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  // Surface a subtle "Install app" button on the page (only once per session)
+  if (!sessionStorage.getItem('tpk_install_dismissed')) {
+    setTimeout(showInstallPrompt, 12000); // after 12s of engagement
+  }
+});
+function showInstallPrompt(){
+  if (!_deferredInstallPrompt || document.getElementById('tpkInstallToast')) return;
+  const t = document.createElement('div');
+  t.id = 'tpkInstallToast';
+  t.style.cssText = 'position:fixed;bottom:90px;left:20px;right:20px;max-width:380px;margin:0 auto;background:#0A1628;color:#fff;padding:14px 16px;border-radius:14px;box-shadow:0 12px 30px rgba(10,22,40,.35);z-index:950;display:flex;gap:12px;align-items:center;font-family:Sora,sans-serif;animation:tpkSlide .3s';
+  t.innerHTML = `<div style="font-size:1.8rem;">📲</div>
+    <div style="flex:1;font-size:.84rem;line-height:1.35;">
+      <b>Install TaleemPK</b><br>
+      <span style="opacity:.7;font-size:.78rem;">Faster access, works offline, no app store needed.</span>
+    </div>
+    <button id="tpkInstallYes" style="background:#00C853;color:#0A1628;border:none;border-radius:9px;padding:8px 12px;font-weight:800;font-size:.78rem;cursor:pointer;font-family:inherit;">Install</button>
+    <button id="tpkInstallNo" style="background:transparent;color:#9BA5B5;border:none;font-size:1.2rem;cursor:pointer;padding:4px;">×</button>`;
+  document.body.appendChild(t);
+  document.getElementById('tpkInstallYes').onclick = async () => {
+    t.remove();
+    if (!_deferredInstallPrompt) return;
+    _deferredInstallPrompt.prompt();
+    const { outcome } = await _deferredInstallPrompt.userChoice;
+    if (outcome === 'dismissed') sessionStorage.setItem('tpk_install_dismissed','1');
+    _deferredInstallPrompt = null;
+  };
+  document.getElementById('tpkInstallNo').onclick = () => {
+    t.remove();
+    sessionStorage.setItem('tpk_install_dismissed','1');
+  };
+}
+const _tpkSlideKf = document.createElement('style');
+_tpkSlideKf.textContent = '@keyframes tpkSlide{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}';
+document.head.appendChild(_tpkSlideKf);
 
 (async function initApp(){
   initAuth();

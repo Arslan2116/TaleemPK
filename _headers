@@ -28,3 +28,11 @@
   Cache-Control: public, max-age=3600
 /robots.txt
   Cache-Control: public, max-age=86400
+
+# ─── PWA — service worker must never be cached by the browser ───
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  Service-Worker-Allowed: /
+/manifest.json
+  Cache-Control: public, max-age=3600
+  Content-Type: application/manifest+json
