@@ -284,7 +284,14 @@
     animation: fadeInDown 0.6s ease both;
     letter-spacing:0.3px;
   }
-  .hero-badge::before { content:'🎓'; font-size:0.9rem; }
+  .hero-badge::before {
+    content: '';
+    display: inline-block; width: 14px; height: 14px;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z'/%3E%3Cpath d='M22 10v6'/%3E%3Cpath d='M6 12.5V16a6 3 0 0 0 12 0v-3.5'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z'/%3E%3Cpath d='M22 10v6'/%3E%3Cpath d='M6 12.5V16a6 3 0 0 0 12 0v-3.5'/%3E%3C/svg%3E") center/contain no-repeat;
+    margin-right: 4px;
+  }
   .hero h1 {
     font-size: clamp(2.4rem, 5.5vw, 4.2rem);
     font-weight:800; color: var(--white); line-height:1.12;
@@ -381,7 +388,12 @@
     border-right:1px solid rgba(255,255,255,0.06);
   }
   .stat:last-child { border-right:none; }
-  .stat-icon { font-size:1.3rem; margin-bottom:6px; }
+  .stat-icon {
+    font-size:1.3rem; margin-bottom:8px;
+    width:36px; height:36px; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,200,83,0.12); border-radius:10px; color:var(--green);
+  }
+  .stat-icon .tpk-ic { vertical-align:0; }
   .stat-num { font-size:1.9rem; font-weight:800; color:var(--green); line-height:1; }
   .stat-label { font-size:0.75rem; color:rgba(255,255,255,0.6); margin-top:5px; font-weight:500; }
   /* hero scroll arrow */
@@ -1068,7 +1080,12 @@
     transition:all 0.3s;
   }
   .about-value-card:hover { border-color:var(--green); transform:translateY(-4px); box-shadow:var(--shadow-md); }
-  .about-value-icon { font-size:2rem; margin-bottom:14px; }
+  .about-value-icon {
+    font-size:2rem; margin-bottom:14px;
+    width:56px; height:56px; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,200,83,0.12); border-radius:14px; color:var(--green);
+  }
+  .about-value-icon .tpk-ic { vertical-align:0; }
   .about-value-title { font-size:1rem; font-weight:700; color:var(--navy); margin-bottom:8px; }
   .about-value-desc { font-size:0.85rem; color:var(--gray-600); line-height:1.7; }
   .about-team {
@@ -1952,7 +1969,7 @@
 <!-- NAV -->
 <nav>
   <a href="#" class="nav-logo" onclick="closeAboutPage();closeBlogPage();closeScholarshipsPage();window.scrollTo({top:0,behavior:'smooth'});return false">
-    <div class="logo-icon">🎓</div>
+    <div class="logo-icon"><span data-icon="graduationCap" data-size="20"></span></div>
     Taleem<span>PK</span>
   </a>
   <ul class="nav-links">
@@ -2013,10 +2030,10 @@
     <button class="hero-chip" onclick="filterUnis('private',document.querySelector('.filter-btn:nth-child(4)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="briefcase" data-size="14"></span> Private</button>
   </div>
   <div class="hero-stats">
-    <div class="stat"><div class="stat-icon">🏫</div><div class="stat-num" id="statUnis">218</div><div class="stat-label">HEC Universities</div></div>
-    <div class="stat"><div class="stat-icon">📚</div><div class="stat-num" id="statProgs">260+</div><div class="stat-label">Programs Listed</div></div>
-    <div class="stat"><div class="stat-icon">🆓</div><div class="stat-num">100%</div><div class="stat-label">Free to Use</div></div>
-    <div class="stat"><div class="stat-icon">📍</div><div class="stat-num" id="statCities">70+</div><div class="stat-label">Cities Covered</div></div>
+    <div class="stat"><div class="stat-icon"><span data-icon="building2" data-size="22"></span></div><div class="stat-num" id="statUnis">218</div><div class="stat-label">HEC Universities</div></div>
+    <div class="stat"><div class="stat-icon"><span data-icon="bookOpen" data-size="22"></span></div><div class="stat-num" id="statProgs">260+</div><div class="stat-label">Programs Listed</div></div>
+    <div class="stat"><div class="stat-icon"><span data-icon="check" data-size="22"></span></div><div class="stat-num">100%</div><div class="stat-label">Free to Use</div></div>
+    <div class="stat"><div class="stat-icon"><span data-icon="mapPin" data-size="22"></span></div><div class="stat-num" id="statCities">70+</div><div class="stat-label">Cities Covered</div></div>
   </div>
   <a class="hero-scroll" href="#universities"><span>↓</span>Explore Universities</a>
 </section>
@@ -2039,20 +2056,20 @@
     <button class="filter-btn" onclick="filterUnis('ajk', this)" data-i18n="filter_ajk">🏞️ AJK</button>
     <button class="filter-btn" onclick="filterUnis('gilgitbaltistan', this)" data-i18n="filter_gb">⛰️ GB</button>
     <select id="cityFilter" class="city-filter" onchange="filterByCity(this.value)" aria-label="Filter by city">
-      <option value="">📍 All Cities</option>
+      <option value="">All Cities</option>
     </select>
     <select id="programFilter" class="city-filter" onchange="filterByProgram(this.value)" aria-label="Filter by program">
-      <option value="">🎓 All Programs</option>
+      <option value="">All Programs</option>
     </select>
     <select id="scholarshipFilter" class="city-filter" onchange="filterByScholarship(this.value)" aria-label="Filter by scholarship">
-      <option value="">💰 Scholarships</option>
+      <option value="">Scholarships</option>
       <option value="any">Any Scholarship</option>
       <option value="need-based">Need-based Aid</option>
       <option value="merit">Merit-based</option>
       <option value="need-blind">Need-blind / Full Aid</option>
     </select>
     <select id="sortFilter" class="city-filter" onchange="sortUnis(this.value)" aria-label="Sort universities">
-      <option value="default">↕️ Sort: Default</option>
+      <option value="default">Sort: Default</option>
       <option value="rank">Rank (Top first)</option>
       <option value="fee-asc">Fee: Low → High</option>
       <option value="fee-desc">Fee: High → Low</option>
@@ -2071,8 +2088,8 @@
   <button class="predictor-open-btn" onclick="openPredictor()" style="display:inline-flex;align-items:center;gap:6px;">Start Predictor <span data-icon="arrowRight" data-size="16"></span></button>
 </div>
 <div class="predictor-active-bar" id="predictorActiveBar">
-  <span class="predictor-active-info" id="predictorActiveInfo"></span>
-  <button class="predictor-clear-btn" onclick="clearPredictor()">✕ Clear Results</button>
+  <span class="predictor-active-info" style="display:inline-flex;align-items:center;gap:6px;"><span data-icon="target" data-size="14"></span><span id="predictorActiveInfo"></span></span>
+  <button class="predictor-clear-btn" onclick="clearPredictor()" style="display:inline-flex;align-items:center;gap:5px;"><span data-icon="x" data-size="12"></span> Clear Results</button>
 </div>
 
 <!-- PREDICTOR MODAL -->
@@ -2107,12 +2124,12 @@
           <label>Preferred Field</label>
           <select id="predField">
             <option value="">Any Field</option>
-            <option value="engineering">⚙️ Engineering</option>
-            <option value="medical">🏥 Medical</option>
-            <option value="business">💼 Business</option>
-            <option value="cs">💻 Computer Science</option>
-            <option value="sciences">🔬 Sciences</option>
-            <option value="arts">🎨 Arts / Design</option>
+            <option value="engineering">Engineering</option>
+            <option value="medical">Medical</option>
+            <option value="business">Business</option>
+            <option value="cs">Computer Science</option>
+            <option value="sciences">Sciences</option>
+            <option value="arts">Arts / Design</option>
           </select>
         </div>
         <div class="pred-select-wrap">
@@ -2132,8 +2149,8 @@
           <label>University Type</label>
           <select id="predType">
             <option value="">Any</option>
-            <option value="public">🏛️ Public</option>
-            <option value="private">🏢 Private</option>
+            <option value="public">Public</option>
+            <option value="private">Private</option>
           </select>
         </div>
         <div class="pred-select-wrap">
@@ -2148,7 +2165,7 @@
       </div>
     </div>
 
-    <button class="pred-run-btn" onclick="runPredictor()">🔍 Show My Best Universities</button>
+    <button class="pred-run-btn" onclick="runPredictor()" style="display:inline-flex;align-items:center;gap:8px;justify-content:center;"><span data-icon="search" data-size="16"></span> Show My Best Universities</button>
   </div>
 </div>
 
@@ -2253,7 +2270,7 @@
 <div id="scholarshipsPage">
   <div class="about-hero">
     <button class="about-back" onclick="closeScholarshipsPage()">← Back to Home</button>
-    <h2>🎓 Scholarships in <span>Pakistan</span></h2>
+    <h2 style="display:inline-flex;align-items:center;gap:10px;"><span data-icon="award" data-size="24"></span> Scholarships in <span>Pakistan</span></h2>
     <p>Need-based and merit scholarships from HEC, government, and universities — eligibility, coverage, and how to apply.</p>
   </div>
   <div class="blog-page-body">
@@ -2304,32 +2321,32 @@
       <h2>What We Stand For</h2>
       <div class="about-values-grid">
         <div class="about-value-card">
-          <div class="about-value-icon">🎯</div>
+          <div class="about-value-icon"><span data-icon="target" data-size="28"></span></div>
           <div class="about-value-title">Accuracy First</div>
           <div class="about-value-desc">Every fee, merit threshold, and program listing is carefully verified. Inaccurate data is more harmful than no data at all.</div>
         </div>
         <div class="about-value-card">
-          <div class="about-value-icon">🆓</div>
+          <div class="about-value-icon"><span data-icon="check" data-size="28"></span></div>
           <div class="about-value-title">Always Free</div>
           <div class="about-value-desc">TaleemPK will always be free for students. Access to quality education information is a right, not a privilege.</div>
         </div>
         <div class="about-value-card">
-          <div class="about-value-icon">🇵🇰</div>
+          <div class="about-value-icon"><span data-icon="flag" data-size="28"></span></div>
           <div class="about-value-title">Pakistan-First</div>
           <div class="about-value-desc">Built specifically for Pakistani students — local context, bilingual support, and data covering all provinces and regions.</div>
         </div>
         <div class="about-value-card">
-          <div class="about-value-icon">⚡</div>
+          <div class="about-value-icon"><span data-icon="flame" data-size="28"></span></div>
           <div class="about-value-title">Simple & Fast</div>
           <div class="about-value-desc">No sign-up required, no downloads. Open your browser, search, compare, and decide — that's all it takes.</div>
         </div>
         <div class="about-value-card">
-          <div class="about-value-icon">🔄</div>
+          <div class="about-value-icon"><span data-icon="trendingUp" data-size="28"></span></div>
           <div class="about-value-title">Regularly Updated</div>
           <div class="about-value-desc">Merit lists, fees, and deadlines are refreshed every admission cycle to ensure students always have current information.</div>
         </div>
         <div class="about-value-card">
-          <div class="about-value-icon">🤝</div>
+          <div class="about-value-icon"><span data-icon="users" data-size="28"></span></div>
           <div class="about-value-title">Community-Driven</div>
           <div class="about-value-desc">Alumni reviews, verified merit data, and student Q&A — built collaboratively with the community we serve.</div>
         </div>
@@ -2341,32 +2358,32 @@
       <h2>Platform Features</h2>
       <div class="about-values-grid">
         <div class="about-value-card">
-          <div class="about-value-icon">🔍</div>
+          <div class="about-value-icon"><span data-icon="search" data-size="28"></span></div>
           <div class="about-value-title">Smart Search</div>
           <div class="about-value-desc">Search by university name, program, city, or province. Full-name aliases ensure relevant results regardless of how you phrase your query.</div>
         </div>
         <div class="about-value-card">
-          <div class="about-value-icon">⚖️</div>
+          <div class="about-value-icon"><span data-icon="filter" data-size="28"></span></div>
           <div class="about-value-title">Side-by-Side Comparison</div>
           <div class="about-value-desc">Compare up to 3 universities simultaneously — fees, merit requirements, programs, and location displayed on a single screen.</div>
         </div>
         <div class="about-value-card">
-          <div class="about-value-icon">🧮</div>
+          <div class="about-value-icon"><span data-icon="calculator" data-size="28"></span></div>
           <div class="about-value-title">Fee Calculator</div>
           <div class="about-value-desc">Estimate the total cost of your degree over 4–5 years, including tuition fees, hostel, and monthly living expenses.</div>
         </div>
         <div class="about-value-card">
-          <div class="about-value-icon">🎯</div>
+          <div class="about-value-icon"><span data-icon="target" data-size="28"></span></div>
           <div class="about-value-title">Admission Predictor</div>
           <div class="about-value-desc">Enter your aggregate percentage and study group — our predictor identifies universities where you have a strong chance of admission.</div>
         </div>
         <div class="about-value-card">
-          <div class="about-value-icon">📅</div>
+          <div class="about-value-icon"><span data-icon="calendar" data-size="28"></span></div>
           <div class="about-value-title">Admission Calendar</div>
           <div class="about-value-desc">Track upcoming application deadlines, entry test dates, and merit list announcements all in one place.</div>
         </div>
         <div class="about-value-card">
-          <div class="about-value-icon">💬</div>
+          <div class="about-value-icon"><span data-icon="messageCircle" data-size="28"></span></div>
           <div class="about-value-title">Community Reviews</div>
           <div class="about-value-desc">Student reviews, alumni connect, and a Q&A section — real experiences from people who have studied at these institutions.</div>
         </div>
@@ -2392,7 +2409,7 @@
         <p>For feedback, data corrections, or partnership inquiries — we'd love to hear from you.</p>
       </div>
       <div class="about-contact-actions">
-        <a href="mailto:info@taleempk.com" class="about-contact-btn primary">📧 Email Us</a>
+        <a href="mailto:info@taleempk.com" class="about-contact-btn primary" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><i class="fas fa-envelope"></i> Email Us</a>
         <a href="#" class="about-contact-btn secondary" onclick="closeAboutPage();return false">🏫 Browse Universities</a>
       </div>
     </div>
@@ -2463,11 +2480,11 @@
     <div class="footer-col">
       <h4>Browse By</h4>
       <div class="footer-links">
-        <a href="#" onclick="filterUnis('public',null);document.getElementById('universities').scrollIntoView({behavior:'smooth'});return false">🏛️ Public Universities</a>
-        <a href="#" onclick="filterUnis('private',null);document.getElementById('universities').scrollIntoView({behavior:'smooth'});return false">🏢 Private Universities</a>
-        <a href="#" onclick="filterUnis('engineering',null);document.getElementById('universities').scrollIntoView({behavior:'smooth'});return false">⚙️ Engineering</a>
-        <a href="#" onclick="filterUnis('medical',null);document.getElementById('universities').scrollIntoView({behavior:'smooth'});return false">🏥 Medical</a>
-        <a href="#" onclick="filterUnis('business',null);document.getElementById('universities').scrollIntoView({behavior:'smooth'});return false">💼 Business</a>
+        <a href="#" onclick="filterUnis('public',null);document.getElementById('universities').scrollIntoView({behavior:'smooth'});return false">Public Universities</a>
+        <a href="#" onclick="filterUnis('private',null);document.getElementById('universities').scrollIntoView({behavior:'smooth'});return false">Private Universities</a>
+        <a href="#" onclick="filterUnis('engineering',null);document.getElementById('universities').scrollIntoView({behavior:'smooth'});return false">Engineering</a>
+        <a href="#" onclick="filterUnis('medical',null);document.getElementById('universities').scrollIntoView({behavior:'smooth'});return false">Medical</a>
+        <a href="#" onclick="filterUnis('business',null);document.getElementById('universities').scrollIntoView({behavior:'smooth'});return false">Business</a>
       </div>
     </div>
     <!-- Contact column -->
@@ -2546,7 +2563,7 @@
       <label>Monthly Living Expenses <span class="fee-val" id="fcLivLabel">Rs. 15K/mo</span></label>
       <input type="range" id="fcLiv" min="5000" max="50000" step="5000" value="15000" oninput="updateFeeCalc()">
     </div>
-    <button class="fee-calc-btn" onclick="calculateFee()">📊 Calculate Total Cost</button>
+    <button class="fee-calc-btn" onclick="calculateFee()" style="display:inline-flex;align-items:center;gap:8px;justify-content:center;"><span data-icon="trendingUp" data-size="16"></span> Calculate Total Cost</button>
     <div class="fee-result" id="feeResult">
       <div class="fee-result-lbl">Estimated Total Degree Cost</div>
       <div class="fee-result-total" id="feeTotal">—</div>
@@ -3208,8 +3225,8 @@ const T = {
     footer_tagline:"Pakistan's #1 Education Comparison Platform",
     footer_link1:'Universities', footer_link2:'Compare', footer_link3:'Admission Calendar', footer_link4:'Scholarships', footer_link5:'About',
     footer_copy:'© 2026 TaleemPK — All rights reserved | Karachi, Pakistan',
-    detail_fee:'💰 Fee Per Semester', detail_entry:'📝 Entry Test', detail_merit:'🏆 Merit Required',
-    detail_seats:'👥 Seats Per Year', detail_scholarships:'🎓 Scholarships', detail_hostel:'🏠 Hostel',
+    detail_fee:'Fee Per Semester', detail_entry:'Entry Test', detail_merit:'Merit Required',
+    detail_seats:'Seats Per Year', detail_scholarships:'Scholarships', detail_hostel:'Hostel',
     detail_programs:'📚 Programs Offered', detail_highlights:'✨ Highlights',
     detail_website_btn:'🌐 Visit Official Website →', detail_est:'Est.',
     compare_modal_label:'Side-by-Side Comparison', compare_modal_title:'University Comparison',
@@ -4974,7 +4991,7 @@ function runPredictor() {
   const bar = document.getElementById('predictorActiveBar');
   bar.classList.add('show');
   document.getElementById('predictorActiveInfo').textContent =
-    `🎯 Showing ${results.length} universities for ${pct}% · ${study==='engineering'?'FSc Pre-Eng':study==='medical'?'FSc Pre-Medical':study==='general'?'FA/ICS/ICom':'A-Levels'}${field?' · '+field.charAt(0).toUpperCase()+field.slice(1):''}`;
+    `Showing ${results.length} universities for ${pct}% · ${study==='engineering'?'FSc Pre-Eng':study==='medical'?'FSc Pre-Medical':study==='general'?'FA/ICS/ICom':'A-Levels'}${field?' · '+field.charAt(0).toUpperCase()+field.slice(1):''}`;
 
   document.getElementById('universities').scrollIntoView({behavior:'smooth'});
 }
@@ -6362,7 +6379,7 @@ function renderCards(unis) {
 
   if(total===0){
     grid.innerHTML = `<div class="grid-error">
-      <div style="font-size:2.4rem;margin-bottom:10px;">🔍</div>
+      <div style="width:60px;height:60px;margin:0 auto 14px;background:#F5F7FA;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#9BA5B5;">${icon('search',{size:28})}</div>
       <h3>No universities match your filters</h3>
       <p>Try a different combination, or clear the filters to see all 218 universities.</p>
       <button onclick="clearAllFilters()">Clear Filters</button>
@@ -6384,7 +6401,7 @@ function renderCards(unis) {
       <div class="uni-card-top" style="${assessMode?'margin-top:28px':''}">
         <div class="uni-icon">${u.website ? `<img src="${logoSrc(u)}" alt="${u.name}" loading="lazy" onload="checkLogoSize(this,'${u.icon}')" onerror="handleLogoError(this,'${u.website}','${u.icon}')">` : u.icon}</div>
         ${u.basic&&!DATA_UPDATES[u.id]?`<div class="uni-rank" style="background:rgba(0,200,83,0.12);color:var(--green);font-size:0.6rem;padding:3px 7px;">HEC ✓</div>`:
-        u.rank?`<div class="uni-rank ${u.rank<=3?'top3':''}">${u.rank<=3?'🏆 ':''} #${u.rank}</div>`:''}
+        u.rank?`<div class="uni-rank ${u.rank<=3?'top3':''}">${u.rank<=3?icon('trophy',{size:12})+' ':''}#${u.rank}</div>`:''}
       </div>
       <div class="uni-name">${u.name}</div>
       <div class="uni-location">${u.city}</div>
