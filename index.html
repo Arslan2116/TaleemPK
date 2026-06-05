@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- ═══ SECURITY: CSP (defence-in-depth XSS mitigation) ═══ -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://plausible.io https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; img-src 'self' data: https:; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https://*.supabase.co https://api.taleempk.pk https://plausible.io https://www.google-analytics.com https://*.google-analytics.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
 <!-- ═══ SEO: PRIMARY ═══ -->
 <title>TaleemPK — Pakistan University Admissions 2025 | Fees, Merit Lists & Scholarships</title>
 <meta name="description" content="Compare fees, merit lists & admissions of 218 HEC-recognized universities in Pakistan. NUST, LUMS, IBA, FAST, COMSATS & more. Free admission predictor, fee calculator & scholarship finder.">
@@ -4616,7 +4620,7 @@ function notifyAdmin(subject, payload) {
     fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(Object.assign({ _subject: subject, _replyto: 'noreply@taleempk.com' }, payload))
+      body: JSON.stringify(Object.assign({ _subject: subject, _replyto: 'noreply@taleempk.pk' }, payload))
     }).catch(()=>{});
   } catch(e) {}
 }
@@ -4888,13 +4892,16 @@ function runPredictor() {
     if(field && FIELD_CHECK[field] && !FIELD_CHECK[field](u)) return false;
 
     // Cross-check: study group + field combo sanity
-    // FSc Pre-Engineering wants Medical → only show unis with MBBS/BDS/Pharm (Pre-Eng can shift via NTS/MDCAT to some)
-    if(study === 'engineering' && field === 'medical' && !hasProgramIn(u,'medical')) return false;
-    // FSc Pre-Medical wants Engineering → only show unis with actual engineering
+    // FSc Pre-Engineering wants Medical → allow medical OR bio-sciences (Biotech, Biomedical Sciences etc. are valid Pre-Eng switch paths)
+    if(study === 'engineering' && field === 'medical'
+       && !hasProgramIn(u,'medical') && !hasProgramIn(u,'bioSciences')) return false;
+    // FSc Pre-Medical wants Engineering → only show unis with actual engineering programs
     if(study === 'medical' && field === 'engineering' && !hasProgramIn(u,'engineering')) return false;
-    // FA/ICS/ICom students cannot pursue MBBS/BDS (need Pre-Medical with Biology) or BE/Engineering (need Pre-Engineering)
+    // FA/ICS/ICom students cannot pursue MBBS/BDS (no Biology) — hard block
     if(study === 'general' && field === 'medical') return false;
-    if(study === 'general' && field === 'engineering') return false;
+    // FA/ICS/ICom + Engineering: BE/BS Civil etc. need FSc Pre-Eng, BUT ICS students can do BS CS, BS SE, BS IT.
+    // Allow only if the uni has computing programs the student can actually enrol in.
+    if(study === 'general' && field === 'engineering' && !hasProgramIn(u,'cs')) return false;
 
     return true;
   });
@@ -6037,10 +6044,10 @@ function buildReviewsHTML(uniId) {
         <div class="review-card">
           <div class="review-card-top">
             <span class="review-card-stars">${starsHTML(r.rating)}</span>
-            <span class="review-card-cat">${r.cat}</span>
-            <span class="review-card-date">${r.author?('👤 '+r.author+' · '):''}${r.date}</span>
+            <span class="review-card-cat">${escHTML(r.cat)}</span>
+            <span class="review-card-date">${r.author?('👤 '+escHTML(r.author)+' · '):''}${escHTML(r.date)}</span>
           </div>
-          <div class="review-card-text">${r.text}</div>
+          <div class="review-card-text">${escHTML(r.text)}</div>
           <div class="review-helpful" id="rvHelpful-${r.id}" onclick="markHelpful(${uniId},${r.id})">👍 Helpful${r.helpful?` (${r.helpful})`:''}</div>
         </div>
       `).join('') : `<div class="review-empty"><span class="empty-icon">💬</span><div class="empty-title">No reviews yet</div><div class="empty-sub">Help future applicants — share your honest experience.</div></div>`}
@@ -6101,11 +6108,11 @@ function buildAlumniHTML(uniId) {
     ${alumni.length ? `<div class="alumni-grid">
       ${alumni.slice(0,8).map(a=>`
         <div class="alumni-card">
-          <div class="alumni-avatar">${a.emoji}</div>
-          <div class="alumni-name">${a.name}</div>
-          <div class="alumni-batch">Batch ${a.batch}</div>
-          <div class="alumni-role">${a.field}${a.company?' @ '+a.company:''}</div>
-          ${a.advice?`<div class="alumni-advice">"${a.advice}"</div>`:''}
+          <div class="alumni-avatar">${escHTML(a.emoji)}</div>
+          <div class="alumni-name">${escHTML(a.name)}</div>
+          <div class="alumni-batch">Batch ${escHTML(a.batch)}</div>
+          <div class="alumni-role">${escHTML(a.field)}${a.company?' @ '+escHTML(a.company):''}</div>
+          ${a.advice?`<div class="alumni-advice">"${escHTML(a.advice)}"</div>`:''}
         </div>
       `).join('')}
     </div>` : `<div class="alumni-empty">🎓 No alumni profiles yet — be the first to add yours!</div>`}
@@ -6193,7 +6200,7 @@ function buildQAHTML(uniId) {
         <div class="qa-item" id="qaItem-${q.id}">
           <div class="qa-question" onclick="toggleQAItem(${q.id})">
             <span style="color:var(--green);font-weight:800;font-size:1rem;margin-top:1px;">Q</span>
-            <span class="qa-q-text">${q.q}<br><small style="color:var(--gray-400);font-weight:400;">👤 ${q.author||'Student'} · ${q.date}</small></span>
+            <span class="qa-q-text">${escHTML(q.q)}<br><small style="color:var(--gray-400);font-weight:400;">👤 ${escHTML(q.author||'Student')} · ${escHTML(q.date)}</small></span>
             <div class="qa-meta">
               <span class="qa-ans-count">${q.answers.length} ans</span>
               <span class="qa-expand-icon">▾</span>
@@ -6202,9 +6209,9 @@ function buildQAHTML(uniId) {
           <div class="qa-answers">
             ${q.answers.length ? q.answers.map(a=>`
               <div class="qa-answer">
-                ${a.text}
+                ${escHTML(a.text)}
                 <div class="qa-answer-meta">
-                  <span>${a.author?('👤 '+a.author+' · '):''}${a.date}</span>
+                  <span>${a.author?('👤 '+escHTML(a.author)+' · '):''}${escHTML(a.date)}</span>
                   <button class="qa-vote-btn" id="qaVote-${a.id}" onclick="voteAnswer(${uniId},${q.id},${a.id})">▲ ${a.votes||0}</button>
                 </div>
               </div>
@@ -6971,16 +6978,26 @@ function toSlugSafe(name){
 
 // Print/PDF the comparison — temporarily isolates the modal so nothing else prints
 function printCompare(){
+  // Idempotent cleanup — runs at most once even if multiple events fire
+  let cleaned = false;
+  const cleanup = ()=>{
+    if (cleaned) return;
+    cleaned = true;
+    document.body.classList.remove('printing-compare');
+    window.removeEventListener('afterprint', cleanup);
+    window.removeEventListener('focus', cleanup);
+  };
   document.body.classList.add('printing-compare');
-  // Ensure layout settles before triggering print dialog
-  setTimeout(()=>{
-    window.print();
-    // Remove class after dialog closes (works for both Print and Cancel)
-    setTimeout(()=>document.body.classList.remove('printing-compare'), 200);
-  }, 60);
-  // Safety net: also clean up when window regains focus
-  const cleanup = ()=>{ document.body.classList.remove('printing-compare'); window.removeEventListener('focus', cleanup); };
-  window.addEventListener('focus', cleanup);
+  // Primary signal — fires reliably in Chromium/Firefox after print or cancel
+  window.addEventListener('afterprint', cleanup, { once: true });
+  // Secondary — Safari/iOS may only fire focus
+  window.addEventListener('focus', cleanup, { once: true });
+  // Hard fallback so we never leave the page broken
+  setTimeout(cleanup, 30000);
+  // Defer print to next 2 frames so the class actually paints
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    try { window.print(); } catch(e) { cleanup(); }
+  }));
 }
 
 // Share comparison link
@@ -6997,23 +7014,37 @@ function shareCompareUrl(){
 }
 
 // Load comparison from URL on page load — only ONCE per param value
-function loadCompareFromURL(){
+async function loadCompareFromURL(){
   const params = new URLSearchParams(location.search);
   const ids = params.get('compare');
   if(!ids) return;
   // Don't auto-open if user already saw this exact comparison in this session
   const seenKey = 'tpk_seen_compare_' + ids;
   if(sessionStorage.getItem(seenKey)) return;
-  sessionStorage.setItem(seenKey, '1');
-  const idArr = ids.split(',').map(Number).filter(Boolean);
-  const found = idArr.map(id=>UNIVERSITIES.find(u=>u.id===id)).filter(Boolean);
-  if(found.length >= 2){
-    compareList = found.slice(0,3);
-    updateCompareBar();
-    setTimeout(openCompareModal, 400);
+
+  // Wait for UNIVERSITIES to hydrate (up to 8s; covers slow 3G/4G)
+  const start = Date.now();
+  while ((!Array.isArray(window.UNIVERSITIES) || UNIVERSITIES.length < 10)
+         && Date.now() - start < 8000) {
+    await new Promise(r => setTimeout(r, 200));
   }
+  if (!Array.isArray(window.UNIVERSITIES) || !UNIVERSITIES.length) {
+    console.warn('Compare auto-load: universities did not hydrate in time');
+    return;
+  }
+
+  const idArr = ids.split(',').map(Number).filter(n => Number.isFinite(n) && n > 0);
+  const found = idArr.map(id => UNIVERSITIES.find(u => u.id === id)).filter(Boolean);
+  if (found.length < 2) {
+    console.warn('Compare URL references missing universities:', idArr);
+    return;
+  }
+  sessionStorage.setItem(seenKey, '1');
+  compareList = found.slice(0, 3);
+  updateCompareBar();
+  openCompareModal();
 }
-window.addEventListener('load', ()=>setTimeout(loadCompareFromURL, 600));
+window.addEventListener('load', ()=>setTimeout(loadCompareFromURL, 400));
 
 function closeCompareModal(e) {
   if(!e || e.target.id==='compareModalOverlay' || e.target.classList.contains('modal-close')) {
@@ -7042,6 +7073,21 @@ const observer = new IntersectionObserver((entries)=>{
 const SUPABASE = {
   url: 'https://vpioffkkzwbfnmpxpwgc.supabase.co',
   key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaW9mZmtrendiZm5tcHhwd2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTc5ODksImV4cCI6MjA5NTczMzk4OX0.IUDmCzw6im094kilaTKw812GkVDC7a85AA4scs1X8YE'
+};
+
+// ════════════════════════════════════════════════════════
+//  XSS PROTECTION — escape every interpolated DB string
+// ════════════════════════════════════════════════════════
+window.escHTML = function(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,
+    c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+};
+// Only allow http(s) URLs — block javascript:, data:, etc.
+window.safeUrl = function(u){
+  if(!u) return '';
+  try{ const x = new URL(u, location.origin);
+    return /^https?:$/.test(x.protocol) ? x.href : '';
+  }catch{ return ''; }
 };
 
 // Supabase JS client (for auth + community writes)
@@ -7108,13 +7154,24 @@ async function initAuth(){
   }catch(e){}
 }
 
+// Extract the lowest plausible cutoff % from a free-text merit string
+function _parseMeritMin(s){
+  if(!s) return 50;
+  const nums = String(s).match(/\d+(?:\.\d+)?/g);
+  if(!nums) return 50;
+  // Pick the smallest plausible % (10–99 range) — closing merit is usually the lower of any cited numbers
+  const valid = nums.map(Number).filter(n => n >= 10 && n <= 99);
+  if(!valid.length) return 50;
+  return Math.min(...valid);
+}
 function mapInstitution(row){
   return {
     id: row.id, rank: row.rank || 0, name: row.name, full: row.full_name,
     city: row.city, province: row.province, type: row.sector, icon: row.icon,
     tags: row.tags || [], fee: row.fee, feeNum: row.fee_num || 0,
     feeYear: row.fee_year || undefined, feeNote: row.fee_note || undefined,
-    merit: row.merit, entry: row.entry, programs: row.programs || [],
+    merit: row.merit, meritMin: _parseMeritMin(row.merit), entry: row.entry,
+    programs: row.programs || [],
     seats: row.seats, established: row.established, website: row.website,
     logoUrl: row.logo_url || '',
     description: row.description, highlights: row.highlights || [],

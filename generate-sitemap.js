@@ -23,7 +23,13 @@ function fetchUniversities() {
     https.get(url, options, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
-      res.on('end', () => resolve(JSON.parse(data)));
+      res.on('end', () => {
+        if (res.statusCode !== 200) {
+          return reject(new Error(`Supabase HTTP ${res.statusCode}: ${data.slice(0,200)}`));
+        }
+        try { resolve(JSON.parse(data)); }
+        catch (e) { reject(new Error('Malformed JSON from Supabase: ' + e.message)); }
+      });
     }).on('error', reject);
   });
 }
@@ -68,4 +74,7 @@ ${allPages.map(p => `  <url><loc>${p.loc}</loc><lastmod>${today}</lastmod><chang
   console.log(`sitemap.xml generated with ${allPages.length} URLs`);
 }
 
-generate().catch(console.error);
+generate().catch(err => {
+  console.error('sitemap generation failed:', err);
+  process.exit(1); // Fail the CI/build so we don't ship an empty sitemap
+});

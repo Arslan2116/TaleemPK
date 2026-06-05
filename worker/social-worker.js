@@ -55,6 +55,14 @@ export default {
   },
   async fetch(request, env) {
     const url = new URL(request.url);
+    // Gate sensitive endpoints behind a shared secret header
+    const isProtected = url.pathname === '/run-now' || url.pathname === '/preview-image';
+    if (isProtected) {
+      const secret = request.headers.get('X-Trigger-Secret') || url.searchParams.get('key') || '';
+      if (!env.TRIGGER_SECRET || secret !== env.TRIGGER_SECRET) {
+        return new Response('Forbidden', { status: 403 });
+      }
+    }
     if (url.pathname === '/run-now') {
       const result = await runDailyPost(env);
       return new Response(JSON.stringify(result, null, 2), {
@@ -102,6 +110,13 @@ async function runDailyPost(env) {
     // Generate branded PNG image
     const imageUrl = await generateAndUploadImage(env, postType, data);
     log.push({ step: 'image_ready', imageUrl });
+
+    // If image generation fell back to the static OG image, skip the post
+    // (avoids posting identical content every day if the WASM/Storage pipeline breaks)
+    if (imageUrl === OG_STATIC) {
+      log.push({ step: 'skipped', reason: 'image fallback — not posting duplicate static OG' });
+      return { success: false, skipped: true, log };
+    }
 
     // Generate post text via Gemini
     const content = await generateContent(env, postType, data, imageUrl);
@@ -201,12 +216,13 @@ async function uploadToSupabase(env, pngBytes, filename) {
 
 /** University Spotlight Card */
 function buildUniversityCard(u) {
+  const sector     = u.sector || 'private';
   const rankLabel  = u.rank ? `#${u.rank}` : '';
   const programs   = (u.programs || []).slice(0, 4).join('  ·  ');
-  const sectorIcon = u.sector === 'public' ? '🏛️' : u.sector === 'military' ? '⚔️' : '🏢';
-  const rankColor  = u.rank <= 3 ? C.gold : C.green;
-  const tagBg      = u.sector === 'public' ? '#1a3a5c' : '#3a1a2e';
-  const tagColor   = u.sector === 'public' ? '#60a8f8' : '#f06090';
+  const sectorIcon = sector === 'public' ? '🏛️' : sector === 'military' ? '⚔️' : '🏢';
+  const rankColor  = (u.rank && u.rank <= 3) ? C.gold : C.green;
+  const tagBg      = sector === 'public' ? '#1a3a5c' : '#3a1a2e';
+  const tagColor   = sector === 'public' ? '#60a8f8' : '#f06090';
 
   return svg1080(`
     <!-- Top green accent bar -->
@@ -229,8 +245,8 @@ function buildUniversityCard(u) {
     <text x="226" y="120" font-size="58" font-weight="700" fill="${C.white}" font-family="Arial, sans-serif">${esc(u.name)}</text>
 
     <!-- Sector tag -->
-    <rect x="226" y="142" width="${u.sector.length * 14 + 30}" height="36" rx="18" fill="${tagBg}"/>
-    <text x="${226 + (u.sector.length * 7 + 15)}" y="165" font-size="20" fill="${tagColor}" text-anchor="middle" font-family="Arial">${cap(u.sector)}</text>
+    <rect x="226" y="142" width="${sector.length * 14 + 30}" height="36" rx="18" fill="${tagBg}"/>
+    <text x="${226 + (sector.length * 7 + 15)}" y="165" font-size="20" fill="${tagColor}" text-anchor="middle" font-family="Arial">${cap(sector)}</text>
 
     <!-- Full name -->
     <text x="60" y="272" font-size="28" fill="rgba(255,255,255,0.55)" font-family="Arial, sans-serif">${esc((u.full_name || '').slice(0, 55))}${(u.full_name||'').length > 55 ? '…' : ''}</text>
@@ -576,8 +592,10 @@ async function buildOAuth(env, method, url) {
 
 // ── Utilities ─────────────────────────────────────────────────
 function getDayOfYear() {
-  const now = new Date();
-  return Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86_400_000);
+  // UTC-based, no DST drift; January 1 = day 1
+  const d = new Date();
+  const start = Date.UTC(d.getUTCFullYear(), 0, 1);
+  return Math.floor((d.getTime() - start) / 86_400_000) + 1;
 }
 function pct(s) { return encodeURIComponent(String(s)); }
 function enc(s) { return new TextEncoder().encode(s); }

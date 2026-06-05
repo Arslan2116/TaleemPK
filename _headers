@@ -1,0 +1,30 @@
+# ─── Global security headers (defence-in-depth) ───
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
+  X-XSS-Protection: 0
+
+# ─── Long-lived assets ───
+/favicon.png
+  Cache-Control: public, max-age=604800
+/logo.png
+  Cache-Control: public, max-age=604800
+/og-image.png
+  Cache-Control: public, max-age=604800
+/og-image.svg
+  Cache-Control: public, max-age=604800
+
+# ─── Short-lived JS (allow quick rollouts) ───
+/chat-widget.js
+  Cache-Control: public, max-age=300, must-revalidate
+/config.js
+  Cache-Control: no-cache, must-revalidate
+
+# ─── Discoverable data ───
+/sitemap.xml
+  Cache-Control: public, max-age=3600
+/robots.txt
+  Cache-Control: public, max-age=86400

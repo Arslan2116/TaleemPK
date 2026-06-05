@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://plausible.io https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; img-src 'self' data: https:; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https://*.supabase.co https://api.taleempk.pk https://plausible.io https://www.google-analytics.com https://*.google-analytics.com; frame-ancestors 'none'; base-uri 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>University — TaleemPK</title>
 <meta name="description" id="metaDesc" content="University details, fees, merit and programs on TaleemPK.">
 <meta property="og:title" id="ogTitle" content="TaleemPK">
@@ -352,7 +354,11 @@
 </div>
 
 <script>
-/* Merit trend data (year vs closing aggregate %) — same as the main site */
+/* Merit trend data (year vs closing aggregate %)
+ * NOTE: These are ESTIMATES based on community-reported historical merit.
+ * Each chart now carries a disclaimer (see drawMeritChart).
+ * Plan: migrate to a `merit_trends` Supabase table with per-row source_url.
+ */
 const MERIT_TRENDS = {
   1:{y:['2022','2023','2024'],m:[83,84,85]}, 2:{y:['2022','2023','2024'],m:[81,82,84]},
   3:{y:['2022','2023','2024'],m:[73,74,75]}, 4:{y:['2022','2023','2024'],m:[81,83,82]},
@@ -404,10 +410,12 @@ function groupedPrograms(programs){
     if(!a.length) return '';
     const overflow = a.length > PREVIEW;
     const visible = overflow ? a.slice(0,PREVIEW) : a;
+    // Safely store the full list in a data attribute (escape both & and ')
+    const dataList = JSON.stringify(a).replace(/&/g,'&amp;').replace(/'/g,'&#39;');
     return `<div class="prog-group">
       <div class="prog-group-title">${t}<span class="prog-count">${a.length}</span></div>
       <div class="pills" id="pg-${key}">${visible.map(p=>`<span class="pill">${esc(p)}</span>`).join('')}
-        ${overflow ? `<button class="pill more" onclick="expandProgs('${key}',${JSON.stringify(a).replace(/"/g,'&quot;')})">+ ${a.length-PREVIEW} more</button>` : ''}
+        ${overflow ? `<button class="pill more" data-list='${dataList}' data-key='${key}' onclick="expandFromBtn(this)">+ ${a.length-PREVIEW} more</button>` : ''}
       </div>
     </div>`;
   };
@@ -415,7 +423,15 @@ function groupedPrograms(programs){
 }
 function expandProgs(key, list){
   const el = document.getElementById('pg-'+key); if(!el) return;
-  el.innerHTML = list.map(p=>`<span class="pill">${esc(p)}</span>`).join('');
+  // Cap at 200 to prevent DOM bloat from malicious bulk-inserts
+  el.innerHTML = list.slice(0,200).map(p=>`<span class="pill">${esc(p)}</span>`).join('');
+}
+// Read list from data attribute on button (safe — no inline JSON injection)
+function expandFromBtn(btn){
+  try{
+    const list = JSON.parse(btn.dataset.list||'[]');
+    expandProgs(btn.dataset.key, list);
+  }catch(e){}
 }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function timeAgo(iso){
@@ -643,6 +659,7 @@ function buildAggCalc(){
 }
 
 function calcAggregate(){
+  if(!UNI) return;
   const f = MERIT_FORMULAS[UNI.id] || MERIT_FORMULAS.default;
   const m = parseFloat(document.getElementById('calcMatric')?.value)||0;
   const s = parseFloat(document.getElementById('calcFsc')?.value)||0;
@@ -745,9 +762,12 @@ function setSEO(){
 
 function render(){
   const u=UNI;
+  // Sanitize icon to prevent attribute-injection XSS
+  const iconSafe = String(u.icon||'🏛️').replace(/['"\\<>]/g,'').slice(0,8);
+  const websiteSafe = String(u.website||'').replace(/[^a-z0-9.\-\/]/gi,'');
   const logo = u.logo_url
-    ? `<img src="${esc(u.logo_url)}" alt="" onerror="this.parentNode.textContent='${u.icon||'🏛️'}'">`
-    : (u.website ? `<img src="https://www.google.com/s2/favicons?domain=${u.website}&sz=128" alt="" onerror="this.parentNode.textContent='${u.icon||'🏛️'}'">` : (u.icon||'🏛️'));
+    ? `<img src="${esc(u.logo_url)}" alt="" data-fb="${esc(iconSafe)}" onerror="this.replaceWith(document.createTextNode(this.dataset.fb))">`
+    : (websiteSafe ? `<img src="https://www.google.com/s2/favicons?domain=${esc(websiteSafe)}&sz=128" alt="" data-fb="${esc(iconSafe)}" onerror="this.replaceWith(document.createTextNode(this.dataset.fb))">` : esc(iconSafe));
   const fd = (u.fee_details||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
   const sectorLabel = u.sector==='public'?'🏛️ Public':u.sector==='military'?'⚔️ Military':'🏢 Private';
   const cleanTags = (u.tags||[]).filter(t=>!['public','private','military','federal','punjab','sindh','kpk','balochistan','ajk','gilgitbaltistan'].includes(t)).slice(0,3);
@@ -797,7 +817,10 @@ function render(){
       <div class="sec">
         <div class="sec-head"><div class="icn">📈</div><h2>Merit Trend <span class="count">Last 3 Years</span></h2></div>
         ${MERIT_TRENDS[u.id]
-          ? `<div class="merit-chart-wrap"><canvas id="meritChart"></canvas></div>`
+          ? `<div class="merit-chart-wrap"><canvas id="meritChart"></canvas></div>
+             <div style="font-size:.72rem;color:var(--gray-400);margin-top:8px;font-style:italic;">
+               ⓘ Estimated trend based on community-reported merit. Verify on the official site.
+             </div>`
           : `<div class="merit-empty"><div class="merit-empty-icn">📭</div><div class="merit-empty-txt">No merit data yet for ${esc(u.name)} — be the first to share last year's closing merit list.</div></div>`}
         <div class="merit-submit-row">
           <button class="btn navyb" onclick="submitMerit()">+ Submit Merit / Closing Data</button>

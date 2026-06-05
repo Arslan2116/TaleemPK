@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="favicon.png">
 <meta name="theme-color" content="#0A1628">
@@ -199,6 +201,9 @@ const val = id => ($(id).value || '').trim();
 const arr = id => val(id) ? val(id).split(',').map(s=>s.trim()).filter(Boolean) : [];
 const numOrNull = id => val(id)==='' ? null : Number(val(id));
 function flash(id, text, ok){ const e=$(id); e.textContent=text; e.className='msg '+(ok?'ok':'err'); setTimeout(()=>{e.className='msg';}, 4000); }
+// XSS protection helpers
+function escHTML(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function safeUrl(u){ if(!u) return ''; try{ const x=new URL(u, location.origin); return /^https?:$/.test(x.protocol)?x.href:''; }catch{ return ''; } }
 
 // ── Auth ──
 async function checkSession(){
@@ -235,7 +240,7 @@ async function saveInstitution(){
     city: val('i_city'), province: val('i_province'), icon: val('i_icon')||'🏛️',
     rank: numOrNull('i_rank')||0, fee: val('i_fee'), fee_num: numOrNull('i_feenum')||0,
     merit: val('i_merit'), entry: val('i_entry'), tags: arr('i_tags'), programs: arr('i_programs'),
-    seats: val('i_seats'), established: numOrNull('i_est'), website: val('i_web'),
+    seats: val('i_seats'), established: numOrNull('i_est'), website: val('i_web').replace(/^https?:\/\//,'').replace(/[^a-z0-9.\-/]/gi,''),
     description: val('i_desc'), highlights: arr('i_high'), scholarships: val('i_schol'), hostel: val('i_hostel')
   };
   const { error } = await sb.from('institutions').insert(row);
@@ -249,7 +254,16 @@ async function saveInstitution(){
 async function loadRecent(){
   const { data, error } = await sb.from('institutions').select('id,name,city,type').order('created_at',{ascending:false}).limit(8);
   if(error){ $('recentList').textContent='Could not load.'; return; }
-  $('recentList').innerHTML = (data||[]).map(u=>`<div class="rec-item"><div><strong>${u.name}</strong> <span class="meta">· ${u.city||''} · ${u.type}</span></div><button class="btn danger" onclick="delInstitution(${u.id},'${(u.name||'').replace(/'/g,"")}')">Delete</button></div>`).join('') || '<div class="meta">None yet.</div>';
+  $('recentList').innerHTML = (data||[]).map(u=>{
+    const safeName = escHTML(u.name||'');
+    const safeCity = escHTML(u.city||'');
+    const safeType = escHTML(u.type||'');
+    return `<div class="rec-item"><div><strong>${safeName}</strong> <span class="meta">· ${safeCity} · ${safeType}</span></div><button class="btn danger" data-uni-id="${u.id}" data-uni-name="${safeName}" onclick="delInstitutionFromBtn(this)">Delete</button></div>`;
+  }).join('') || '<div class="meta">None yet.</div>';
+}
+// Read uni name from data attribute (avoids inline-string injection)
+function delInstitutionFromBtn(btn){
+  delInstitution(parseInt(btn.dataset.uniId,10), btn.dataset.uniName||'');
 }
 async function delInstitution(id, name){
   if(!confirm('Delete "'+name+'"? This cannot be undone.')) return;
@@ -271,7 +285,9 @@ async function saveBlog(){
 // ── Save: Note ──
 async function saveNote(){
   if(!val('n_title')||!val('n_url')){ flash('noteMsg','Title and File URL are required.',false); return; }
-  const row={ title:val('n_title'), subject:val('n_subject'), level:val('n_level'), file_url:val('n_url'), institution_id:numOrNull('n_inst') };
+  const url = safeUrl(val('n_url'));
+  if(!url){ flash('noteMsg','File URL must be http(s) only.',false); return; }
+  const row={ title:val('n_title'), subject:val('n_subject'), level:val('n_level'), file_url:url, institution_id:numOrNull('n_inst') };
   const { error } = await sb.from('notes').insert(row);
   if(error){ flash('noteMsg', error.message, false); return; }
   flash('noteMsg','✅ Saved!', true);
@@ -281,7 +297,9 @@ async function saveNote(){
 // ── Save: Result ──
 async function saveResult(){
   if(!val('r_title')){ flash('resMsg','Title is required.',false); return; }
-  const row={ title:val('r_title'), year:numOrNull('r_year'), category:val('r_cat'), file_url:val('r_url'), institution_id:numOrNull('r_inst') };
+  const url = val('r_url') ? safeUrl(val('r_url')) : '';
+  if(val('r_url') && !url){ flash('resMsg','URL must be http(s) only.',false); return; }
+  const row={ title:val('r_title'), year:numOrNull('r_year'), category:val('r_cat'), file_url:url, institution_id:numOrNull('r_inst') };
   const { error } = await sb.from('results').insert(row);
   if(error){ flash('resMsg', error.message, false); return; }
   flash('resMsg','✅ Saved!', true);
@@ -291,9 +309,11 @@ async function saveResult(){
 // ── Save: Scholarship ──
 async function saveScholarship(){
   if(!val('s_title')){ flash('scholMsg','Title is required.',false); return; }
+  const applyUrl = val('s_url') ? safeUrl(val('s_url')) : '';
+  if(val('s_url') && !applyUrl){ flash('scholMsg','Apply URL must be http(s) only.',false); return; }
   const row={ title:val('s_title'), provider:val('s_provider'), type:val('s_type'), level:val('s_level'),
     coverage:val('s_coverage'), deadline:val('s_deadline'), eligibility:val('s_elig'),
-    apply_url:val('s_url'), description:val('s_desc'), icon:val('s_icon')||'🎓', featured:(val('s_feat')==='true') };
+    apply_url:applyUrl, description:val('s_desc'), icon:val('s_icon')||'🎓', featured:(val('s_feat')==='true') };
   const { error } = await sb.from('scholarships').insert(row);
   if(error){ flash('scholMsg', error.message, false); return; }
   flash('scholMsg','✅ Saved!', true);
