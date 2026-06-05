@@ -359,12 +359,15 @@
 </div>
 
 <script>
-/* Merit trend data (year vs closing aggregate %)
- * NOTE: These are ESTIMATES based on community-reported historical merit.
- * Each chart now carries a disclaimer (see drawMeritChart).
+/* Merit trend data (closing aggregate % over the last 3 years).
+ * The years are derived dynamically from the current date so the chart
+ * stops claiming "2024" forever. Values are ESTIMATES based on
+ * community-reported historical merit — each chart carries a disclaimer.
  * Plan: migrate to a `merit_trends` Supabase table with per-row source_url.
  */
-const MERIT_TRENDS = {
+const _trendYear = new Date().getFullYear() - 1;                       // most recent completed admission cycle
+const _TY = [String(_trendYear - 2), String(_trendYear - 1), String(_trendYear)];
+const MERIT_TRENDS_RAW = {
   1:{y:['2022','2023','2024'],m:[83,84,85]}, 2:{y:['2022','2023','2024'],m:[81,82,84]},
   3:{y:['2022','2023','2024'],m:[73,74,75]}, 4:{y:['2022','2023','2024'],m:[81,83,82]},
   5:{y:['2022','2023','2024'],m:[73,74,75]}, 6:{y:['2022','2023','2024'],m:[63,64,65]},
@@ -380,10 +383,15 @@ const MERIT_TRENDS = {
   115:{y:['2022','2023','2024'],m:[60,61,62]},118:{y:['2022','2023','2024'],m:[78,79,80]},
   160:{y:['2022','2023','2024'],m:[63,64,65]},200:{y:['2022','2023','2024'],m:[53,54,55]},
 };
+// Replace hard-coded year labels with rolling-3-year labels at runtime
+const MERIT_TRENDS = {};
+Object.keys(MERIT_TRENDS_RAW).forEach(k => { MERIT_TRENDS[k] = { y: _TY, m: MERIT_TRENDS_RAW[k].m }; });
 const MERIT_WA_NUMBER = '923353303999';   // admin WhatsApp for merit data submissions
 
-const SB_URL='https://vpioffkkzwbfnmpxpwgc.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaW9mZmtrendiZm5tcHhwd2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTc5ODksImV4cCI6MjA5NTczMzk4OX0.IUDmCzw6im094kilaTKw812GkVDC7a85AA4scs1X8YE';
+// Prefer the centralised config (config.js sets window.TPK_CONFIG) but keep
+// the literal as a fallback so rotation still works if config.js fails to load.
+const SB_URL = (window.TPK_CONFIG && window.TPK_CONFIG.SUPABASE_URL) || 'https://vpioffkkzwbfnmpxpwgc.supabase.co';
+const SB_KEY = (window.TPK_CONFIG && window.TPK_CONFIG.SUPABASE_ANON_KEY) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaW9mZmtrendiZm5tcHhwd2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTc5ODksImV4cCI6MjA5NTczMzk4OX0.IUDmCzw6im094kilaTKw812GkVDC7a85AA4scs1X8YE';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 const $ = id => document.getElementById(id);
 let UNI=null, currentUser=null;
@@ -406,7 +414,12 @@ function getId(){
   return null;
 }
 function stars(n){ n=Math.round(n||0); return '★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n); }
-function progGroup(p){ const s=(p||'').trim(); if(/^phd\b/i.test(s))return 'phd'; if(/^(ms|mba|mphil|ma|msc|master|m\.s|m\.phil)\b/i.test(s)||/^mphil\/phd/i.test(s))return 'grad'; return 'ug'; }
+function progGroup(p){
+  const s = (p||'').trim();
+  if (/^(phd|d\.?phil|doctor(ate)? of (philosophy|engineering)|mphil\/phd)\b/i.test(s)) return 'phd';
+  if (/^(ms|m\.s|mba|emba|mphil|m\.phil|ma|m\.a|msc|m\.sc|master|pgd|postgraduate diploma|llm)\b/i.test(s)) return 'grad';
+  return 'ug';
+}
 function groupedPrograms(programs){
   if(!programs||!programs.length) return '<span class="muted">Program list coming soon.</span>';
   const g={ug:[],grad:[],phd:[]}; programs.forEach(p=>g[progGroup(p)].push(p));
@@ -453,11 +466,14 @@ function timeAgo(iso){
 
 // ── Nav search across institutions ──
 let ALL_UNIS_CACHE = [];
+let ALL_UNIS_CACHED_AT = 0;
+const UNI_CACHE_TTL_MS = 15 * 60 * 1000; // 15 min — long enough to be cheap, short enough to refresh after admin edits
 async function preloadUnis(){
-  if(ALL_UNIS_CACHE.length) return;
+  if(ALL_UNIS_CACHE.length && (Date.now() - ALL_UNIS_CACHED_AT) < UNI_CACHE_TTL_MS) return;
   try{
     const { data } = await sb.from('institutions').select('id,name,full_name,city,sector,website,logo_url,tags,type,programs').order('rank',{ascending:true});
     ALL_UNIS_CACHE = data || [];
+    ALL_UNIS_CACHED_AT = Date.now();
   }catch(e){}
 }
 function toggleMobileSearch(){
@@ -553,7 +569,9 @@ async function load(){
     if(!match){ $('content').innerHTML='<div class="loading">University not found. <a href="/">Go back</a></div>'; return; }
     id = match.id;
   }
-  const { data, error } = await sb.from('institutions').select('*,fee_details(label,value,sort_order)').eq('id',id).single();
+  const { data, error } = await sb.from('institutions')
+    .select('id,name,full_name,city,province,sector,type,icon,rank,fee,fee_num,fee_year,fee_note,merit,entry,programs,seats,established,website,logo_url,description,highlights,scholarships,hostel,tags,data_updated,fee_details(label,value,sort_order)')
+    .eq('id',id).single();
   if(error || !data){ $('content').innerHTML='<div class="loading">University not found. <a href="/">Go back</a></div>'; return; }
   UNI = data;
   render();

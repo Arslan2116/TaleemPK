@@ -75,8 +75,10 @@
   gtag('js', new Date());
   gtag('config', 'G-1T7ZYZFGZ2');
 </script>
-<!-- Plausible (privacy-friendly, kept as a secondary tracker) -->
-<script defer data-domain="taleempk.pk" src="https://plausible.io/js/script.js"></script>
+<!-- Plausible removed: running GA4 + Plausible duplicated pageviews and added ~60 KB of JS.
+     GA4 chosen because it offers richer reporting and is explicitly configured (ID above).
+     If you want Plausible back later, re-enable the script tag and disable GA4 here and in blog.html. -->
+
 
 <!-- ═══ GOOGLE SEARCH CONSOLE VERIFICATION ═══ -->
 <!-- Replace content value with your verification code from Search Console -->
@@ -4625,7 +4627,6 @@ function copyMeritData() {
 function notifyAdmin(subject, payload) {
   const endpoint = window._formspreeEndpoint || SITE_CONFIG.formspree_endpoint || '';
   if (!endpoint) return; // Not configured yet — skip silently
-  // Neutralise any HTML so Formspree's email viewer can't render injected script
   function neutralise(v){
     if (v == null) return '';
     if (typeof v === 'object') return JSON.stringify(v).slice(0, 4000);
@@ -4633,16 +4634,27 @@ function notifyAdmin(subject, payload) {
   }
   const safePayload = {};
   for (const [k, v] of Object.entries(payload || {})) safePayload[k] = neutralise(v);
-  try {
-    fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(Object.assign(
-        { _subject: neutralise(subject).slice(0, 200), _replyto: 'noreply@taleempk.pk' },
-        safePayload
-      ))
-    }).catch(()=>{});
-  } catch(e) {}
+  const body = JSON.stringify(Object.assign(
+    { _subject: neutralise(subject).slice(0, 200), _replyto: 'noreply@taleempk.pk' },
+    safePayload
+  ));
+  // Best-effort send with one retry — Formspree occasionally 5xx during peak.
+  // Done in a microtask so the form submit isn't blocked on this.
+  async function send(){
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const r = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body
+        });
+        if (r.ok) return;
+        if (r.status >= 400 && r.status < 500) return; // 4xx won't recover on retry
+      } catch (_) { /* network error — try again */ }
+      await new Promise(r => setTimeout(r, 1500)); // 1.5 s backoff between tries
+    }
+  }
+  try { send(); } catch(e) {}
 }
 
 async function submitMeritForm() {
@@ -5180,7 +5192,9 @@ let _scholFilter = 'all';
 async function loadScholarships(){
   if(!sbClient) return;
   try{
-    const { data, error } = await sbClient.from('scholarships').select('*').order('sort_order',{ascending:true});
+    const { data, error } = await sbClient.from('scholarships')
+      .select('id,title,provider,type,level,coverage,eligibility,deadline,description,apply_url,icon,featured,sort_order')
+      .order('sort_order',{ascending:true});
     if(error) throw error;
     SCHOLARSHIPS = data || [];
   }catch(e){ SCHOLARSHIPS = []; }
@@ -6764,8 +6778,11 @@ function removeFromCompare(id) {
 
 function progGroup(p){
   const s = (p||'').trim();
-  if(/^phd\b/i.test(s)) return 'phd';
-  if(/^(ms|mba|mphil|ma|msc|master|m\.s|m\.phil)\b/i.test(s) || /^mphil\/phd/i.test(s)) return 'grad';
+  // PhD / Doctorate — match anywhere a clear PhD prefix appears (handles
+  // "PhD Mathematics", "Doctor of Philosophy", "PhD/Doctoral Studies", "DPhil ...")
+  if (/^(phd|d\.?phil|doctor(ate)? of (philosophy|engineering)|mphil\/phd)\b/i.test(s)) return 'phd';
+  // Graduate degrees — strict prefix match, common abbreviations
+  if (/^(ms|m\.s|mba|emba|mphil|m\.phil|ma|m\.a|msc|m\.sc|master|pgd|postgraduate diploma|llm)\b/i.test(s)) return 'grad';
   return 'ug';
 }
 function groupedProgramsHTML(programs){
@@ -6983,7 +7000,7 @@ function openCompareModal() {
     <div class="cmp-cards">
       ${list.map((u,i)=>`
         <div class="cmp-card ${i===overallWinnerIdx&&maxScore>0?'cmp-overall-winner':''}">
-          ${i===overallWinnerIdx&&maxScore>0?'<div class="cmp-crown">👑 Overall Winner</div>':''}
+          ${i===overallWinnerIdx&&maxScore>0?`<div class="cmp-crown" title="Wins ${maxScore} of ${4} measurable categories — not a quality verdict">👑 Most Wins (${maxScore}/4)</div>`:''}
           <div class="cmp-logo">${u.icon||'🏛️'}</div>
           <div class="cmp-name">${u.name}</div>
           <div class="cmp-loc">📍 ${u.city||'—'}</div>
@@ -7028,8 +7045,10 @@ function openCompareModal() {
 
     <!-- TIP FOOTER -->
     <div class="cmp-tip">
-      💡 <strong>Tip:</strong> Click "👑 Overall Winner" with caution — it only counts wins across measurable categories.
-      Visit each university's detail page for the full picture. Share this comparison with friends or save as PDF for offline review.
+      💡 <strong>What "Most Wins" means:</strong> it just counts how many of the 4 measurable categories
+      (cheapest fee, highest cutoff merit, most seats, oldest, most variety) a university leads in.
+      It is <em>not</em> an overall "best" verdict — visit each profile for the full picture before deciding.
+      Share this comparison with friends or save it as PDF for offline review.
     </div>
 
     <!-- HIDDEN INPUT FOR SHARE -->
@@ -7141,9 +7160,12 @@ const observer = new IntersectionObserver((entries)=>{
 //  (anon key is public/safe for frontend. Falls back to built-in
 //   data if the database is unreachable, so the site never breaks.)
 // ═══════════════════════════════════════════════════════════════
+// Prefer centralised config (window.TPK_CONFIG set by config.js) — keeps literal as fallback
+// so the site still boots if config.js fails to load. To rotate the anon key safely,
+// update config.js + the 4 literal fallbacks (see OPS-RUNBOOK.md §1).
 const SUPABASE = {
-  url: 'https://vpioffkkzwbfnmpxpwgc.supabase.co',
-  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaW9mZmtrendiZm5tcHhwd2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTc5ODksImV4cCI6MjA5NTczMzk4OX0.IUDmCzw6im094kilaTKw812GkVDC7a85AA4scs1X8YE'
+  url: (window.TPK_CONFIG && window.TPK_CONFIG.SUPABASE_URL) || 'https://vpioffkkzwbfnmpxpwgc.supabase.co',
+  key: (window.TPK_CONFIG && window.TPK_CONFIG.SUPABASE_ANON_KEY) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaW9mZmtrendiZm5tcHhwd2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTc5ODksImV4cCI6MjA5NTczMzk4OX0.IUDmCzw6im094kilaTKw812GkVDC7a85AA4scs1X8YE'
 };
 
 // ════════════════════════════════════════════════════════

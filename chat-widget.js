@@ -150,13 +150,25 @@
 
   // ── Render & escape
   function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  // Block anything that isn't http(s) or an internal ?id=… / #uni-… anchor.
+  // Stops the model from ever rendering javascript:, data:, vbscript: URLs.
+  function safeLinkURL(u){
+    if (!u) return '';
+    if (/^https?:\/\//i.test(u)) return u;                      // external https link
+    if (/^\?id=\d+$/.test(u))    return 'university.html' + u;  // internal uni link
+    if (/^\/university\/[a-z0-9-]+$/i.test(u)) return u;        // clean slug
+    if (/^#uni-\d+$/.test(u))    return u;                      // hash anchor
+    return '';                                                   // refuse everything else
+  }
   function md(t){
     // very small markdown: **bold**, [text](url), line breaks, • list
     return esc(t)
       .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g,(_,t,u)=>{
-        const safe = u.startsWith('http') ? u : 'university.html'+u;
-        return `<a href="${safe}" target="${u.startsWith('http')?'_blank':'_self'}" rel="noopener">${esc(t)}</a>`;
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g,(_,label,u)=>{
+        const safe = safeLinkURL(u);
+        if (!safe) return esc(label); // refuse the link, keep the text
+        const ext = /^https?:/i.test(safe);
+        return `<a href="${esc(safe)}" target="${ext?'_blank':'_self'}" rel="noopener noreferrer">${esc(label)}</a>`;
       })
       .replace(/\n/g,'<br>');
   }
@@ -238,4 +250,18 @@
     input.style.height='auto';
     input.style.height = Math.min(input.scrollHeight, 120) + 'px';
   });
+
+  // Public handle so other code on the page can programmatically open / ask / clear
+  // Example: document.querySelector('.help-link').onclick = () => window.TPK_Chat.ask('How do I apply to NUST?')
+  window.TPK_Chat = {
+    open,
+    close,
+    ask,
+    clear(){
+      messages.length = 0;
+      try{ sessionStorage.removeItem(STORAGE_KEY); }catch(e){}
+      renderAll();
+    },
+    isOpen(){ return panel.classList.contains('open'); }
+  };
 })();

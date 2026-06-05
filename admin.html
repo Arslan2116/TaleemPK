@@ -11,6 +11,7 @@
 <meta name="theme-color" content="#0A1628">
 <title>TaleemPK — Admin Panel</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 <style>
   :root{
     --green:#00C853; --green-dark:#00A040; --green-light:#E8FFF1;
@@ -194,8 +195,9 @@
 </div>
 
 <script>
-const SB_URL = 'https://vpioffkkzwbfnmpxpwgc.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaW9mZmtrendiZm5tcHhwd2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTc5ODksImV4cCI6MjA5NTczMzk4OX0.IUDmCzw6im094kilaTKw812GkVDC7a85AA4scs1X8YE';
+// Prefer centralised config (config.js → window.TPK_CONFIG) but keep literal as fallback for rotation safety
+const SB_URL = (window.TPK_CONFIG && window.TPK_CONFIG.SUPABASE_URL) || 'https://vpioffkkzwbfnmpxpwgc.supabase.co';
+const SB_KEY = (window.TPK_CONFIG && window.TPK_CONFIG.SUPABASE_ANON_KEY) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwaW9mZmtrendiZm5tcHhwd2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTc5ODksImV4cCI6MjA5NTczMzk4OX0.IUDmCzw6im094kilaTKw812GkVDC7a85AA4scs1X8YE';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
 const $ = id => document.getElementById(id);
