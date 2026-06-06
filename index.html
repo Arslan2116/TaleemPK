@@ -2708,7 +2708,7 @@
   <div class="fee-modal">
     <button class="predictor-close" onclick="closeScholMatch()"><span data-icon="x" data-size="16"></span></button>
     <h2><span data-icon="gift" data-size="22"></span> Scholarship Auto-Matcher</h2>
-    <p>4 questions answer karo — best matching scholarships dekho with personalized score</p>
+    <p>Answer 4 quick questions to find your best-matching scholarships with a personalized score</p>
 
     <!-- Progress -->
     <div class="sm-progress" id="smProgress">
@@ -2730,7 +2730,7 @@
     <!-- Step 2: Field -->
     <div class="sm-step" data-step="2">
       <h3 class="sm-step-title"><span data-icon="target"></span> Field of Study</h3>
-      <p class="sm-step-sub">Kis field me apply karna chahte ho?</p>
+      <p class="sm-step-sub">Which field do you want to apply to?</p>
       <div class="sm-opts cols2">
         <button class="sm-opt" data-val="engineering" onclick="smPick(this,'field')"><span class="sm-opt-icon">⚙️</span><span>Engineering</span></button>
         <button class="sm-opt" data-val="medical"     onclick="smPick(this,'field')"><span class="sm-opt-icon">🏥</span><span>Medical / MBBS</span></button>
@@ -2745,7 +2745,7 @@
     <!-- Step 3: Profile (CGPA / Income) -->
     <div class="sm-step" data-step="3">
       <h3 class="sm-step-title"><span data-icon="dollarSign"></span> Financial Need vs Merit</h3>
-      <p class="sm-step-sub">Konsi category par focus karein?</p>
+      <p class="sm-step-sub">Which category should we focus on?</p>
       <div class="sm-opts">
         <button class="sm-opt" data-val="need"  onclick="smPick(this,'priority')"><span class="sm-opt-icon">🏠</span><span>Need-Based (Family Income Low)<span class="sm-opt-sub">Ehsaas, USAT, Pakistan Baitul Maal</span></span></button>
         <button class="sm-opt" data-val="merit" onclick="smPick(this,'priority')"><span class="sm-opt-icon">🏆</span><span>Merit-Based (Strong Academics)<span class="sm-opt-sub">HEC merit, fellowships, top scorer awards</span></span></button>
@@ -2756,7 +2756,7 @@
     <!-- Step 4: Region -->
     <div class="sm-step" data-step="4">
       <h3 class="sm-step-title"><span data-icon="globe"></span> Where do you want to study?</h3>
-      <p class="sm-step-sub">Domestic ya foreign scholarships?</p>
+      <p class="sm-step-sub">Domestic or foreign scholarships?</p>
       <div class="sm-opts">
         <button class="sm-opt" data-val="domestic" onclick="smPick(this,'region')"><span class="sm-opt-icon">🇵🇰</span><span>Inside Pakistan<span class="sm-opt-sub">HEC, NUST, LUMS, etc.</span></span></button>
         <button class="sm-opt" data-val="foreign"  onclick="smPick(this,'region')"><span class="sm-opt-icon">✈️</span><span>Abroad (Foreign Universities)<span class="sm-opt-sub">Fulbright, Chevening, Erasmus, etc.</span></span></button>
@@ -2917,7 +2917,7 @@
   <div class="fee-modal">
     <button class="predictor-close" onclick="closeMeritCalc()"><span data-icon="x" data-size="16"></span></button>
     <h2><span data-icon="ruler" data-size="22"></span> Merit Aggregate Calculator</h2>
-    <p>Apni Matric, FSc & Entry Test marks daalo — exact aggregate dekho per university</p>
+    <p>Enter your Matric, FSc & Entry Test marks — see your exact aggregate per university</p>
     <div class="fee-field">
       <label>Select University Formula</label>
       <select class="fee-select" id="mcUni" onchange="updateMeritCalc()">
@@ -4583,7 +4583,7 @@ function handleMeritImg(input) {
   const file = input.files && input.files[0];
   if (!file) return;
   if (file.size > 5 * 1024 * 1024) {
-    alert('Image bohot bari hai — 5MB se kam honi chahiye.');
+    alert('Image is too large — it must be under 5 MB.');
     return;
   }
   _meritImgFile = file;
@@ -5678,7 +5678,7 @@ function smShowResults(){
   document.getElementById('smCount').textContent = scored.length;
 
   if(!scored.length){
-    list.innerHTML = '<div class="sm-no-results">😔 Koi matching scholarship nahi mili. Filter relax karke try karo — All Fields ya Both option pick karo.</div>';
+    list.innerHTML = '<div class="sm-no-results">😔 No matching scholarships found. Try relaxing your filters — pick "Any Field" or "Both" to see more options.</div>';
     return;
   }
 
@@ -5819,7 +5819,7 @@ function updateMeritCalc() {
 }
 
 function calculateMerit() {
-  if(!_meritUniData){ alert('Pehle university select karo.'); return; }
+  if(!_meritUniData){ alert('Please select a university first.'); return; }
   const f = _meritUniData;
   const w = f.weights;
   const matricObt = parseFloat(document.getElementById('mcMatricInput').value) || 0;
@@ -6216,7 +6216,7 @@ function submitAlumni(uniId) {
   const field   = document.getElementById('alField-'+uniId).value.trim();
   const company = document.getElementById('alCompany-'+uniId).value.trim();
   const advice  = document.getElementById('alAdvice-'+uniId).value.trim();
-  if(!batch||!field){ alert('Batch aur current field zaroori hai!'); return; }
+  if(!batch||!field){ alert('Batch and current field are required.'); return; }
   const al = { id:Date.now(), name, batch, field, company, advice,
     emoji: ALUMNI_EMOJIS[Math.floor(Math.random()*ALUMNI_EMOJIS.length)] };
   const arr = getAlumni(uniId);

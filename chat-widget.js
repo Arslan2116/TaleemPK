@@ -176,7 +176,7 @@
   function renderAll(){
     body.innerHTML = '';
     if(!messages.length){
-      body.innerHTML = `<div class="tpk-msg bot">Salam! 👋 I'm <b>TaleemPK Assistant</b> — your education advisor for Pakistan.<br><br>I can help with:<br>🏫 University choice & fees<br>📝 Entry tests (ECAT, MDCAT, NET, NTS…)<br>🎓 Field & career advice<br>💰 Scholarships<br>📊 Comparisons & shortlists<br><br>Try a suggestion below or ask me anything.</div>`;
+      body.innerHTML = `<div class="tpk-msg bot">Hi! 👋 I'm <b>TaleemPK Assistant</b> — your education advisor for Pakistan.<br><br>I can help with:<br>🏫 University choice & fees<br>📝 Entry tests (ECAT, MDCAT, NET, NTS…)<br>🎓 Field & career advice<br>💰 Scholarships<br>📊 Comparisons & shortlists<br><br>Try a suggestion below or ask me anything.</div>`;
       return;
     }
     messages.forEach(m=>{
