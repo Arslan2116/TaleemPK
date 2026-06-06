@@ -132,6 +132,17 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   html { scroll-behavior: smooth; }
 
+  /* Respect users who prefer reduced motion — disables the hero float,
+     fade-ins, hover transforms etc. for vestibular-sensitivity accessibility. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   /* ──── Icon system (Lucide-derived) ──── */
   .tpk-ic {
     display: inline-block;

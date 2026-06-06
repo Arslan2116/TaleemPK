@@ -155,7 +155,7 @@
   function safeLinkURL(u){
     if (!u) return '';
     if (/^https?:\/\//i.test(u)) return u;                      // external https link
-    if (/^\?id=\d+$/.test(u))    return 'university.html' + u;  // internal uni link
+    if (/^\?id=\d+$/.test(u))    return '/university.html' + u; // internal uni link (absolute — widget also runs on /university/<slug>)
     if (/^\/university\/[a-z0-9-]+$/i.test(u)) return u;        // clean slug
     if (/^#uni-\d+$/.test(u))    return u;                      // hash anchor
     return '';                                                   // refuse everything else
