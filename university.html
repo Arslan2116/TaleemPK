@@ -21,10 +21,10 @@
 <meta name="twitter:image" content="https://taleempk.pk/og-image.png">
 <meta name="robots" content="index, follow">
 <link rel="canonical" id="canonicalUrl" href="">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
-<link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
-<link rel="shortcut icon" type="image/png" href="favicon.png">
-<link rel="apple-touch-icon" sizes="180x180" href="favicon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
+<link rel="shortcut icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
 <link rel="manifest" href="/manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -39,12 +39,12 @@
   gtag('js', new Date());
   gtag('config', 'G-1T7ZYZFGZ2');
 </script>
-<!-- Plausible (secondary) -->
-<script defer data-domain="taleempk.pk" src="https://plausible.io/js/script.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script defer src="config.js"></script>
-<script defer src="chat-widget.js"></script>
+<!-- Absolute paths: these pages are served from /university/<slug>, so relative
+     src would 404 (resolving to /university/config.js etc.) -->
+<script defer src="/config.js"></script>
+<script defer src="/chat-widget.js"></script>
 <style>
   :root{
     --green:#00C853; --green-dark:#00A040; --green-light:#E8FFF1;

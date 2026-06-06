@@ -85,10 +85,10 @@
 <!-- <meta name="google-site-verification" content="PASTE_YOUR_CODE_HERE"> -->
 
 <!-- ═══ FAVICON + PWA ═══ -->
-<link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
-<link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
-<link rel="shortcut icon" type="image/png" href="favicon.png">
-<link rel="apple-touch-icon" sizes="180x180" href="favicon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
+<link rel="shortcut icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0A1628">
 <meta name="msapplication-TileColor" content="#0A1628">
@@ -107,8 +107,8 @@
 <!-- Leaflet: load only when map is opened -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="config.js"></script>
-<script defer src="chat-widget.js"></script>
+<script defer src="/config.js"></script>
+<script defer src="/chat-widget.js"></script>
 <style>
   :root {
     --green: #00C853;
@@ -554,10 +554,14 @@
     font-size:1.1rem; font-weight:800; color:var(--navy);
     margin-bottom:4px; line-height:1.3; letter-spacing:-0.01em;
   }
+  /* Location: single line, truncated with ellipsis so multi-city universities
+     don't blow out card height (was causing a 60px height variance in the grid).
+     Colour bumped from gray-400 to gray-600 for WCAG AA contrast (2.49 -> 5.7). */
   .uni-location {
-    font-size:0.8rem; color:var(--gray-400); margin-bottom:14px;
+    font-size:0.8rem; color:var(--gray-600); margin-bottom:14px;
+    display: flex; align-items: center; gap: 4px;
+    white-space: nowrap; overflow: hidden;
   }
-  .uni-location { display: inline-flex; align-items: center; gap: 4px; }
   .uni-location::before {
     content: '';
     display: inline-block; width: 12px; height: 12px;
@@ -566,6 +570,8 @@
             mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E") center/contain no-repeat;
     flex-shrink: 0;
   }
+  /* The city text node lives in this span so ellipsis works inside the flex row */
+  .uni-loc-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .uni-tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
   .tag {
     font-size:0.72rem; font-weight:600; padding:3px 10px;
@@ -584,7 +590,7 @@
     margin-top:auto;                          /* push info+footer to the bottom */
   }
   .info-item { min-width:0; }
-  .info-key { font-size:0.72rem; color:var(--gray-400); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+  .info-key { font-size:0.72rem; color:var(--gray-600); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
   .info-val {
     font-size:0.92rem; font-weight:700; color:var(--navy); margin-top:2px;
     /* Clamp to 2 lines so cards stay even when uni has long merit/entry text */
@@ -904,7 +910,7 @@
     width:100%; height:100%; object-fit:contain;
   }
   .detail-title { font-size:1.5rem; font-weight:800; color:var(--navy); }
-  .detail-loc { color:var(--gray-400); margin:4px 0 10px; }
+  .detail-loc { color:var(--gray-600); margin:4px 0 10px; }
   .detail-grid {
     display:grid; grid-template-columns:1fr 1fr;
     gap:16px; margin-bottom:28px;
@@ -2129,7 +2135,7 @@
 <!-- PREDICTOR MODAL -->
 <div class="predictor-overlay" id="predictorOverlay" onclick="if(event.target===this)closePredictor()">
   <div class="predictor-modal" style="position:relative">
-    <button class="predictor-close" onclick="closePredictor()"><span data-icon="x" data-size="16"></span></button>
+    <button class="predictor-close" onclick="closePredictor()" aria-label="Close"><span data-icon="x" data-size="16"></span></button>
     <h2><span data-icon="target" data-size="22"></span> Admission Predictor</h2>
     <p>Tell us about yourself — we'll recommend the best universities for your profile</p>
 
@@ -2454,7 +2460,7 @@
 <!-- AUTH MODAL -->
 <div class="auth-overlay" id="authOverlay" onclick="if(event.target===this)closeAuthModal()">
   <div class="auth-modal">
-    <button class="auth-close" onclick="closeAuthModal()">×</button>
+    <button class="auth-close" onclick="closeAuthModal()" aria-label="Close">×</button>
     <h2 id="authTitle">Welcome back 👋</h2>
     <p class="auth-sub" id="authSub">Log in to write reviews and ask questions.</p>
     <div class="auth-tabs">
@@ -2569,7 +2575,7 @@
 <!-- FEE CALCULATOR MODAL -->
 <div class="fee-overlay" id="feeOverlay" onclick="if(event.target===this)closeFeeCalc()">
   <div class="fee-modal">
-    <button class="predictor-close" onclick="closeFeeCalc()"><span data-icon="x" data-size="16"></span></button>
+    <button class="predictor-close" onclick="closeFeeCalc()" aria-label="Close"><span data-icon="x" data-size="16"></span></button>
     <h2><span data-icon="calculator" data-size="22"></span> Degree Fee Calculator</h2>
     <p>Total cost estimate including tuition, hostel & living</p>
     <div class="fee-field">
@@ -2706,7 +2712,7 @@
 </style>
 <div class="fee-overlay" id="scholMatchOverlay" onclick="if(event.target===this)closeScholMatch()">
   <div class="fee-modal">
-    <button class="predictor-close" onclick="closeScholMatch()"><span data-icon="x" data-size="16"></span></button>
+    <button class="predictor-close" onclick="closeScholMatch()" aria-label="Close"><span data-icon="x" data-size="16"></span></button>
     <h2><span data-icon="gift" data-size="22"></span> Scholarship Auto-Matcher</h2>
     <p>Answer 4 quick questions to find your best-matching scholarships with a personalized score</p>
 
@@ -2915,7 +2921,7 @@
 </style>
 <div class="fee-overlay" id="meritCalcOverlay" onclick="if(event.target===this)closeMeritCalc()">
   <div class="fee-modal">
-    <button class="predictor-close" onclick="closeMeritCalc()"><span data-icon="x" data-size="16"></span></button>
+    <button class="predictor-close" onclick="closeMeritCalc()" aria-label="Close"><span data-icon="x" data-size="16"></span></button>
     <h2><span data-icon="ruler" data-size="22"></span> Merit Aggregate Calculator</h2>
     <p>Enter your Matric, FSc & Entry Test marks — see your exact aggregate per university</p>
     <div class="fee-field">
@@ -2966,7 +2972,7 @@
 <!-- COMMUNITY MERIT SUBMIT MODAL -->
 <div class="merit-overlay" id="meritOverlay" onclick="if(event.target===this)closeMeritSubmit()">
   <div class="merit-submit-modal">
-    <button class="predictor-close" onclick="closeMeritSubmit()">✕</button>
+    <button class="predictor-close" onclick="closeMeritSubmit()" aria-label="Close">✕</button>
     <h2>📊 Submit Merit Data</h2>
     <p class="ms-uni" id="meritSubmitUniName"></p>
     <div class="ms-two-col">
@@ -3016,7 +3022,7 @@
           <p>Tap to upload or drag & drop</p>
           <small>Merit list screenshot — JPG / PNG, max 5MB</small>
         </div>
-        <img id="msImgPreview" style="display:none;max-width:100%;max-height:200px;object-fit:contain;border-radius:6px;">
+        <img id="msImgPreview" alt="Merit document preview" style="display:none;max-width:100%;max-height:200px;object-fit:contain;border-radius:6px;">
         <button type="button" class="ms-img-remove" id="msImgRemove" style="display:none" onclick="removeMeritImg(event)">✕ Remove</button>
       </div>
     </div>
@@ -5325,7 +5331,7 @@ function openArticle(id){
   const p = NEWS_POSTS.find(x=>x.id===id);
   if(!p) return;
   document.getElementById('articleModal').innerHTML = `
-    <button class="article-close" onclick="closeArticle()">×</button>
+    <button class="article-close" onclick="closeArticle()" aria-label="Close">×</button>
     <span class="article-cat">${p.category||'Article'}</span>
     <h1>${p.title}</h1>
     <div class="article-meta">By ${p.author||'TaleemPK'} · ${fmtNewsDate(p.date)}</div>
@@ -6447,7 +6453,7 @@ function renderCards(unis) {
         u.rank?`<div class="uni-rank ${u.rank<=3?'top3':''}">${u.rank<=3?icon('trophy',{size:12})+' ':''}#${u.rank}</div>`:''}
       </div>
       <div class="uni-name">${escHTML(u.name)}</div>
-      <div class="uni-location">${escHTML(u.city)}</div>
+      <div class="uni-location" title="${escHTML(u.city)}"><span class="uni-loc-text">${escHTML(u.city)}</span></div>
       ${cardRating(u.id)}
       <div class="uni-tags">
         <span class="tag ${u.type}"><span data-icon="${u.type==='public'?'building2':'briefcase'}" data-size="12"></span>${u.type==='public'?t('tag_public'):t('tag_private')}</span>
@@ -6911,7 +6917,7 @@ function openDetail(id) {
   const safeWebsite = escHTML(u.website || '').replace(/'/g, '');
   const safeDescription = escHTML(u.description || '');
   modal.innerHTML = `
-    <button class="modal-close" onclick="closeDetailModal()">×</button>
+    <button class="modal-close" onclick="closeDetailModal()" aria-label="Close">×</button>
     <div class="detail-hero">
       <div class="detail-icon">${u.website ? `<img src="${escHTML(logoSrc(u))}" alt="${safeFull}" onload="checkLogoSize(this,'${safeIcon}')" onerror="handleLogoError(this,'${safeWebsite}','${safeIcon}')">` : safeIcon}</div>
       <div>
@@ -7085,7 +7091,7 @@ function openCompareModal() {
   const shareUrl = `${location.origin}/?compare=${list.map(u=>u.id).join(',')}`;
 
   modal.innerHTML = `
-    <button class="modal-close" onclick="closeCompareModal()">×</button>
+    <button class="modal-close" onclick="closeCompareModal()" aria-label="Close">×</button>
 
     <!-- HEADER -->
     <div class="cmp-header">
