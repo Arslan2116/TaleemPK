@@ -7051,8 +7051,13 @@ function openCompareModal() {
     {
       title: icon('share',{size:18,cls:'tpk-ic-green'}) + ' Resources',
       rows: [
-        { label:'Website', vals: list.map(u=>u.website? `<a href="https://www.${u.website}" target="_blank" rel="noopener" style="color:#00A040;font-weight:700;display:inline-flex;align-items:center;gap:4px;">${icon('globe',{size:14})} ${u.website}</a>` : '—') },
-        { label:'Details', vals: list.map(u=>`<a href="/university/${toSlugSafe(u.name)}" style="color:#00A040;font-weight:700;display:inline-flex;align-items:center;gap:4px;">View Profile ${icon('arrowRight',{size:14})}</a>`) },
+        { label:'Website', vals: list.map(u=>u.website? `<a href="https://www.${u.website}" target="_blank" rel="noopener noreferrer" style="color:#00A040;font-weight:700;display:inline-flex;align-items:center;gap:4px;">${icon('globe',{size:14})} ${u.website}</a>` : '—') },
+        { label:'Details', vals: list.map(u=>{
+          // Fallback to ?id= if for any reason u.name is missing — guarantees the link always works
+          const slug = toSlugSafe(u.name);
+          const href = slug ? `/university/${slug}` : `/university.html?id=${u.id}`;
+          return `<a href="${href}" target="_blank" rel="noopener" style="color:#00A040;font-weight:700;display:inline-flex;align-items:center;gap:4px;">View Profile ${icon('arrowRight',{size:14})}</a>`;
+        }) },
       ]
     }
   ];
@@ -7185,14 +7190,16 @@ function shareCompareUrl(){
   }
 }
 
-// Load comparison from URL on page load — only ONCE per param value
+// Load comparison from URL on page load — only ONCE per param value (per pageview)
+// "Dismissed" key is set only when the user EXPLICITLY closes the modal,
+// so coming back via the browser back button does reopen the comparison.
 async function loadCompareFromURL(){
   const params = new URLSearchParams(location.search);
   const ids = params.get('compare');
   if(!ids) return;
-  // Don't auto-open if user already saw this exact comparison in this session
-  const seenKey = 'tpk_seen_compare_' + ids;
-  if(sessionStorage.getItem(seenKey)) return;
+  // Only skip if the user actively dismissed THIS exact comparison earlier in the session
+  const dismissedKey = 'tpk_dismissed_compare_' + ids;
+  if(sessionStorage.getItem(dismissedKey)) return;
 
   // Wait for UNIVERSITIES to hydrate (up to 8s; covers slow 3G/4G)
   const start = Date.now();
@@ -7211,7 +7218,6 @@ async function loadCompareFromURL(){
     console.warn('Compare URL references missing universities:', idArr);
     return;
   }
-  sessionStorage.setItem(seenKey, '1');
   compareList = found.slice(0, 3);
   updateCompareBar();
   openCompareModal();
@@ -7222,10 +7228,13 @@ function closeCompareModal(e) {
   if(!e || e.target.id==='compareModalOverlay' || e.target.classList.contains('modal-close')) {
     document.getElementById('compareModalOverlay').classList.remove('show');
     document.body.classList.remove('printing-compare');
-    // Clear ?compare=... from URL so it doesn't auto-reopen on next visit
+    // Remember that the user actively dismissed this comparison — back-button revisits
+    // won't auto-reopen it for the rest of the session.
     try{
       const url = new URL(location.href);
-      if(url.searchParams.has('compare')){
+      const ids = url.searchParams.get('compare');
+      if (ids) {
+        sessionStorage.setItem('tpk_dismissed_compare_' + ids, '1');
         url.searchParams.delete('compare');
         history.replaceState(null, '', url.pathname + (url.search ? url.search : '') + url.hash);
       }
