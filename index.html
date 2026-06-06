@@ -4611,18 +4611,25 @@ function removeMeritImg(e) {
 }
 
 function openMeritSubmit(uniId, uniName) {
+  // Look up the uni name from UNIVERSITIES if not passed in — avoids template-injection
+  // through u.full when the function is called from a card inline onclick.
+  if (!uniName && typeof UNIVERSITIES !== 'undefined') {
+    const u = UNIVERSITIES.find(x => x.id === uniId);
+    uniName = u ? (u.full || u.name) : '';
+  }
   _meritUniId = uniId;
   _meritImgFile = null;
-  document.getElementById('meritSubmitUniName').textContent = '🏛️ ' + uniName;
+  // Guarded element access — these modal fields might not exist on every page state
+  const nameEl = document.getElementById('meritSubmitUniName');
+  if (nameEl) nameEl.textContent = uniName || '';
   ['msProg','msMerit','msSeats','msProof','msName'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
-  document.getElementById('msYear').value = '2024-25';
-  document.getElementById('msImgFile').value = '';
-  document.getElementById('msImgPreview').style.display = 'none';
-  document.getElementById('msImgPreview').src = '';
-  document.getElementById('msImgPlaceholder').style.display = 'flex';
+  const yearEl = document.getElementById('msYear');           if (yearEl) yearEl.value = '2024-25';
+  const fileEl = document.getElementById('msImgFile');         if (fileEl) fileEl.value = '';
+  const previewEl = document.getElementById('msImgPreview');   if (previewEl) { previewEl.style.display = 'none'; previewEl.src = ''; }
+  const placeholderEl = document.getElementById('msImgPlaceholder'); if (placeholderEl) placeholderEl.style.display = 'flex';
   document.getElementById('msImgRemove').style.display = 'none';
   document.getElementById('msShareNote').style.display = 'none';
   document.getElementById('meritOverlay').classList.add('open');
@@ -4633,7 +4640,7 @@ function closeMeritSubmit() {
 }
 
 function buildMeritMsg() {
-  const uniName = document.getElementById('meritSubmitUniName').textContent.replace('🏛️ ','');
+  const uniName = (document.getElementById('meritSubmitUniName')?.textContent || '').replace(/^🏛️\s*/, '').trim();
   const prog  = document.getElementById('msProg').value.trim();
   const merit = document.getElementById('msMerit').value.trim();
   const seats = document.getElementById('msSeats').value.trim();
@@ -4735,7 +4742,7 @@ async function submitMeritForm() {
     return;
   }
 
-  const uniName = document.getElementById('meritSubmitUniName').textContent.replace('🏛️ ','');
+  const uniName = (document.getElementById('meritSubmitUniName')?.textContent || '').replace(/^🏛️\s*/, '').trim();
   const prog  = document.getElementById('msProg').value.trim();
   const merit = document.getElementById('msMerit').value.trim();
   const seats = document.getElementById('msSeats').value.trim();
@@ -5996,12 +6003,14 @@ function initMap() {
   }
   _mapInstance = L.map('mapContainer',{zoomControl:true}).setView([30.3753,69.3451],6);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(_mapInstance);
-  const icon = L.divIcon({className:'',html:'<div style="background:#00C853;width:9px;height:9px;border-radius:50%;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3)"></div>',iconSize:[9,9],iconAnchor:[4,4]});
+  // Renamed to mapMarkerIcon so it doesn't shadow the global icon() helper
+  const mapMarkerIcon = L.divIcon({className:'',html:'<div style="background:#00C853;width:9px;height:9px;border-radius:50%;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3)"></div>',iconSize:[9,9],iconAnchor:[4,4]});
   UNIVERSITIES.forEach(u=>{
     const c=CITY_COORDS[u.city]; if(!c) return;
     const jr=()=>(Math.random()-0.5)*0.03;
-    L.marker([c[0]+jr(),c[1]+jr()],{icon}).bindPopup(
-      `<div class="map-popup"><div class="map-popup-name">${u.name}</div><div class="map-popup-city">📍 ${u.city} · ${u.type==='public'?'🏛️ Public':'🏢 Private'}</div><button class="map-popup-btn" onclick="toggleMapView();setTimeout(()=>openDetail(${u.id}),100)">View Details →</button></div>`
+    const typeLabel = u.type==='public' ? 'Public' : 'Private';
+    L.marker([c[0]+jr(),c[1]+jr()],{icon: mapMarkerIcon}).bindPopup(
+      `<div class="map-popup"><div class="map-popup-name">${escHTML(u.name)}</div><div class="map-popup-city">${escHTML(u.city)} · ${typeLabel}</div><button class="map-popup-btn" onclick="toggleMapView();setTimeout(()=>openDetail(${u.id}),100)">View Details →</button></div>`
     ).addTo(_mapInstance);
   });
 }
@@ -6433,12 +6442,12 @@ function renderCards(unis) {
     <div class="uni-card fade-in ${u.rank && u.rank<=3 ? 'is-top3':''} ${compareList.find(c=>c.id===u.id)?'selected':''}" id="card-${u.id}" style="position:relative">
       ${matchBadge}
       <div class="uni-card-top" style="${assessMode?'margin-top:28px':''}">
-        <div class="uni-icon">${u.website ? `<img src="${logoSrc(u)}" alt="${u.name}" loading="lazy" onload="checkLogoSize(this,'${u.icon}')" onerror="handleLogoError(this,'${u.website}','${u.icon}')">` : u.icon}</div>
+        <div class="uni-icon">${u.website ? `<img src="${escHTML(logoSrc(u))}" alt="${escHTML(u.name)}" loading="lazy" onload="checkLogoSize(this,'${escHTML(u.icon||'').replace(/'/g,'')}')" onerror="handleLogoError(this,'${escHTML(u.website||'').replace(/'/g,'')}','${escHTML(u.icon||'').replace(/'/g,'')}')">` : escHTML(u.icon||'')}</div>
         ${u.basic&&!DATA_UPDATES[u.id]?`<div class="uni-rank" style="background:rgba(0,200,83,0.12);color:var(--green);font-size:0.6rem;padding:3px 7px;">HEC ✓</div>`:
         u.rank?`<div class="uni-rank ${u.rank<=3?'top3':''}">${u.rank<=3?icon('trophy',{size:12})+' ':''}#${u.rank}</div>`:''}
       </div>
-      <div class="uni-name">${u.name}</div>
-      <div class="uni-location">${u.city}</div>
+      <div class="uni-name">${escHTML(u.name)}</div>
+      <div class="uni-location">${escHTML(u.city)}</div>
       ${cardRating(u.id)}
       <div class="uni-tags">
         <span class="tag ${u.type}"><span data-icon="${u.type==='public'?'building2':'briefcase'}" data-size="12"></span>${u.type==='public'?t('tag_public'):t('tag_private')}</span>
@@ -6555,7 +6564,7 @@ function renderSuggestions(value){
     .slice(0, 5);
 
   if(!unis.length && !cats.length && !progNames.length){
-    box.innerHTML = `<div class="sug-empty">No matches for “${value}”. Press Search to see all results.</div>`;
+    box.innerHTML = `<div class="sug-empty">No matches for “${escHTML(value)}”. Press Search to see all results.</div>`;
     box.classList.add('show');
     return;
   }
@@ -6563,19 +6572,22 @@ function renderSuggestions(value){
   const esc = s => String(s).replace(/`/g,"'").replace(/"/g,'&quot;');
   let html = '';
   unis.forEach(u => {
-    const icon = u.website
-      ? `<img src="${logoSrc(u)}" alt="" loading="lazy" onload="checkLogoSize(this,'${u.icon}')" onerror="handleLogoError(this,'${u.website}','${u.icon}')">`
-      : (u.icon||'🏛️');
+    // Renamed local var to avoid shadowing the global icon() helper
+    const safeIcon = escHTML(u.icon || '').replace(/'/g, '');
+    const safeWebsite = escHTML(u.website || '').replace(/'/g, '');
+    const sugIcon = u.website
+      ? `<img src="${escHTML(logoSrc(u))}" alt="" loading="lazy" onload="checkLogoSize(this,'${safeIcon}')" onerror="handleLogoError(this,'${safeWebsite}','${safeIcon}')">`
+      : (safeIcon || '');
     html += `<div class="sug-item" onmousedown="selectSuggestion('uni',${u.id})">
-      <span class="sug-icon">${icon}</span>
-      <span class="sug-text"><div class="sug-title">${u.name} — ${u.full}</div><div class="sug-sub">📍 ${u.city} · ${u.type==='public'?'Public':'Private'}</div></span>
+      <span class="sug-icon">${sugIcon}</span>
+      <span class="sug-text"><div class="sug-title">${escHTML(u.name)} — ${escHTML(u.full)}</div><div class="sug-sub">${escHTML(u.city)} · ${u.type==='public'?'Public':'Private'}</div></span>
       <span class="sug-type">University</span>
     </div>`;
   });
   cats.forEach(p => {
     html += `<div class="sug-item" onmousedown="selectSuggestion('program',\`${esc(p.label)}\`)">
-      <span class="sug-icon">🎓</span>
-      <span class="sug-text"><div class="sug-title">${p.label}</div><div class="sug-sub">Browse universities offering this</div></span>
+      <span class="sug-icon">${icon('bookOpen',{size:14})}</span>
+      <span class="sug-text"><div class="sug-title">${escHTML(p.label)}</div><div class="sug-sub">Browse universities offering this</div></span>
       <span class="sug-type">Program</span>
     </div>`;
   });
@@ -6839,10 +6851,11 @@ function toggleCompare(id, e) {
 function updateCompareBar() {
   const bar = document.getElementById('compareBar');
   const chips = document.getElementById('compareChips');
+  if (!bar || !chips) return;
   chips.innerHTML = compareList.map(u=>`
     <div class="compare-chip">
-      ${u.icon} ${u.name}
-      <button onclick="removeFromCompare(${u.id})">×</button>
+      ${escHTML(u.icon || '')} ${escHTML(u.name)}
+      <button onclick="removeFromCompare(${u.id})" aria-label="Remove">×</button>
     </div>
   `).join('');
   bar.classList.toggle('show', compareList.length > 0);
@@ -6890,17 +6903,24 @@ function openDetail(id) {
   /* ---- legacy modal (kept for reference, no longer used) ---- */
   const u = UNIVERSITIES.find(u=>u.id===id);
   const modal = document.getElementById('detailModal');
+  // Pre-escape DB fields once for safe template interpolation
+  const safeName = escHTML(u.name);
+  const safeFull = escHTML(u.full);
+  const safeCity = escHTML(u.city);
+  const safeIcon = escHTML(u.icon || '').replace(/'/g, '');
+  const safeWebsite = escHTML(u.website || '').replace(/'/g, '');
+  const safeDescription = escHTML(u.description || '');
   modal.innerHTML = `
     <button class="modal-close" onclick="closeDetailModal()">×</button>
     <div class="detail-hero">
-      <div class="detail-icon">${u.website ? `<img src="${logoSrc(u)}" alt="${u.full}" onload="checkLogoSize(this,'${u.icon}')" onerror="handleLogoError(this,'${u.website}','${u.icon}')">` : u.icon}</div>
+      <div class="detail-icon">${u.website ? `<img src="${escHTML(logoSrc(u))}" alt="${safeFull}" onload="checkLogoSize(this,'${safeIcon}')" onerror="handleLogoError(this,'${safeWebsite}','${safeIcon}')">` : safeIcon}</div>
       <div>
-        <div class="detail-title">${u.full}</div>
-        <div class="detail-loc">📍 ${u.city} &nbsp;·&nbsp; ${t('detail_est')} ${u.established}</div>
-        <div class="uni-tags">${u.tags.map(tg=>`<span class="tag ${tg}">${tg}</span>`).join('')}</div>
+        <div class="detail-title">${safeFull}</div>
+        <div class="detail-loc">${icon('mapPin',{size:14})} ${safeCity} &nbsp;·&nbsp; ${t('detail_est')} ${escHTML(u.established || '')}</div>
+        <div class="uni-tags">${(u.tags||[]).map(tg=>`<span class="tag ${escHTML(tg).replace(/[^a-z0-9-]/gi,'')}">${escHTML(tg)}</span>`).join('')}</div>
       </div>
     </div>
-    <p style="color:var(--gray-600);line-height:1.7;margin-bottom:24px;">${u.description}</p>
+    <p style="color:var(--gray-600);line-height:1.7;margin-bottom:24px;">${safeDescription}</p>
     <div class="detail-grid">
       <div class="detail-box"><div class="detail-box-title">${t('detail_fee')}</div><div class="detail-box-val">${u.fee}</div></div>
       <div class="detail-box"><div class="detail-box-title">${t('detail_entry')}</div><div class="detail-box-val">${u.entry}</div></div>
@@ -6931,7 +6951,7 @@ function openDetail(id) {
       <div class="merit-community-header">
         <span class="merit-community-title">📊 Last Year's Closing Merit <span style="font-weight:400;color:var(--gray-400);font-size:0.78rem;">(Community Verified)</span></span>
         ${VERIFIED_MERIT[u.id] ? `<span class="merit-verified-tag">✅ Verified ${VERIFIED_MERIT[u.id].year}</span>` : ''}
-        <button class="merit-submit-btn" onclick="openMeritSubmit(${u.id},\`${u.full.replace(/`/g,"'")}\`)">+ Submit Data</button>
+        <button class="merit-submit-btn" onclick="openMeritSubmit(${u.id})">+ Submit Data</button>
       </div>
       ${VERIFIED_MERIT[u.id] ? renderVerifiedMerit(u.id) : `<p class="no-merit-msg">📭 No community data yet — be the first to share last year's merit list!</p>`}
     </div>
@@ -7503,10 +7523,15 @@ function renderRecentlyViewed(){
   const items = ids.map(id=>UNIVERSITIES.find(u=>u.id===id)).filter(Boolean).slice(0,8);
   if(!items.length){ el.style.display='none'; return; }
   el.style.display='block';
-  el.innerHTML = `<h4>🕘 Recently Viewed <button class="rec-clear" onclick="clearRecent()">Clear</button></h4>
+  el.innerHTML = `<h4 style="display:flex;align-items:center;gap:8px;">${icon('arrowUp',{size:16,cls:'tpk-ic-green'})} Recently Viewed <button class="rec-clear" onclick="clearRecent()">Clear</button></h4>
     <div class="rec-row">${items.map(u=>{
-      const ic = u.logoUrl ? `<img src="${u.logoUrl}" alt="">` : (u.website? `<img src="https://www.google.com/s2/favicons?domain=${u.website}&sz=64" alt="">` : `<span>${u.icon||'🏛️'}</span>`);
-      return `<div class="rec-chip" onclick="openDetail(${u.id})">${ic}<span class="rec-chip-name">${u.name}</span></div>`;
+      const safeLogo = escHTML(u.logoUrl || '');
+      const safeWeb = escHTML(u.website || '');
+      const safeIcon = escHTML(u.icon || '');
+      const ic = u.logoUrl
+        ? `<img src="${safeLogo}" alt="">`
+        : (u.website ? `<img src="https://www.google.com/s2/favicons?domain=${safeWeb}&sz=64" alt="">` : `<span>${safeIcon}</span>`);
+      return `<div class="rec-chip" onclick="openDetail(${u.id})">${ic}<span class="rec-chip-name">${escHTML(u.name)}</span></div>`;
     }).join('')}</div>`;
 }
 function clearRecent(){ try{ localStorage.removeItem('tpk_recent_v1'); }catch(e){} renderRecentlyViewed(); }
