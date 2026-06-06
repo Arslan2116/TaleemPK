@@ -786,13 +786,40 @@
   }
   .cmp-tip strong{ color:#0A1628; }
 
+  /* Uni-name chip inside each cell (hidden on desktop, shown on mobile so users know
+     which value belongs to which university once rows stack vertically). */
+  .cmp-uni-tag{ display:none; }
+
   /* Mobile responsive */
   @media(max-width:720px){
     .cmp-cards{ grid-template-columns:1fr; }
-    .cmp-row{ grid-template-columns:1fr !important; }
-    .cmp-row-label{ background:#0A1628; color:#fff; font-size:.78rem; }
-    .cmp-cell{ min-height:auto; }
+    .cmp-row{ grid-template-columns:1fr !important; gap:6px; }
+    .cmp-row-label{
+      background:#0A1628; color:#fff; font-size:.78rem;
+      padding:8px 12px; border-radius:8px;
+    }
+    .cmp-cell{
+      min-height:auto;
+      display:flex; flex-direction:row; align-items:center;
+      gap:10px; padding:10px 12px; text-align:left;
+    }
+    .cmp-uni-tag{
+      display:inline-flex; align-items:center;
+      background:#F0FBF4; color:#00723B;
+      border:1px solid #B8E6C9;
+      font-size:.66rem; font-weight:800; letter-spacing:.03em;
+      padding:3px 8px; border-radius:8px; white-space:nowrap;
+      flex-shrink:0; max-width:90px; overflow:hidden; text-overflow:ellipsis;
+    }
+    .cmp-cell-winner .cmp-uni-tag{
+      background:#00C853; color:#fff; border-color:#00A040;
+    }
+    .cmp-cell .cmp-val{ flex:1; text-align:left; font-size:.86rem; }
+    .cmp-bar{ display:none; } /* progress bars don't read well in narrow stacked layout */
+    .cmp-win-badge{ position:static; transform:none; margin:0; align-self:center; font-size:.6rem; padding:2px 6px; }
     .cmp-h2{ font-size:1.25rem; }
+    .cmp-actions{ flex-wrap: wrap; }
+    .cmp-cat-title{ font-size:.95rem; }
   }
 
   /* Print / PDF styling — only the compare modal, nothing else */
@@ -7082,9 +7109,11 @@ function openCompareModal() {
                   : ((row.bars[i]-min)/(max-min||1)) * 100;
                 bar = `<div class="cmp-bar"><span style="width:${Math.max(15,pct)}%"></span></div>`;
               }
+              const uniName = list[i] ? (list[i].name || '') : '';
               return `
-                <div class="cmp-cell ${isWinner?'cmp-cell-winner':''}">
+                <div class="cmp-cell ${isWinner?'cmp-cell-winner':''}" data-uni="${escHTML(uniName)}">
                   ${isWinner?`<div class="cmp-win-badge">✨ ${row.winnerLabel||'Best'}</div>`:''}
+                  <div class="cmp-uni-tag">${escHTML(uniName)}</div>
                   <div class="cmp-val">${v}</div>
                   ${bar}
                 </div>`;
