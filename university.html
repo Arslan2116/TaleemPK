@@ -168,6 +168,11 @@
     border:1px solid rgba(255,255,255,.15);
   }
   .hero-badges span.green{ background:var(--green); border-color:var(--green); color:var(--navy); }
+  /* HEC trust badge — prominent, answers the "is X recognized by HEC" intent at a glance */
+  .hero-badges span.hec-badge{
+    background:rgba(0,200,83,.18); border-color:rgba(0,200,83,.55);
+    color:#7CFFB0; font-weight:800; letter-spacing:.02em;
+  }
 
   /* ─── 2-COLUMN LAYOUT (sidebar overlaps hero) ─── */
   .layout{
@@ -713,9 +718,10 @@ function calcAggregate(){
 function setSEO(){
   const u=UNI;
   const city = u.city ? u.city.split('/')[0].trim() : '';
-  document.title = `${u.full_name||u.name}${city?' — '+city:''} — Fee Structure, Merit List 2025 | TaleemPK`;
+  const yr = new Date().getFullYear(); // dynamic admission year so titles never go stale
+  document.title = `${u.full_name||u.name}${city?' — '+city:''} Fee Structure ${yr}, Merit List & Admissions | TaleemPK`;
   const progCount = (u.programs||[]).length;
-  const d = `${u.full_name||u.name}${city?' ('+city+')':''} 2025 admissions: fee structure${u.fee?' ('+u.fee+')':''}, merit list, entry test${progCount?', '+progCount+'+ programs':''}. Compare Pakistan universities on TaleemPK.`;
+  const d = `${u.full_name||u.name}${city?' ('+city+')':''} ${yr} admissions: fee structure${u.fee?' ('+u.fee+')':''}, merit list, entry test${progCount?', '+progCount+'+ programs':''}. HEC-recognized. Compare on TaleemPK.`;
   $('metaDesc').setAttribute('content', d);
   $('ogTitle').setAttribute('content', `${u.full_name||u.name} | TaleemPK`);
   $('ogDesc').setAttribute('content', d);
@@ -748,10 +754,17 @@ function setSEO(){
 
   // FAQPage JSON-LD for Google rich results
   const faqs = [];
+  // HEC recognition — directly answers the common "is X recognized by HEC" query.
+  // Every institution in our dataset is HEC-recognized, so this is factual.
+  faqs.push({
+    "@type":"Question",
+    "name":`Is ${u.full_name||u.name} recognized by HEC?`,
+    "acceptedAnswer":{"@type":"Answer","text":`Yes. ${u.full_name||u.name} is recognized by the Higher Education Commission (HEC) of Pakistan${u.established?', established in '+u.established:''}${city?' and located in '+city:''}.`}
+  });
   if(u.fee) faqs.push({
     "@type":"Question",
     "name":`What is the fee structure of ${u.full_name||u.name}?`,
-    "acceptedAnswer":{"@type":"Answer","text":`The fee at ${u.full_name||u.name} is approximately ${u.fee}${u.fee_note?' ('+u.fee_note+')':''}.`}
+    "acceptedAnswer":{"@type":"Answer","text":`The fee at ${u.full_name||u.name} is approximately ${u.fee}${u.fee_note?' ('+u.fee_note+')':''}. See the full fee breakdown on TaleemPK.`}
   });
   if(u.merit) faqs.push({
     "@type":"Question",
@@ -816,6 +829,7 @@ function render(){
         <span id="heroRating" class="hero-rating"></span>
       </div>
       <div class="hero-badges">
+        <span class="hec-badge">✓ HEC Recognized</span>
         <span class="green">${sectorLabel}</span>
         ${cleanTags.map(t=>`<span>${esc(t)}</span>`).join('')}
       </div>
@@ -824,11 +838,13 @@ function render(){
 
   <div class="layout">
     <div class="main">
-      ${u.description?`
-        <div class="sec">
-          <div class="sec-head"><div class="icn">📖</div><h2>About</h2></div>
-          <div class="desc">${esc(u.description)}</div>
-        </div>`:''}
+      <div class="sec">
+        <div class="sec-head"><div class="icn">📖</div><h2>About ${esc(u.name)}</h2></div>
+        <div class="desc">
+          <p style="margin:0 0 10px;"><strong>${esc(u.full_name||u.name)}</strong> is a${u.sector==='private'?' private':u.sector==='military'?' military':' public'} ${u.type==='college'?'college':'university'} in ${esc((u.city||'Pakistan').split('/')[0].trim())}, recognized by the Higher Education Commission (HEC) of Pakistan${u.established?', established in '+u.established:''}.</p>
+          ${u.description?`<p style="margin:0;">${esc(u.description)}</p>`:''}
+        </div>
+      </div>
 
       ${fd.length?`
         <div class="sec">
