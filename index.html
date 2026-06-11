@@ -2027,7 +2027,8 @@
     .nav-cta { display:none; }   /* on mobile, login moves into the menu */
     .hero-stats { gap:28px; }
     .stat-num { font-size:1.5rem; }
-    .uni-grid { grid-template-columns:1fr; }
+    /* (uni-grid columns handled by its own breakpoints: 2-col ≤860px, 1-col ≤520px —
+       do NOT force 1fr here or tablets lose the 2-column layout) */
     .detail-grid { grid-template-columns:1fr; }
     .modal { padding:24px; }
     .compare-bar { flex-direction:column; gap:12px; align-items:stretch; }
