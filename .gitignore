@@ -10,3 +10,10 @@ migrate.sql
 
 # Data agent (local dev tool — keep keys & output out of the repo/site)
 agent/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
