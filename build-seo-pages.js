@@ -189,8 +189,10 @@ ${faqSchema ? `<script type="application/ld+json">${JSON.stringify(faqSchema)}</
 // ── main ──
 async function main() {
   console.log('Fetching institutions…');
-  const all = await get('institutions?select=id,name,full_name,city,province,sector,tags,fee,merit,rank,established&order=rank.asc.nullslast,id.asc&limit=500');
+  const all = await get('institutions?select=id,name,full_name,city,province,sector,tags,programs,fee,merit,rank,established&order=rank.asc.nullslast,id.asc&limit=500');
   console.log(`  ${all.length} universities`);
+  // Program-based matchers (for categories where the tag is sparse but programs exist)
+  const hasProgram = (u, re) => (u.programs || []).some(p => re.test(p));
 
   const sortByRank = a => a.slice().sort((x, y) => (x.rank || 999) - (y.rank || 999));
   const pages = [];
@@ -247,12 +249,13 @@ async function main() {
     { tag: 'engineering', slugName: 'engineering-universities-in-pakistan', label: 'Engineering Universities', noun: 'engineering universities' },
     { tag: 'medical', slugName: 'medical-colleges-in-pakistan', label: 'Medical Colleges', noun: 'medical colleges' },
     { tag: 'business', slugName: 'business-schools-in-pakistan', label: 'Business Schools', noun: 'business schools' },
-    { tag: 'cs', slugName: 'computer-science-universities-in-pakistan', label: 'Computer Science Universities', noun: 'computer science universities' },
+    // CS tag is sparse, but many unis offer BS Computer Science — match by program instead.
+    { match: u => hasProgram(u, /computer science|software engineer|\bbs\s*cs\b|\bbscs\b|information technology|\bbs\s*it\b|data science|artificial intelligence/i), slugName: 'computer-science-universities-in-pakistan', label: 'Computer Science Universities', noun: 'computer science (CS/IT) universities' },
     { tag: 'arts', slugName: 'arts-design-universities-in-pakistan', label: 'Arts & Design Universities', noun: 'arts and design universities' },
   ];
   const catRelated = categories.map(c => ({ slug: c.slugName, label: c.label }));
   categories.forEach(cat => {
-    const list = sortByRank(all.filter(u => (u.tags || []).includes(cat.tag)));
+    const list = sortByRank(all.filter(cat.match ? cat.match : (u => (u.tags || []).includes(cat.tag))));
     if (list.length < 2) return;
     const top3 = list.slice(0, 3).map(u => u.name).join(', ');
     pages.push({
