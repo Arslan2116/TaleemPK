@@ -5,6 +5,35 @@ incident. Keep this in the repo so the steps stay versioned with the code.
 
 ---
 
+## 0. SEO build flow — RUN AFTER ANY DATA CHANGE
+
+The SEO pages (landing pages, comparison pages, and the 218 pre-rendered
+university pages) bake university data into **static HTML at build time**.
+Users always see fresh data (the pages re-fetch from Supabase and re-render
+on load), but **crawlers see the baked snapshot until you rebuild.**
+
+So whenever you change university data (admin panel, or SQL like the VU
+update), regenerate and commit:
+
+```bash
+cd C:\Users\User\TaleemPK
+node build-university-pages.js   # regenerate 218 /university/<slug>.html
+node build-seo-pages.js          # regenerate city/category/comparison pages
+node generate-sitemap.js         # refresh sitemap.xml
+git add -A && git commit -m "Rebuild SEO pages after data update" && git push
+```
+
+Cloudflare Pages auto-deploys on push. The static `university/<slug>.html`
+files are served at `/university/<slug>` and take precedence over the
+`_redirects` fallback to `university.html` (used only for slugs that don't
+have a pre-rendered file yet — e.g. a brand-new uni before the next rebuild).
+
+Cadence: run this **monthly**, and always **after a batch of fee/merit
+updates** before an admission cycle. Not needed for review/Q&A activity
+(that's read live from Supabase, never baked).
+
+---
+
 ## 1. Rotating the Supabase `anon` key (H-1)
 
 Do this **once per year** as routine hygiene, or **immediately** if you
