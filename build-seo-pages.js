@@ -186,13 +186,127 @@ ${faqSchema ? `<script type="application/ld+json">${JSON.stringify(faqSchema)}</
 </html>`;
 }
 
+// ── comparison page template (A vs B) ──
+function comparisonHTML(a, b) {
+  const an = a.full_name || a.name, bn = b.full_name || b.name;
+  const slugName = `${slug(a.name)}-vs-${slug(b.name)}`;
+  const canonical = `${SITE}/${slugName}`;
+  const title = `${a.name} vs ${b.name} — Fees, Merit & Comparison ${YEAR} | TaleemPK`;
+  const metaDesc = `${a.name} vs ${b.name}: compare fees, merit, programs, and admissions side by side. ${an} vs ${bn} — which is better for you? Updated ${YEAR}.`;
+  const sectorLabel = u => u.sector === 'public' ? 'Public' : u.sector === 'military' ? 'Military' : 'Private';
+  const row = (label, va, vb) => `
+      <tr><th>${esc(label)}</th><td>${esc(va || '—')}</td><td>${esc(vb || '—')}</td></tr>`;
+  const breadcrumb = {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    'itemListElement': [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE + '/' },
+      { '@type': 'ListItem', position: 2, name: `${a.name} vs ${b.name}`, item: canonical }
+    ]
+  };
+  const faqs = [
+    { q: `Is ${a.name} better than ${b.name}?`, a: `Both ${an} and ${bn} are HEC-recognized universities. ${a.name} is ${sectorLabel(a).toLowerCase()} (est. ${a.established || 'N/A'}) in ${firstCity(a.city)}, while ${b.name} is ${sectorLabel(b).toLowerCase()} (est. ${b.established || 'N/A'}) in ${firstCity(b.city)}. The better choice depends on your field, budget, and merit — compare the details above.` },
+    { q: `What is the fee difference between ${a.name} and ${b.name}?`, a: `${a.name}'s fee is approximately ${a.fee || 'not listed'} per semester, while ${b.name}'s is ${b.fee || 'not listed'}. See the full comparison above.` }
+  ];
+  const faqSchema = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(metaDesc)}">
+<link rel="canonical" href="${canonical}">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:url" content="${canonical}">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(metaDesc)}">
+<meta property="og:image" content="${SITE}/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(title)}">
+<link rel="icon" type="image/png" href="/favicon.png">
+<meta name="theme-color" content="#0A1628">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">${JSON.stringify(breadcrumb)}</script>
+<script type="application/ld+json">${JSON.stringify(faqSchema)}</script>
+<style>
+  :root{--navy:#0A1628;--green:#00C853;--green-dark:#00A040;--g100:#F5F7FA;--g200:#E8ECF2;--g600:#5A6478;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Sora',system-ui,sans-serif;color:var(--navy);background:#fff;line-height:1.6;}
+  a{color:var(--green-dark);text-decoration:none;}
+  nav{background:var(--navy);padding:0 5%;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+  nav .logo{color:#fff;font-weight:800;font-size:1.2rem;}nav .logo span{color:var(--green);}
+  nav a.home{color:rgba(255,255,255,.8);font-size:.85rem;}
+  .hero{background:linear-gradient(135deg,#0A1628,#112240);color:#fff;padding:44px 5% 36px;text-align:center;}
+  .crumbs{font-size:.78rem;color:rgba(255,255,255,.55);margin-bottom:14px;text-align:left;}.crumbs a{color:var(--green);}
+  h1{font-size:clamp(1.5rem,4vw,2.3rem);font-weight:800;}h1 .vs{color:var(--green);margin:0 10px;}
+  .intro{color:rgba(255,255,255,.8);max-width:720px;margin:14px auto 0;font-size:.98rem;}
+  main{max-width:880px;margin:0 auto;padding:36px 5% 60px;}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--g200);border-radius:12px;overflow:hidden;font-size:.9rem;}
+  thead th{background:var(--navy);color:#fff;padding:16px 14px;font-size:1rem;text-align:center;}
+  thead th:first-child{background:#0d1d33;}
+  th{text-align:left;padding:12px 14px;font-weight:700;color:var(--g600);font-size:.82rem;width:28%;vertical-align:top;}
+  td{padding:12px 14px;border-top:1px solid var(--g200);text-align:center;vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--g100);}
+  .uni-link{display:inline-block;margin-top:4px;font-size:.78rem;}
+  .faq{margin-top:44px;}.faq h2{font-size:1.3rem;font-weight:800;margin-bottom:16px;}
+  .faq-item{margin-bottom:16px;padding:16px;background:var(--g100);border-radius:12px;border-left:3px solid var(--green);}
+  .faq-item h3{font-size:1rem;margin-bottom:6px;}.faq-item p{color:var(--g600);font-size:.9rem;}
+  .cta{margin-top:36px;text-align:center;background:linear-gradient(135deg,#0A1628,#112240);color:#fff;padding:30px;border-radius:16px;}
+  .cta h2{color:#fff;font-size:1.2rem;margin-bottom:8px;}.cta p{color:rgba(255,255,255,.7);margin-bottom:14px;font-size:.9rem;}
+  .cta a{display:inline-block;background:var(--green);color:var(--navy);font-weight:800;padding:11px 24px;border-radius:10px;font-size:.9rem;}
+  footer{background:var(--navy);color:rgba(255,255,255,.55);text-align:center;padding:24px;font-size:.82rem;}footer a{color:var(--green);}
+</style>
+</head>
+<body>
+<nav><a class="logo" href="/">Taleem<span>PK</span></a><a class="home" href="/">← All Universities</a></nav>
+<div class="hero">
+  <div class="crumbs"><a href="/">Home</a> › ${esc(a.name)} vs ${esc(b.name)}</div>
+  <h1>${esc(a.name)}<span class="vs">vs</span>${esc(b.name)}</h1>
+  <p class="intro">Comparing <b>${esc(an)}</b> and <b>${esc(bn)}</b> side by side — fees, merit, programs, and admissions for ${YEAR}. Both are HEC-recognized universities in Pakistan.</p>
+</div>
+<main>
+  <table>
+    <thead><tr><th></th><th>${esc(a.name)}<br><a class="uni-link" href="/university/${slug(a.name)}" style="color:#9BE6BC">View profile →</a></th><th>${esc(b.name)}<br><a class="uni-link" href="/university/${slug(b.name)}" style="color:#9BE6BC">View profile →</a></th></tr></thead>
+    <tbody>
+      ${row('Full Name', an, bn)}
+      ${row('City', firstCity(a.city), firstCity(b.city))}
+      ${row('Sector', sectorLabel(a), sectorLabel(b))}
+      ${row('Established', a.established, b.established)}
+      ${row('Fee / Semester', a.fee, b.fee)}
+      ${row('Merit / Eligibility', a.merit, b.merit)}
+      ${row('Entry Test', a.entry, b.entry)}
+      ${row('Seats', a.seats, b.seats)}
+      ${row('Scholarships', a.scholarships, b.scholarships)}
+      ${row('Hostel', a.hostel, b.hostel)}
+      ${row('Total Programs', (a.programs || []).length || '—', (b.programs || []).length || '—')}
+    </tbody>
+  </table>
+  <section class="faq">
+    <h2>Frequently Asked Questions</h2>
+    ${faqs.map(f => `<div class="faq-item"><h3>${esc(f.q)}</h3><p>${esc(f.a)}</p></div>`).join('')}
+  </section>
+  <div class="cta">
+    <h2>Compare more universities</h2>
+    <p>Add up to 3 universities and see them side by side, or use the Admission Predictor.</p>
+    <a href="/?action=predictor">Try the Admission Predictor →</a>
+  </div>
+</main>
+<footer>© ${YEAR} TaleemPK · <a href="/">Compare 218+ Universities in Pakistan</a></footer>
+</body>
+</html>`;
+  return { slugName, html };
+}
+
 // ── main ──
 async function main() {
   console.log('Fetching institutions…');
-  const all = await get('institutions?select=id,name,full_name,city,province,sector,tags,programs,fee,merit,rank,established&order=rank.asc.nullslast,id.asc&limit=500');
+  const all = await get('institutions?select=id,name,full_name,city,province,sector,tags,programs,fee,merit,entry,seats,scholarships,hostel,rank,established,website&order=rank.asc.nullslast,id.asc&limit=500');
   console.log(`  ${all.length} universities`);
   // Program-based matchers (for categories where the tag is sparse but programs exist)
   const hasProgram = (u, re) => (u.programs || []).some(p => re.test(p));
+  const byName = n => all.find(u => u.name.toLowerCase() === n.toLowerCase());
 
   const sortByRank = a => a.slice().sort((x, y) => (x.rank || 999) - (y.rank || 999));
   const pages = [];
@@ -293,18 +407,42 @@ async function main() {
     });
   });
 
-  // ── write files ──
+  // ── write listing pages ──
   let written = 0;
-  pages.forEach(p => {
-    fs.writeFileSync(p.slugName + '.html', pageHTML(p));
-    written++;
-  });
-  console.log(`\nGenerated ${written} SEO landing pages:`);
+  pages.forEach(p => { fs.writeFileSync(p.slugName + '.html', pageHTML(p)); written++; });
+  console.log(`\nGenerated ${written} listing pages:`);
   pages.forEach(p => console.log(`  /${p.slugName}  (${p.unis.length} unis)`));
 
-  // emit the list of slugs for the sitemap generator
-  fs.writeFileSync('.seo-pages.json', JSON.stringify(pages.map(p => p.slugName)));
-  console.log('\nWrote .seo-pages.json (consumed by generate-sitemap.js)');
+  // ── Comparison pages (curated high-search matchups) ──
+  const matchups = [
+    ['NUST', 'FAST NUCES'], ['NUST', 'GIKI'], ['NUST', 'LUMS'], ['NUST', 'UET Lahore'],
+    ['FAST NUCES', 'GIKI'], ['FAST NUCES', 'COMSATS'], ['FAST NUCES', 'LUMS'],
+    ['GIKI', 'PIEAS'], ['LUMS', 'IBA Karachi'], ['IBA Karachi', 'LUMS'],
+    ['COMSATS', 'FAST NUCES'], ['NED University', 'UET Lahore'], ['UET Lahore', 'UET Taxila'],
+    ['KEMU', 'Dow University'], ['Aga Khan University', 'Dow University'], ['NUST', 'COMSATS'],
+    ['LUMS', 'FAST NUCES'], ['GIKI', 'NUST'], ['Bahria University', 'Air University'],
+  ];
+  const compSlugs = [];
+  const seenComp = new Set();
+  let compWritten = 0;
+  matchups.forEach(([na, nb]) => {
+    const a = byName(na), b = byName(nb);
+    if (!a || !b || a.id === b.id) { if (!a) console.warn('  match skip — not found:', na); if (!b) console.warn('  match skip — not found:', nb); return; }
+    // Dedup by the unordered pair so A-vs-B and B-vs-A don't create duplicate content
+    const pairKey = [slug(a.name), slug(b.name)].sort().join('|');
+    if (seenComp.has(pairKey)) return;
+    seenComp.add(pairKey);
+    const { slugName, html } = comparisonHTML(a, b);
+    fs.writeFileSync(slugName + '.html', html);
+    compSlugs.push(slugName); compWritten++;
+  });
+  console.log(`\nGenerated ${compWritten} comparison pages:`);
+  compSlugs.forEach(s => console.log('  /' + s));
+
+  // emit all slugs for the sitemap generator
+  const allSlugs = pages.map(p => p.slugName).concat(compSlugs);
+  fs.writeFileSync('.seo-pages.json', JSON.stringify(allSlugs));
+  console.log(`\nWrote .seo-pages.json (${allSlugs.length} pages, consumed by generate-sitemap.js)`);
 }
 
 main().catch(e => { console.error('FAILED:', e.message); process.exit(1); });
