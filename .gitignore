@@ -15,3 +15,6 @@ agent/
 
 # Cloudflare Wrangler local cache
 worker/.wrangler/
+
+# Build intermediate (list of generated SEO page slugs)
+.seo-pages.json
