@@ -7,6 +7,10 @@ Thumbs.db
 # Stray / scratch files (not part of the site)
 colors.html
 migrate.sql
+UPCOMING-FEATURES.html   # internal roadmap — must NOT be publicly deployed
 
 # Data agent (local dev tool — keep keys & output out of the repo/site)
 agent/
+
+# Cloudflare Wrangler local cache
+worker/.wrangler/
