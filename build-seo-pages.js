@@ -103,6 +103,8 @@ function pageHTML({ slugName, title, metaDesc, h1, intro, unis, faqs, related, c
 <meta name="twitter:description" content="${esc(metaDesc)}">
 <link rel="icon" type="image/png" href="/favicon.png">
 <meta name="theme-color" content="#0A1628">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1T7ZYZFGZ2"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1T7ZYZFGZ2');</script>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script type="application/ld+json">${JSON.stringify(itemList)}</script>
 <script type="application/ld+json">${JSON.stringify(breadcrumb)}</script>
@@ -227,6 +229,8 @@ function comparisonHTML(a, b) {
 <meta name="twitter:title" content="${esc(title)}">
 <link rel="icon" type="image/png" href="/favicon.png">
 <meta name="theme-color" content="#0A1628">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1T7ZYZFGZ2"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1T7ZYZFGZ2');</script>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script type="application/ld+json">${JSON.stringify(breadcrumb)}</script>
 <script type="application/ld+json">${JSON.stringify(faqSchema)}</script>
