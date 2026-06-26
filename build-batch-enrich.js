@@ -1,4 +1,4 @@
-// Generates sql/09-batch-enrich-8.sql from a batch JSON of {id, keepName, data}.
+// Generates sql/10-batch-enrich-9.sql from a batch JSON of {id, keepName, data}.
 // Per uni: UPDATE institutions (only provided fields) + replace fee_details rows.
 // Normalizes "field:x"/"sector:x"/"region:x" tags to TaleemPK's flat vocabulary,
 // strips [reference:N] citation markers, and skips non-numeric fee amounts.
@@ -12,8 +12,9 @@ const arr = list => list.length ? "ARRAY[" + list.map(q).join(',') + "]::text[]"
 
 // map dataset "namespace:value" tags → TaleemPK flat tags (filter vocab + descriptors)
 const TAGMAP = {
-  'computing':'cs','engineering-technology':'engineering','health-sciences':'medical',
-  'allied-health':'medical','nursing':'medical','public-health':'medical','psychology':'sciences',
+  'computing':'cs','computer-science':'cs','engineering-technology':'engineering','technology':'engineering',
+  'robotics':'engineering','health-sciences':'medical','allied-health':'medical','nursing':'medical',
+  'public-health':'medical','global-health':'medical','psychology':'sciences','environmental-sciences':'sciences',
   'commerce':'business','social-sciences':'arts','humanities':'arts','arts-design':'arts',
   'islamic-studies':'islamic','sufism':'islamic','fashion':'arts'
 };
@@ -29,7 +30,7 @@ function normTags(tags){
 }
 
 let sql = `-- ============================================================================
--- 09-batch-enrich-8.sql — enrich 8 existing universities with full official data.
+-- 09-batch-enrich-8.sql — enrich 9 existing universities with full official data.
 -- All target existing rows by id (verified); names/slugs unchanged. Run in Supabase.
 -- ============================================================================\n`;
 
@@ -70,6 +71,6 @@ batch.forEach(u => {
 
 sql += `\n-- After running: node build-university-pages.js && node generate-sitemap.js, then commit.\n`;
 if(!fs.existsSync('sql')) fs.mkdirSync('sql');
-fs.writeFileSync('sql/09-batch-enrich-8.sql', sql);
-console.log(`Wrote sql/09-batch-enrich-8.sql — ${batch.length} universities`);
+fs.writeFileSync('sql/10-batch-enrich-9.sql', sql);
+console.log(`Wrote sql/10-batch-enrich-9.sql — ${batch.length} universities`);
 console.log('Total fee_detail rows:', batch.reduce((n,u)=>n+(u.data.money.fee_details||[]).filter(r=>typeof r.amount==='number').length,0));
