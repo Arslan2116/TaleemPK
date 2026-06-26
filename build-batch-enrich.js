@@ -1,4 +1,4 @@
-// Generates sql/11-batch-enrich-14.sql from a batch JSON of {id, keepName, data}.
+// Generates sql/12-batch-enrich-12.sql from a batch JSON of {id, keepName, data}.
 // Per uni: UPDATE institutions (only provided fields) + replace fee_details rows.
 // Normalizes "field:x"/"sector:x"/"region:x" tags to TaleemPK's flat vocabulary,
 // strips [reference:N] citation markers, and skips non-numeric fee amounts.
@@ -18,7 +18,8 @@ const TAGMAP = {
   'commerce':'business','social-sciences':'arts','humanities':'arts','arts-design':'arts',
   'islamic-studies':'islamic','sufism':'islamic','fashion':'arts',
   'information-technology':'cs','data-analytics':'cs','dental':'medical','pharmacy':'medical',
-  'finance':'business','environmental-studies':'sciences','architecture':'arts','design':'arts'
+  'finance':'business','environmental-studies':'sciences','architecture':'arts','design':'arts',
+  'artificial-intelligence':'cs','veterinary-sciences':'medical','fashion-design':'arts','science':'sciences'
 };
 function normTags(tags){
   const out = [];
@@ -32,7 +33,7 @@ function normTags(tags){
 }
 
 let sql = `-- ============================================================================
--- 09-batch-enrich-8.sql — enrich 14 existing universities with full official data.
+-- 09-batch-enrich-8.sql — enrich 12 existing universities with full official data.
 -- All target existing rows by id (verified); names/slugs unchanged. Run in Supabase.
 -- ============================================================================\n`;
 
@@ -73,6 +74,6 @@ batch.forEach(u => {
 
 sql += `\n-- After running: node build-university-pages.js && node generate-sitemap.js, then commit.\n`;
 if(!fs.existsSync('sql')) fs.mkdirSync('sql');
-fs.writeFileSync('sql/11-batch-enrich-14.sql', sql);
-console.log(`Wrote sql/11-batch-enrich-14.sql — ${batch.length} universities`);
+fs.writeFileSync('sql/12-batch-enrich-12.sql', sql);
+console.log(`Wrote sql/12-batch-enrich-12.sql — ${batch.length} universities`);
 console.log('Total fee_detail rows:', batch.reduce((n,u)=>n+(u.data.money.fee_details||[]).filter(r=>typeof r.amount==='number').length,0));
