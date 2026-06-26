@@ -286,9 +286,24 @@ const MERIT_FORMULAS = {
   default: [10, 40, 50, 'Entry Test']
 };
 
+// Returns [matric%, fsc%, test%, testLabel] — prefers the verified dataset
+// (window.TPK_MERIT, 182 internet-checked formulas) over the small hardcoded set.
+// Keeps LUMS/IBA-style special (SAT/aptitude, 0/0/0) handling intact, and only
+// uses clean 3-component verified formulas (skips interview/other-based ones the
+// 3-input calculator can't represent accurately).
+function getMeritFormula(id){
+  const hard = MERIT_FORMULAS[id];
+  if(hard && hard[0]===0 && hard[1]===0 && hard[2]===0) return hard; // special: LUMS/IBA
+  const v = (window.TPK_MERIT||{})[id];
+  if(v && (v.t>0 || v.f>0) && !v.iv && !v.o){
+    return [v.m||0, v.f||0, v.t||0, v.test||'Entry Test'];
+  }
+  return hard || MERIT_FORMULAS.default;
+}
+
 function buildAggCalc(){
   if(!UNI) return;
-  const f = MERIT_FORMULAS[UNI.id] || MERIT_FORMULAS.default;
+  const f = getMeritFormula(UNI.id);
   const isSpecial = f[0]===0; // LUMS, IBA — test-only, can't calculate simply
   const closing = UNI.merit ? parseFloat(UNI.merit) : null;
 
@@ -323,7 +338,7 @@ function buildAggCalc(){
 
 function calcAggregate(){
   if(!UNI) return;
-  const f = MERIT_FORMULAS[UNI.id] || MERIT_FORMULAS.default;
+  const f = getMeritFormula(UNI.id);
   const m = parseFloat(document.getElementById('calcMatric')?.value)||0;
   const s = parseFloat(document.getElementById('calcFsc')?.value)||0;
   const t = parseFloat(document.getElementById('calcTest')?.value)||0;
