@@ -6998,6 +6998,14 @@ function openDetail(id) {
     list = [id, ...list.filter(x=>x!==id)].slice(0,8);
     localStorage.setItem(k, JSON.stringify(list));
   }catch(e){}
+  // Save filter/scroll state so back-navigation restores where the user was
+  try{
+    sessionStorage.setItem('tpk_back_state', JSON.stringify({
+      filter: currentFilter, city: currentCity, program: currentProgram,
+      scholarship: currentScholarship, sort: currentSort,
+      query: searchQuery, page: currentPage, scrollY: window.scrollY
+    }));
+  }catch(e){}
   // Canonical detail view is the dedicated university page.
   const _u = (window.INSTITUTIONS||[]).find(x=>x.id===id);
   window.location.href = _u ? '/university/'+(_u.name||'').toLowerCase().replace(/[()]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') : 'university.html?id='+id;
@@ -7805,6 +7813,35 @@ document.head.appendChild(_tpkSlideKf);
   populateCityFilter();
   populateProgramFilter();
   renderNews();
+  // Restore filter/scroll state after back-navigation from a university page
+  try{
+    const _saved = JSON.parse(sessionStorage.getItem('tpk_back_state')||'null');
+    if(_saved){
+      sessionStorage.removeItem('tpk_back_state');
+      currentFilter = _saved.filter||'all';
+      currentCity = _saved.city||'';
+      currentProgram = _saved.program||'';
+      currentScholarship = _saved.scholarship||'';
+      currentSort = _saved.sort||'default';
+      searchQuery = _saved.query||'';
+      currentPage = _saved.page||1;
+      // Restore search input text
+      const _inp = document.getElementById('heroSearch');
+      if(_inp && searchQuery) _inp.value = searchQuery;
+      // Restore active filter button
+      document.querySelectorAll('.filter-btn').forEach(b=>{
+        const _m = (b.getAttribute('onclick')||'').match(/filterUnis\('([^']+)'/);
+        if(_m) b.classList.toggle('active', _m[1]===currentFilter);
+      });
+      // Restore dropdown values
+      const _cy=document.getElementById('cityFilter'); if(_cy&&currentCity) _cy.value=currentCity;
+      const _pr=document.getElementById('programFilter'); if(_pr&&currentProgram) _pr.value=currentProgram;
+      const _so=document.getElementById('sortFilter'); if(_so&&currentSort!=='default') _so.value=currentSort;
+      // Restore scroll after cards render
+      const _sy = _saved.scrollY||0;
+      if(_sy>0) setTimeout(()=>window.scrollTo({top:_sy,behavior:'instant'}),150);
+    }
+  }catch(e){}
   applyFilters();
   updateHeroStats();
   renderRecentlyViewed();
