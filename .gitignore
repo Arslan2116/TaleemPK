@@ -18,3 +18,9 @@ worker/.wrangler/
 
 # Build intermediate (list of generated SEO page slugs)
 .seo-pages.json
+
+# Kaggle source data (local build input only — never deploy)
+*.csv
+merit-formulas.json
+match-map.json
+new-unis.json
