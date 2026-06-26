@@ -19,13 +19,14 @@ update), regenerate and commit:
 cd C:\Users\User\TaleemPK
 node build-match-map.js          # re-match TaleemPK unis ↔ Kaggle dataset (writes match-map.json)
 node build-merit-data.js         # regenerate merit-formulas.js (verified merit weightages)
+node build-gpa-data.js           # regenerate gpa-systems.js (CGPA calculator grading scales)
 node build-university-pages.js   # regenerate 218 /university/<slug>.html
 node build-seo-pages.js          # regenerate city/category/comparison pages
 node generate-sitemap.js         # refresh sitemap.xml
 git add -A && git commit -m "Rebuild SEO pages after data update" && git push
 ```
 
-> The first two steps need the Kaggle CSVs (Universities.csv, Merit_Formulas.csv,
+> The first three steps need the Kaggle CSVs (Universities.csv, Merit_Formulas.csv,
 > GPA_Grading_Systems.csv, Departments.csv) present in the project root. They are
 > gitignored (local build input only). If you re-add or update a university, run
 > build-match-map.js first so the new uni gets matched to its verified formula.

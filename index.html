@@ -108,6 +108,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="/config.js"></script>
+<script defer src="/gpa-systems.js"></script>
 <script defer src="/chat-widget.js"></script>
 <style>
   :root {
@@ -2060,6 +2061,7 @@
       <div class="nav-dropdown-menu" id="navDropdownMenu">
         <button onclick="openFeeCalc();closeNavDropdown()"><span class="ndm-icon" data-icon="calculator"></span> Fee Calculator</button>
         <button onclick="openMeritCalc();closeNavDropdown()"><span class="ndm-icon" data-icon="ruler"></span> Merit Calculator</button>
+        <button onclick="openCgpaCalc();closeNavDropdown()"><span class="ndm-icon" data-icon="graduationCap"></span> CGPA Calculator</button>
         <button onclick="openScholMatch();closeNavDropdown()"><span class="ndm-icon" data-icon="gift"></span> Scholarship Matcher</button>
         <button onclick="toggleCalendar();closeNavDropdown()"><span class="ndm-icon" data-icon="calendar"></span> Admission Dates</button>
         <button onclick="toggleMapView();closeNavDropdown()"><span class="ndm-icon" data-icon="map"></span> Map View</button>
@@ -2250,6 +2252,7 @@
   <button class="tool-btn" id="slToolBtn" onclick="toggleShortlistFilter()"><span data-icon="heart"></span> My Shortlist <span class="tool-badge" id="slCountBadge" style="display:none">0</span></button>
   <button class="tool-btn" onclick="openFeeCalc()"><span data-icon="calculator"></span> Fee Calculator</button>
   <button class="tool-btn" onclick="openMeritCalc()"><span data-icon="ruler"></span> Merit Calculator</button>
+  <button class="tool-btn" onclick="openCgpaCalc()"><span data-icon="graduationCap"></span> CGPA Calculator</button>
   <button class="tool-btn" onclick="openScholMatch()"><span data-icon="gift"></span> Scholarship Matcher</button>
   <button class="tool-btn" id="calToolBtn" onclick="toggleCalendar()"><span data-icon="calendar"></span> Admission Dates</button>
   <button class="tool-btn" id="mapToolBtn" onclick="toggleMapView()"><span data-icon="map"></span> Map View</button>
@@ -2547,6 +2550,7 @@
         <a href="#" onclick="openScholarshipsPage();return false">Scholarships</a>
         <a href="#" onclick="openFeeCalc();return false">Fee Calculator</a>
         <a href="#" onclick="openMeritCalc();return false">Merit Calculator</a>
+        <a href="#" onclick="openCgpaCalc();return false">CGPA Calculator</a>
         <a href="#" onclick="openScholMatch();return false">Scholarship Matcher</a>
         <a href="#" onclick="toggleCalendar();return false">Admission Calendar</a>
         <a href="#" onclick="toggleMapView();return false">Map View</a>
@@ -2892,6 +2896,45 @@
   }
   .mc-result.show{ display:block; animation:mcSlideUp .4s ease; }
   @keyframes mcSlideUp{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+
+  /* ── CGPA Calculator ── */
+  .cgpa-scale-note{ font-size:12.5px; color:#475569; margin-top:6px; line-height:1.45; }
+  .cgpa-rows{ display:flex; flex-direction:column; gap:8px; margin:14px 0 10px; }
+  .cgpa-row{ display:grid; grid-template-columns:1fr 84px 64px 34px; gap:8px; align-items:center; }
+  .cgpa-row input, .cgpa-row select{
+    padding:9px 10px; border:1.5px solid #e2e8f0; border-radius:9px;
+    font-size:14px; font-family:inherit; background:#fff; color:#0A1628; width:100%;
+  }
+  .cgpa-row input:focus, .cgpa-row select:focus{ outline:none; border-color:#2563eb; }
+  .cgpa-del{
+    width:34px; height:34px; border:none; border-radius:8px; cursor:pointer;
+    background:#f1f5f9; color:#64748b; display:flex; align-items:center; justify-content:center;
+    transition:background .15s,color .15s;
+  }
+  .cgpa-del:hover{ background:#fee2e2; color:#dc2626; }
+  .cgpa-add{
+    display:inline-flex; align-items:center; gap:6px; padding:9px 14px;
+    background:#eff6ff; color:#2563eb; border:1.5px dashed #93c5fd; border-radius:10px;
+    font-size:13.5px; font-weight:600; cursor:pointer; font-family:inherit; transition:background .15s;
+  }
+  .cgpa-add:hover{ background:#dbeafe; }
+  .cgpa-result{
+    margin-top:18px; border-radius:16px; overflow:hidden;
+    background:linear-gradient(135deg,#0A1628 0%,#1a2942 100%); color:#fff;
+    box-shadow:0 8px 24px rgba(10,22,40,.14); animation:mcSlideUp .35s ease;
+  }
+  .cgpa-result-main{ display:grid; grid-template-columns:1fr 1fr; }
+  .cgpa-res-block{ padding:22px 18px; text-align:center; }
+  .cgpa-res-block:first-child{ border-right:1px solid rgba(255,255,255,.12); }
+  .cgpa-res-lbl{ font-size:12px; text-transform:uppercase; letter-spacing:.5px; opacity:.7; margin-bottom:6px; }
+  .cgpa-res-num{ font-size:34px; font-weight:800; line-height:1; }
+  .cgpa-verdict{ padding:11px 18px; font-size:13.5px; font-weight:600; text-align:center; }
+  .cgpa-verdict.good{ background:#065f46; }
+  .cgpa-verdict.fair{ background:#92400e; }
+  .cgpa-verdict.low{ background:#991b1b; }
+  .cgpa-credits{ padding:9px 18px 14px; font-size:12px; text-align:center; opacity:.6; }
+  .cgpa-disclaimer{ font-size:11.5px !important; color:#94a3b8 !important; margin-top:14px !important; line-height:1.5; display:flex; gap:6px; align-items:flex-start; }
+  @media(max-width:480px){ .cgpa-row{ grid-template-columns:1fr 76px 54px 32px; gap:6px; } }
   .mc-result-head{
     background:linear-gradient(135deg,#0A1628 0%,#1a2942 100%);
     color:#fff; padding:24px 22px 20px; text-align:center;
@@ -3015,6 +3058,39 @@
       </div>
       <div class="mc-breakdown" id="meritBreakdown"></div>
     </div>
+  </div>
+</div>
+
+<!-- CGPA CALCULATOR -->
+<div class="fee-overlay" id="cgpaOverlay" onclick="if(event.target===this)closeCgpaCalc()">
+  <div class="fee-modal">
+    <button class="predictor-close" onclick="closeCgpaCalc()" aria-label="Close"><span data-icon="x" data-size="16"></span></button>
+    <h2><span data-icon="graduationCap" data-size="22"></span> CGPA Calculator</h2>
+    <p>Add your courses with grades &amp; credit hours to get your semester GPA / CGPA — on your university's official grading scale.</p>
+    <div class="fee-field">
+      <label>Grading Scale</label>
+      <select class="fee-select" id="cgpaUni" onchange="renderCgpaRows()">
+        <option value="">HEC Standard (4.0) — used by most universities</option>
+      </select>
+      <div class="cgpa-scale-note" id="cgpaScaleNote"></div>
+    </div>
+    <div class="cgpa-rows" id="cgpaRows"></div>
+    <button class="cgpa-add" onclick="addCgpaRow()"><span data-icon="plus" data-size="14"></span> Add Course</button>
+    <div class="cgpa-result" id="cgpaResult" style="display:none;">
+      <div class="cgpa-result-main">
+        <div class="cgpa-res-block">
+          <div class="cgpa-res-lbl">Your GPA</div>
+          <div class="cgpa-res-num" id="cgpaNum">—</div>
+        </div>
+        <div class="cgpa-res-block">
+          <div class="cgpa-res-lbl">Percentage (approx)</div>
+          <div class="cgpa-res-num" id="cgpaPct">—</div>
+        </div>
+      </div>
+      <div class="cgpa-verdict" id="cgpaVerdict"></div>
+      <div class="cgpa-credits" id="cgpaCredits"></div>
+    </div>
+    <p class="cgpa-disclaimer"><span data-icon="info" data-size="12"></span> GPA = Σ(grade points × credit hours) ÷ Σ(credit hours). Percentage is an approximation (CGPA × conversion factor) — always confirm with your university transcript.</p>
   </div>
 </div>
 
@@ -5792,9 +5868,9 @@ const MERIT_FORMULAS = [
   { uni:'UET Lahore',        field:'engineering', test:{name:'ECAT',     max:400},  matric:1100, fsc:1100, weights:{matric:0.17, fsc:0.50, test:0.33}, lastMerit:'78-82%' },
   { uni:'UET Taxila',        field:'engineering', test:{name:'ECAT',     max:400},  matric:1100, fsc:1100, weights:{matric:0.17, fsc:0.50, test:0.33}, lastMerit:'72-78%' },
   { uni:'UET Peshawar',      field:'engineering', test:{name:'ETEA',     max:200},  matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'70-80%' },
-  { uni:'GIKI',              field:'engineering', test:{name:'GIKI Test',max:100},  matric:1100, fsc:1100, weights:{matric:0.05, fsc:0.10, test:0.85}, lastMerit:'80-85%' },
-  { uni:'PIEAS',             field:'engineering', test:{name:'PIEAS Test',max:100}, matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.15, test:0.75}, lastMerit:'85-90%' },
-  { uni:'NED University',    field:'engineering', test:{name:'NED Test', max:100},  matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.50, test:0.40}, lastMerit:'80-87%' },
+  { uni:'GIKI',              field:'engineering', test:{name:'GIKI Test',max:100},  matric:1100, fsc:1100, weights:{matric:0.15, fsc:0.00, test:0.85}, lastMerit:'80-85%' },
+  { uni:'PIEAS',             field:'engineering', test:{name:'PIEAS Test',max:100}, matric:1100, fsc:1100, weights:{matric:0.15, fsc:0.25, test:0.60}, lastMerit:'85-90%' },
+  { uni:'NED University',    field:'engineering', test:{name:'NED Test', max:100},  matric:1100, fsc:1100, weights:{matric:0.00, fsc:0.40, test:0.60}, lastMerit:'80-87%' },
   { uni:'MUET Jamshoro',     field:'engineering', test:{name:'MUET Test',max:100},  matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'72-80%' },
   { uni:'QUEST Nawabshah',   field:'engineering', test:{name:'QUEST Test',max:100}, matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'68-75%' },
   { uni:'KFUEIT',            field:'engineering', test:{name:'KFUEIT Test',max:100},matric:1100, fsc:1100, weights:{matric:0.10, fsc:0.40, test:0.50}, lastMerit:'70-76%' },
@@ -5847,6 +5923,115 @@ function openMeritCalc() {
   if (typeof hydrateIcons === 'function') hydrateIcons(document.getElementById('meritCalcOverlay'));
 }
 function closeMeritCalc(){ document.getElementById('meritCalcOverlay').classList.remove('open'); }
+
+/* ───────────────── CGPA CALCULATOR ───────────────── */
+const CGPA_GRADES = ['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','F'];
+let _cgpaInit = false;
+
+function cgpaScale(){
+  const id = parseInt(document.getElementById('cgpaUni')?.value) || 0;
+  const G = (window.TPK_GPA||{});
+  return (id && G.byId && G.byId[id]) ? G.byId[id] : (G.hec || {grades:{'A+':4,'A':4,'A-':3.67,'B+':3.33,'B':3,'B-':2.67,'C+':2.33,'C':2,'C-':1.67,'D+':1.33,'D':1,'F':0}, conv:25});
+}
+
+// Grades valid for a scale: those with grade points > 0 (in canonical order) plus
+// F. Grades a university doesn't use (e.g. NUST has no A-/B-/C+) are stored as 0
+// in the data and must NOT appear in the dropdown — otherwise picking one wrongly
+// scores 0. The top grade (A or A+) is whichever the scale defines with the max GP.
+function validGrades(scale){
+  const g = scale.grades || {};
+  const list = CGPA_GRADES.filter(k => k!=='F' && (g[k]||0) > 0);
+  list.push('F');
+  return list;
+}
+function gradeOptions(scale, selected){
+  return validGrades(scale).map(k=>`<option value="${k}"${k===selected?' selected':''}>${k}</option>`).join('');
+}
+
+function openCgpaCalc(){
+  const ov = document.getElementById('cgpaOverlay');
+  if(!_cgpaInit){
+    // populate uni dropdown (only those whose scale differs from HEC are flagged)
+    const sel = document.getElementById('cgpaUni');
+    const custom = (window.TPK_GPA && window.TPK_GPA.byId) ? window.TPK_GPA.byId : {};
+    if(typeof UNIVERSITIES !== 'undefined'){
+      UNIVERSITIES.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'')).forEach(u=>{
+        const opt = document.createElement('option');
+        opt.value = u.id;
+        opt.textContent = u.name + (custom[u.id] ? ' — custom scale' : '');
+        sel.appendChild(opt);
+      });
+    }
+    // start with 3 blank course rows
+    addCgpaRow(); addCgpaRow(); addCgpaRow();
+    _cgpaInit = true;
+  }
+  ov.classList.add('open');
+  if(window.hydrateIcons) window.hydrateIcons(ov);
+  renderCgpaRows();
+}
+function closeCgpaCalc(){ document.getElementById('cgpaOverlay').classList.remove('open'); }
+
+function addCgpaRow(){
+  const box = document.getElementById('cgpaRows');
+  const row = document.createElement('div');
+  row.className = 'cgpa-row';
+  row.innerHTML =
+    `<input type="text" class="cgpa-cname" placeholder="Course (optional)" aria-label="Course name">`+
+    `<select class="cgpa-grade" aria-label="Grade" onchange="calcCgpa()">${gradeOptions(cgpaScale(),'A')}</select>`+
+    `<input type="number" class="cgpa-ch" min="0" max="12" step="0.5" placeholder="Cr" aria-label="Credit hours" oninput="calcCgpa()">`+
+    `<button class="cgpa-del" aria-label="Remove course" onclick="this.parentElement.remove();calcCgpa()"><span data-icon="x" data-size="12"></span></button>`;
+  box.appendChild(row);
+  if(window.hydrateIcons) window.hydrateIcons(row);
+}
+
+function renderCgpaRows(){
+  const s = cgpaScale();
+  // rebuild every row's grade dropdown to this scale's valid grades, keeping the
+  // current pick if it's still valid (else fall back to the top grade)
+  const valid = validGrades(s);
+  document.querySelectorAll('#cgpaRows .cgpa-grade').forEach(sel=>{
+    const cur = valid.includes(sel.value) ? sel.value : valid[0];
+    sel.innerHTML = gradeOptions(s, cur);
+  });
+  const note = document.getElementById('cgpaScaleNote');
+  const id = parseInt(document.getElementById('cgpaUni')?.value)||0;
+  const isCustom = id && window.TPK_GPA && window.TPK_GPA.byId && window.TPK_GPA.byId[id];
+  const topGp = Math.max(...Object.values(s.grades||{}));
+  note.textContent = isCustom
+    ? `This university uses a custom grading scale (top grade = ${topGp} GP, ${valid.length} grade levels). Percentage ≈ CGPA × ${s.conv}.`
+    : `HEC standard 4.0 scale (A = 4.0). Percentage ≈ CGPA × ${s.conv}.`;
+  calcCgpa();
+}
+
+function calcCgpa(){
+  const s = cgpaScale();
+  let totQ = 0, totCh = 0;
+  document.querySelectorAll('#cgpaRows .cgpa-row').forEach(r=>{
+    const g = r.querySelector('.cgpa-grade').value;
+    const ch = parseFloat(r.querySelector('.cgpa-ch').value);
+    if(!ch || ch<=0) return;
+    const gp = (g in s.grades) ? s.grades[g] : 0;
+    totQ += gp * ch;
+    totCh += ch;
+  });
+  const res = document.getElementById('cgpaResult');
+  if(totCh <= 0){ res.style.display='none'; return; }
+  const gpa = totQ / totCh;
+  const pct = gpa * s.conv;
+  document.getElementById('cgpaNum').textContent = gpa.toFixed(2);
+  document.getElementById('cgpaPct').textContent = Math.min(pct,100).toFixed(1) + '%';
+  document.getElementById('cgpaCredits').textContent = `Based on ${totCh} credit hour${totCh!==1?'s':''}`;
+  let verdict, cls;
+  if(gpa>=3.5){ verdict="🌟 Excellent — Dean's List range"; cls='good'; }
+  else if(gpa>=3.0){ verdict='👍 Very Good standing'; cls='good'; }
+  else if(gpa>=2.5){ verdict='✓ Good standing'; cls='fair'; }
+  else if(gpa>=2.0){ verdict='⚠️ Satisfactory — above graduation minimum (2.0)'; cls='fair'; }
+  else { verdict='❗ Below the 2.0 graduation minimum — improvement needed'; cls='low'; }
+  const v = document.getElementById('cgpaVerdict');
+  v.textContent = verdict; v.className = 'cgpa-verdict ' + cls;
+  res.style.display = 'block';
+}
 
 function updateMeritCalc() {
   const idx = document.getElementById('mcUni').value;
