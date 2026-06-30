@@ -311,8 +311,7 @@ function buildAggCalc(){
   if(isSpecial){
     html = `<div class="agg-formula-tag">⚡ ${UNI.name} uses a custom test/interview-based admission — no standard aggregate formula applies.</div>`;
   } else {
-    const noTest = f[2] === 0;
-    const formulaStr = noTest
+    const formulaStr = f[2] === 0
       ? `Matric ${f[0]}% + FSc/Inter ${f[1]}%`
       : `Matric ${f[0]}% + FSc/Inter ${f[1]}% + ${f[3]} ${f[2]}%`;
     html = `
@@ -326,11 +325,10 @@ function buildAggCalc(){
           <label>FSc / Inter %</label>
           <input type="number" id="calcFsc" min="0" max="100" placeholder="e.g. 80" oninput="calcAggregate()">
         </div>
-        ${noTest ? `<input type="hidden" id="calcTest" value="0">` : `
         <div class="agg-input-group">
-          <label>${f[3]} Score %</label>
+          <label>${f[3] || 'Entry Test'} Score %</label>
           <input type="number" id="calcTest" min="0" max="100" placeholder="e.g. 70" oninput="calcAggregate()">
-        </div>`}
+        </div>
       </div>
       <div class="agg-result" id="aggResult">
         <div class="agg-score" id="aggScore">--%<span> aggregate</span></div>
