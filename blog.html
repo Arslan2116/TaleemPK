@@ -57,6 +57,21 @@
   .article-body strong{color:var(--navy);}
   .article-body a{color:var(--green);text-decoration:underline;}
 
+  /* BLOG LISTING */
+  .blog-listing-header{padding:40px 0 24px;text-align:center;}
+  .blog-listing-header h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;color:var(--navy);margin-bottom:8px;}
+  .blog-listing-header p{color:var(--gray-600);font-size:0.97rem;}
+  .blog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:8px;}
+  .blog-card{background:#fff;border-radius:16px;box-shadow:var(--shadow);border:1.5px solid var(--gray-200);overflow:hidden;transition:border-color .2s,transform .2s;display:flex;flex-direction:column;}
+  .blog-card:hover{border-color:var(--green);transform:translateY(-4px);}
+  .blog-card-banner{background:var(--navy);padding:32px;text-align:center;font-size:2.8rem;}
+  .blog-card-body{padding:20px 24px 24px;flex:1;display:flex;flex-direction:column;}
+  .blog-card-cat{font-size:0.72rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+  .blog-card-title{font-size:1rem;font-weight:800;color:var(--navy);line-height:1.4;margin-bottom:10px;flex:1;}
+  .blog-card-excerpt{font-size:0.85rem;color:var(--gray-600);line-height:1.6;margin-bottom:16px;}
+  .blog-card-meta{font-size:0.75rem;color:var(--gray-400);display:flex;justify-content:space-between;align-items:center;}
+  .blog-card-read{color:var(--green);font-weight:700;font-size:0.8rem;}
+
   /* NOT FOUND */
   .not-found{text-align:center;padding:80px 24px;}
   .not-found h2{font-size:1.5rem;margin-bottom:12px;}
@@ -321,12 +336,40 @@ async function fetchSupabasePosts(){
   }catch(e){ return []; }
 }
 
+function renderListing(allPosts){
+  document.getElementById('breadcrumb').innerHTML = '<a href="/">Home</a><span>›</span><span>Blog</span>';
+  document.getElementById('articleContent').innerHTML = `
+    <div class="blog-listing-header">
+      <h1>📰 TaleemPK Blog</h1>
+      <p>Admission guides, test prep tips & scholarship news for Pakistani students</p>
+    </div>
+    <div class="blog-grid">
+      ${allPosts.map(p=>`
+        <a href="/blog/${toSlug(p.title)}" class="blog-card">
+          <div class="blog-card-banner">${p.icon||'📰'}</div>
+          <div class="blog-card-body">
+            <div class="blog-card-cat">${bEsc(p.category||'Article')}</div>
+            <div class="blog-card-title">${bEsc(p.title)}</div>
+            <div class="blog-card-excerpt">${bEsc(p.excerpt||'')}</div>
+            <div class="blog-card-meta">
+              <span>${bEsc(fmtDate(p.date))}</span>
+              <span class="blog-card-read">Read →</span>
+            </div>
+          </div>
+        </a>`).join('')}
+    </div>`;
+  document.title = 'Blog — TaleemPK';
+  document.getElementById('relatedSection').style.display = 'none';
+}
+
 // Read slug from URL path: /blog/ecat-preparation-guide
 async function init(){
   const pathMatch = location.pathname.match(/\/blog\/([^/?#]+)/);
   if(!pathMatch){
-    // No slug — redirect to home page blog section
-    window.location.replace('/#news');
+    // No slug — show blog listing
+    const dbPosts = await fetchSupabasePosts();
+    const allPosts = dbPosts.length ? [...POSTS, ...dbPosts] : POSTS;
+    renderListing(allPosts);
     return;
   }
   const slug = pathMatch[1];
