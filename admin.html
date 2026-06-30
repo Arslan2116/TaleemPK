@@ -95,6 +95,7 @@
       <button class="tab" data-panel="note" onclick="showPanel('note',this)">📒 Notes</button>
       <button class="tab" data-panel="res"  onclick="showPanel('res',this)">📊 Results</button>
       <button class="tab" data-panel="schol" onclick="showPanel('schol',this)">🎓 Scholarships</button>
+      <button class="tab" data-panel="deadline" onclick="showPanel('deadline',this)">⏰ Deadline</button>
     </div>
 
     <!-- Institutions -->
@@ -189,6 +190,24 @@
         <div><label>Featured?</label><select id="s_feat"><option value="false">No</option><option value="true">Yes</option></select></div>
       </div>
       <div class="save-row"><button class="btn" onclick="saveScholarship()">Save Scholarship</button><span class="msg" id="scholMsg"></span></div>
+    </div>
+
+    <!-- Admission Deadline -->
+    <div class="panel" id="panel-deadline">
+      <h2>Set Admission Deadline</h2>
+      <div class="hint">Search a university, then set its admission deadline. A countdown badge shows automatically on the site once a future date is set. Leave date empty and save to clear it.</div>
+      <div class="grid2">
+        <div class="full"><label>Search University (by name)</label><input id="d_search" placeholder="Type a name…" oninput="searchInstForDeadline(this.value)"></div>
+        <div id="d_results" class="full" style="display:flex;flex-direction:column;gap:4px;"></div>
+      </div>
+      <div id="d_form" style="display:none;margin-top:14px;">
+        <div class="grid2">
+          <div class="full"><strong id="d_selectedName"></strong></div>
+          <div><label>Deadline Date</label><input id="d_date" type="date"></div>
+          <div><label>Note (optional)</label><input id="d_note" placeholder="e.g. Fall 2026 intake"></div>
+        </div>
+        <div class="save-row"><button class="btn" onclick="saveDeadline()">Save Deadline</button><span class="msg" id="deadlineMsg"></span></div>
+      </div>
     </div>
 
   </div>
@@ -322,6 +341,40 @@ async function saveScholarship(){
   if(error){ flash('scholMsg', error.message, false); return; }
   flash('scholMsg','✅ Saved!', true);
   ['s_title','s_provider','s_level','s_coverage','s_deadline','s_elig','s_url','s_desc'].forEach(id=>$(id).value='');
+}
+
+// ── Set Admission Deadline ──
+let _deadlineSearchTimer = null;
+let _deadlineSelectedId = null;
+function searchInstForDeadline(q){
+  clearTimeout(_deadlineSearchTimer);
+  q = q.trim();
+  if(!q){ $('d_results').innerHTML=''; return; }
+  _deadlineSearchTimer = setTimeout(async ()=>{
+    const { data, error } = await sb.from('institutions').select('id,name,city,admission_deadline').ilike('name','%'+q+'%').limit(8);
+    if(error || !data){ $('d_results').innerHTML=''; return; }
+    $('d_results').innerHTML = data.map(u=>{
+      const safeName = escHTML(u.name||'');
+      const safeCity = escHTML(u.city||'');
+      return `<button type="button" class="btn" style="text-align:left;background:#f5f7fa;color:#222;border:1px solid #ddd;" onclick="pickInstForDeadline(${u.id},'${safeName.replace(/'/g,"\\'")}','${safeCity.replace(/'/g,"\\'")}','${u.admission_deadline||''}')">${safeName} <span class="meta">· ${safeCity}${u.admission_deadline?' · current: '+u.admission_deadline:''}</span></button>`;
+    }).join('') || '<div class="meta">No matches.</div>';
+  }, 300);
+}
+function pickInstForDeadline(id, name, city, currentDate){
+  _deadlineSelectedId = id;
+  $('d_selectedName').textContent = name + (city?' · '+city:'');
+  $('d_date').value = currentDate || '';
+  $('d_note').value = '';
+  $('d_form').style.display = 'block';
+  $('d_results').innerHTML = '';
+  $('d_search').value = '';
+}
+async function saveDeadline(){
+  if(!_deadlineSelectedId){ flash('deadlineMsg','Pick a university first.',false); return; }
+  const row = { admission_deadline: val('d_date') || null, admission_deadline_note: val('d_note') || null };
+  const { error } = await sb.from('institutions').update(row).eq('id', _deadlineSelectedId);
+  if(error){ flash('deadlineMsg', error.message, false); return; }
+  flash('deadlineMsg','✅ Deadline saved!', true);
 }
 
 checkSession();

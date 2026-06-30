@@ -166,6 +166,22 @@ function navSearchInput(){
   box.classList.add('show');
 }
 
+// ── Admission Deadline Countdown ──
+function deadlineBadge(u){
+  if(!u.admission_deadline) return '';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dl = new Date(u.admission_deadline + 'T00:00:00');
+  const days = Math.round((dl - today) / 86400000);
+  if(days < 0) return '';
+  const dateStr = dl.toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
+  const urgent = days <= 7;
+  const label = days === 0 ? 'Last day to apply!' : days === 1 ? '1 day left to apply' : `${days} days left to apply`;
+  return `<div class="deadline-badge${urgent?' urgent':''}">
+    <div class="deadline-top"><span class="deadline-icn">⏰</span><span class="deadline-label">${esc(label)}</span></div>
+    <div class="deadline-sub">Closes ${dateStr}${u.admission_deadline_note?' · '+esc(u.admission_deadline_note):''}</div>
+  </div>`;
+}
+
 // ── Similar Universities (same type & overlapping tags/city) ──
 async function loadSimilar(){
   if(!UNI) return;
@@ -210,7 +226,7 @@ async function load(){
     id = match.id;
   }
   const { data, error } = await sb.from('institutions')
-    .select('id,name,full_name,city,province,sector,type,icon,rank,fee,fee_num,fee_year,fee_note,merit,entry,programs,seats,established,website,logo_url,description,highlights,scholarships,hostel,tags,data_updated,fee_details(label,value,sort_order)')
+    .select('id,name,full_name,city,province,sector,type,icon,rank,fee,fee_num,fee_year,fee_note,merit,entry,programs,seats,established,website,logo_url,description,highlights,scholarships,hostel,tags,data_updated,admission_deadline,admission_deadline_note,fee_details(label,value,sort_order)')
     .eq('id',id).single();
   if(error || !data){ $('content').innerHTML='<div class="loading">University not found. <a href="/">Go back</a></div>'; return; }
   UNI = data;
@@ -559,6 +575,7 @@ function render(){
     </div>
 
     <aside class="sidebar">
+      ${deadlineBadge(u)}
       <div class="side-card">
         <h3>Quick Facts</h3>
         ${sideRow('💰','Fee / Semester', u.fee)}

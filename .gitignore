@@ -7,8 +7,9 @@ Thumbs.db
 # Stray / scratch files (not part of the site)
 colors.html
 migrate.sql
-# internal roadmap — must NOT be publicly deployed
+# internal roadmap / strategy — must NOT be publicly deployed
 UPCOMING-FEATURES.html
+GROWTH-PLAN-90DAY.md
 
 # Data agent (local dev tool — keep keys & output out of the repo/site)
 agent/

@@ -186,6 +186,13 @@
   .sidebar{ display:flex; flex-direction:column; gap:18px; }
   @media(min-width:921px){ .sidebar > *{ position:sticky; } .side-card{ position:sticky; top:84px; } }
 
+  /* ─── ADMISSION DEADLINE BADGE ─── */
+  .deadline-badge{ background:linear-gradient(135deg,var(--green) 0%,var(--green-dark) 100%); color:#fff; border-radius:16px; padding:16px 20px; box-shadow:0 12px 30px rgba(0,200,83,.25); }
+  .deadline-badge.urgent{ background:linear-gradient(135deg,var(--red) 0%,#d32f3f 100%); box-shadow:0 12px 30px rgba(255,71,87,.3); }
+  .deadline-top{ display:flex; align-items:center; gap:8px; font-weight:800; font-size:.98rem; }
+  .deadline-icn{ font-size:1.15rem; }
+  .deadline-sub{ font-size:.78rem; opacity:.9; margin-top:4px; margin-left:24px; }
+
   /* ─── SIDE CARD (key info + CTA) ─── */
   .side-card{
     background:#fff; border-radius:18px; padding:24px;
