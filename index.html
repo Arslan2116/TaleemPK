@@ -3299,6 +3299,7 @@ const NEWS_POSTS = [
     date: "2026-05-30",
     author: "TaleemPK Team",
     excerpt: "Entry tests can make or break your admission. Here is a practical, week-by-week strategy to prepare for ECAT and MDCAT without burning out.",
+    url: "/blog/entry-test-preparation-ecat-mdcat",
     body: `
       <p>For most engineering and medical aspirants, the entry test carries the highest weightage in the final merit. A focused study plan matters more than long, unstructured hours.</p>
       <h3>Step 1: Know the Pattern</h3>
@@ -3322,6 +3323,7 @@ const NEWS_POSTS = [
     date: "2026-05-28",
     author: "TaleemPK Team",
     excerpt: "Most universities weigh Matric, Intermediate, and the entry test differently. Learn the standard aggregate formula and how to estimate your merit before applying.",
+    url: "/blog/university-aggregate-merit-pakistan",
     // Body supports simple HTML: <p>, <h3>, <ul>/<li>, <strong>
     body: `
       <p>Your <strong>aggregate</strong> (also called merit percentage) decides which universities you can get into. Each university uses its own weightage, but the most common formula in Pakistan is:</p>
@@ -3343,6 +3345,7 @@ const NEWS_POSTS = [
     date: "2026-05-20",
     author: "TaleemPK Team",
     excerpt: "From the HEC Need-Based Scholarship to Ehsaas Undergraduate Scholarships — a quick overview of major funding options and who qualifies.",
+    url: "/blog/scholarships-pakistan-2026",
     body: `
       <p>Higher education can be expensive, but several scholarships make it affordable for deserving students:</p>
       <ul>
@@ -3362,6 +3365,7 @@ const NEWS_POSTS = [
     date: "2026-05-12",
     author: "TaleemPK Team",
     excerpt: "Lower fees and prestige, or modern facilities and flexibility? We break down the real trade-offs between public and private universities in Pakistan.",
+    url: "/blog/public-vs-private-universities-pakistan",
     body: `
       <p>Choosing between a public and private university is one of the biggest decisions for students. Here's a balanced look:</p>
       <h3>Public Universities</h3>
@@ -5425,8 +5429,9 @@ function fmtNewsDate(d){
 }
 function blogSlug(title){ return (title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
 function newsCardHTML(p){
+  const href = p.url || `/blog/${blogSlug(p.title)}`;
   return `
-    <a href="/blog/${blogSlug(p.title)}" class="news-card" style="display:block;text-decoration:none;color:inherit;">
+    <a href="${href}" class="news-card" style="display:block;text-decoration:none;color:inherit;">
       <div class="news-card-banner">${p.icon||'📰'}</div>
       <div class="news-card-body">
         <span class="news-cat">${p.category||'Article'}</span>
