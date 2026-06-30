@@ -170,9 +170,52 @@
     overflow-x: hidden;
   }
 
+  /* ───── ANNOUNCEMENT BAR ───── */
+  #announcBar {
+    position: fixed; top:0; left:0; right:0; z-index:101;
+    background: linear-gradient(90deg, #00A040 0%, #007a30 100%);
+    color: #fff; height: 36px;
+    display: flex; align-items: center;
+    overflow: hidden;
+    font-size: 0.8rem; font-weight: 600;
+    transition: height 0.3s ease, opacity 0.3s ease;
+  }
+  #announcBar.hidden { height: 0; opacity: 0; pointer-events: none; }
+  .annc-label {
+    flex-shrink: 0; background: rgba(0,0,0,0.2);
+    padding: 0 12px; height: 100%;
+    display: flex; align-items: center; gap: 6px;
+    white-space: nowrap; font-size: 0.75rem; letter-spacing: 0.3px;
+  }
+  .annc-ticker {
+    flex: 1; overflow: hidden; position: relative; height: 100%;
+    display: flex; align-items: center;
+    mask-image: linear-gradient(90deg, transparent 0%, black 4%, black 94%, transparent 100%);
+  }
+  .annc-track {
+    display: flex; gap: 0; white-space: nowrap;
+    animation: ticker 35s linear infinite;
+  }
+  .annc-track:hover { animation-play-state: paused; }
+  .annc-item {
+    padding: 0 32px; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .annc-item::after { content: '•'; opacity: 0.5; margin-left: 32px; }
+  .annc-item:last-child::after { content: ''; }
+  .annc-close {
+    flex-shrink: 0; background: none; border: none; color: rgba(255,255,255,0.7);
+    cursor: pointer; padding: 0 12px; font-size: 1.1rem; height: 100%;
+    display: flex; align-items: center; transition: color 0.2s;
+  }
+  .annc-close:hover { color: #fff; }
+  @keyframes ticker {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
   /* ───── NAV ───── */
   nav {
-    position: fixed; top:0; left:0; right:0; z-index:100; /* nav */
+    position: fixed; top:36px; left:0; right:0; z-index:100; /* nav */
     background: rgba(10,22,40,0.96);
     backdrop-filter: blur(12px);
     display:flex; align-items:center; justify-content:space-between;
@@ -267,10 +310,12 @@
     background: var(--navy);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     text-align:center;
-    padding: 120px 5% 0;
+    padding: 156px 5% 0;
     position: relative;
     overflow: hidden;
+    transition: padding-top 0.3s ease;
   }
+  body.annc-hidden .hero { padding-top: 120px; }
   /* large glow */
   .hero::before {
     content:'';
@@ -2044,6 +2089,26 @@
 </head>
 <body>
 
+<!-- ANNOUNCEMENT BAR -->
+<div id="announcBar">
+  <div class="annc-label">
+    <span>📢</span> ADMISSIONS 2026
+  </div>
+  <div class="annc-ticker">
+    <div class="annc-track" id="anncTrack">
+      <span class="annc-item">🎓 NUST Entry Test (NET) — Registration open, test series begins July 2026</span>
+      <span class="annc-item">📝 MDCAT 2026 — PMC registration expected August 2026</span>
+      <span class="annc-item">🏛️ University of Punjab — Admissions open for Fall 2026 semester</span>
+      <span class="annc-item">💡 ECAT 2026 — Engineering university admissions underway across Pakistan</span>
+      <span class="annc-item">🎯 LUMS SSE & SDSB — Merit-based admissions, apply before deadline</span>
+      <span class="annc-item">📚 HEC Scholarships — Need-based & merit scholarships available for 2026</span>
+      <span class="annc-item">🏥 NUMS — Medical & Dental admissions, MDCAT required</span>
+      <span class="annc-item">⚡ FAST NUCES — NCAT registration open for CS, AI & Engineering programs</span>
+    </div>
+  </div>
+  <button class="annc-close" onclick="dismissAnnouncBar()" title="Dismiss">×</button>
+</div>
+
 <!-- NAV -->
 <nav>
   <a href="#" class="nav-logo" onclick="closeAboutPage();closeBlogPage();closeScholarshipsPage();window.scrollTo({top:0,behavior:'smooth'});return false">
@@ -3317,6 +3382,40 @@ const NEWS_POSTS = [
 ];
 
 /* ── Apply Config on load ─────────────────────────────────────── */
+// ── Announcement Bar ──
+(function() {
+  const bar = document.getElementById('announcBar');
+  const nav = document.querySelector('nav');
+  if (!bar) return;
+
+  // Dismissed this session?
+  if (sessionStorage.getItem('anncDismissed')) {
+    bar.classList.add('hidden');
+    if (nav) nav.style.top = '0';
+    document.body.classList.add('annc-hidden');
+    return;
+  }
+
+  // Duplicate ticker items for seamless infinite scroll
+  const track = document.getElementById('anncTrack');
+  if (track) {
+    track.innerHTML += track.innerHTML;
+  }
+
+  // Update nav top when bar is visible
+  if (nav) nav.style.top = '36px';
+})();
+
+function dismissAnnouncBar() {
+  const bar = document.getElementById('announcBar');
+  const nav = document.querySelector('nav');
+  if (!bar) return;
+  bar.classList.add('hidden');
+  if (nav) nav.style.top = '0';
+  document.body.classList.add('annc-hidden');
+  sessionStorage.setItem('anncDismissed', '1');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   // Social links
   const s = SITE_CONFIG.social;
