@@ -192,12 +192,13 @@
     box-shadow:0 18px 50px rgba(10,22,40,.10); border:1px solid rgba(0,0,0,.04);
   }
   .side-card h3{ font-size:.7rem; font-weight:800; color:var(--gray-400); text-transform:uppercase; letter-spacing:.6px; margin-bottom:14px; }
-  .side-row{ display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-top:1px solid var(--gray-100); }
+  .side-row{ display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--gray-100); }
   .side-row:first-of-type{ border-top:none; padding-top:0; }
-  .side-icn{ width:30px; flex-shrink:0; font-size:1.1rem; text-align:center; padding-top:1px; }
-  .side-k{ font-size:.7rem; color:var(--gray-400); font-weight:600; text-transform:uppercase; letter-spacing:.3px; margin-bottom:1px; }
-  .side-v{ font-size:.9rem; font-weight:700; color:var(--navy); line-height:1.35; }
+  .side-icn{ width:34px; height:34px; flex-shrink:0; font-size:1rem; border-radius:10px; background:var(--gray-100); display:flex; align-items:center; justify-content:center; }
+  .side-k{ font-size:.68rem; color:var(--gray-400); font-weight:600; text-transform:uppercase; letter-spacing:.3px; margin-bottom:2px; }
+  .side-v{ font-size:.88rem; font-weight:700; color:var(--navy); line-height:1.35; }
   .side-cta{ display:flex; flex-direction:column; gap:8px; margin-top:18px; }
+  @media(max-width:920px){ .side-cta{ display:none; } }
   .side-cta .btn{ width:100%; text-align:center; padding:13px 18px; font-size:.92rem; }
 
   /* ─── SECTIONS ─── */

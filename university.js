@@ -461,7 +461,8 @@ function render(){
   const sectorLabel = u.sector==='public'?'🏛️ Public':u.sector==='military'?'⚔️ Military':'🏢 Private';
   const cleanTags = (u.tags||[]).filter(t=>!['public','private','military','federal','punjab','sindh','kpk','balochistan','ajk','gilgitbaltistan'].includes(t)).slice(0,3);
 
-  const sideRow = (icn,k,v) => v ? `<div class="side-row"><div class="side-icn">${icn}</div><div><div class="side-k">${k}</div><div class="side-v">${esc(v)}</div></div></div>` : '';
+  const isEmptyVal = v => !v || ['—','-','n/a','na','tbd'].includes(String(v).trim().toLowerCase());
+  const sideRow = (icn,k,v) => isEmptyVal(v) ? '' : `<div class="side-row"><div class="side-icn">${icn}</div><div><div class="side-k">${k}</div><div class="side-v">${esc(v)}</div></div></div>`;
 
   $('content').innerHTML = `
   <div class="hero-band">
