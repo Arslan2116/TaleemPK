@@ -7350,7 +7350,7 @@ function openDetail(id) {
     <div class="comm-section" id="qaSection-${u.id}">${buildQAHTML(u.id)}</div>
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--gray-200);text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
       ${u.website?`<a href="https://www.${u.website}" target="_blank" style="background:var(--green);color:var(--navy);padding:12px 28px;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.9rem;">${t('detail_website_btn')}</a>`:`<span style="color:var(--gray-400);font-size:0.85rem;">🔗 Website coming soon — check HEC portal for details</span>`}
-      <button onclick="shareUniversity(${u.id})" style="background:var(--navy);color:var(--white);padding:12px 22px;border:none;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">🔗 Share</button>
+      <button onclick="shareUniversity(${u.id})" style="background:#25D366;color:#fff;padding:12px 22px;border:none;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">📤 Share on WhatsApp</button>
     </div>
   `;
   document.getElementById('detailModalOverlay').classList.add('show');
@@ -7363,13 +7363,17 @@ function openDetail(id) {
 function shareUniversity(id){
   const u = UNIVERSITIES.find(x=>x.id===id);
   if(!u) return;
-  const url = window.location.origin + window.location.pathname + '#uni-' + id;
-  const text = `${u.full} — fees, merit & programs on TaleemPK`;
+  const slug = (u.name||'').toLowerCase().replace(/[()]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const url = window.location.origin + '/university/' + slug;
+  const fee = u.fee ? ` | Fee: ${u.fee}` : '';
+  const city = u.city ? ` | ${u.city}` : '';
+  const text = `🎓 *${u.full}*${city}${fee}\n\nDetails, merit list & programs 👇\n${url}\n\n_via TaleemPK — Pakistan's University Guide_`;
   if(navigator.share){
-    navigator.share({ title:u.full, text, url }).catch(()=>{});
+    navigator.share({ title: u.full, text: u.full + city + fee, url }).catch(()=>{
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    });
   } else {
-    // Fallback: open WhatsApp share
-    window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
   }
 }
 

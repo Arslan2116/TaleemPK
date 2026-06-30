@@ -339,7 +339,7 @@
 <!-- Mobile sticky action bar -->
 <div id="mobileSticky" class="mobile-sticky" style="display:none;">
   <a id="msVisit" class="btn" href="#" target="_blank" rel="noopener" style="flex:1;">🌐 Visit Site</a>
-  <button class="btn navyb" onclick="shareUni()" style="flex:1;">🔗 Share</button>
+  <button class="btn" onclick="shareUni()" style="flex:1;background:#25D366;color:#fff;border-color:#25D366;">📤 Share</button>
 </div>
 
 <footer>© <span id="yr"></span> TaleemPK · <a href="/">Compare Universities in Pakistan</a></footer>
@@ -374,6 +374,21 @@
     ms.classList.toggle('show', show);
     document.body.classList.toggle('has-sticky', show);
   }, { passive: true });
+
+  function shareUni() {
+    var name  = document.querySelector('h1') ? document.querySelector('h1').textContent.trim() : document.title;
+    var url   = window.location.href;
+    var meta  = document.getElementById('metaDesc');
+    var desc  = meta ? meta.getAttribute('content') : '';
+    var text  = '🎓 *' + name + '*\n\n' + desc.substring(0, 120) + '\n\n' + url + '\n\n_via TaleemPK — Pakistan\'s University Guide_';
+    if (navigator.share) {
+      navigator.share({ title: name, url: url }).catch(function() {
+        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+      });
+    } else {
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    }
+  }
 </script>
 </body>
 </html>
