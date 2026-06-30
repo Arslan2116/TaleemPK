@@ -337,7 +337,7 @@ async function fetchSupabasePosts(){
 }
 
 function renderListing(allPosts){
-  document.getElementById('breadcrumb').innerHTML = '<a href="/">Home</a><span>›</span><span>Blog</span>';
+  document.getElementById('breadcrumb').innerHTML = '<a href="/">Home</a><span>›</span><span>Blog</span><span id="breadcrumbTitle" style="display:none"></span>';
   document.getElementById('articleContent').innerHTML = `
     <div class="blog-listing-header">
       <h1>📰 TaleemPK Blog</h1>
