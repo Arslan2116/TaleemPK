@@ -4611,17 +4611,11 @@ const LOGO_OVERRIDES = {
 function logoSrc(u) {
   if (u.logoUrl) return u.logoUrl;              // custom logo from DB (preferred)
   if (!u.website) return '';
-  return LOGO_OVERRIDES[u.website] || `https://logo.clearbit.com/${u.website}?size=200`;
+  return LOGO_OVERRIDES[u.website] || `https://www.google.com/s2/favicons?domain=${u.website}&sz=128`;
 }
 
 function handleLogoError(img, domain, fallback) {
-  const tried = img.dataset.tried || '';
-  if (!tried) {
-    img.dataset.tried = 'clearbit';
-    img.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
-  } else {
-    img.parentElement.innerHTML = fallback;
-  }
+  img.parentElement.innerHTML = fallback;
 }
 function checkLogoSize(img, fallback) {
   // If favicon came back tiny (≤20px) replace with emoji — looks far better than a blurry 16px icon
@@ -5304,10 +5298,10 @@ async function toggleShortlist(id, event) {
 
 function updateSlBadge() {
   const count = _shortlistIds.size;
+  const badge = document.getElementById('slCountBadge');
+  if(badge){ badge.textContent = count; badge.style.display = count > 0 ? 'inline' : 'none'; }
   const btn = document.getElementById('slToolBtn');
-  if(btn){
-    btn.innerHTML = (_slActive?'❤️':'🤍') + ' My Shortlist <span class="tool-badge" id="slCountBadge" style="display:'+(count>0?'inline':'none')+'">'+count+'</span>';
-  }
+  if(btn) btn.classList.toggle('active', _slActive);
 }
 
 /* ── About Page ── */

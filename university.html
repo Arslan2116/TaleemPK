@@ -365,5 +365,15 @@
 </div>
 
 <script defer src="/university.js"></script>
+<script>
+  // Show mobile sticky bar after scrolling past the hero
+  window.addEventListener('scroll', function() {
+    var ms = document.getElementById('mobileSticky');
+    if (!ms) return;
+    var show = window.scrollY > 200;
+    ms.classList.toggle('show', show);
+    document.body.classList.toggle('has-sticky', show);
+  }, { passive: true });
+</script>
 </body>
 </html>
