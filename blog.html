@@ -324,7 +324,11 @@ async function fetchSupabasePosts(){
 // Read slug from URL path: /blog/ecat-preparation-guide
 async function init(){
   const pathMatch = location.pathname.match(/\/blog\/([^/?#]+)/);
-  if(!pathMatch){ notFound(); return; }
+  if(!pathMatch){
+    // No slug — redirect to home page blog section
+    window.location.replace('/#news');
+    return;
+  }
   const slug = pathMatch[1];
   // Try hard-coded first (instant for the curated SEO posts)
   let post = POSTS.find(p => toSlug(p.title) === slug);
