@@ -197,6 +197,9 @@
   .side-icn{ width:34px; height:34px; flex-shrink:0; font-size:1rem; border-radius:10px; background:var(--gray-100); display:flex; align-items:center; justify-content:center; }
   .side-k{ font-size:.68rem; color:var(--gray-400); font-weight:600; text-transform:uppercase; letter-spacing:.3px; margin-bottom:2px; }
   .side-v{ font-size:.88rem; font-weight:700; color:var(--navy); line-height:1.35; }
+  .side-v.clamp{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .side-v.clamp.open{ -webkit-line-clamp:unset; }
+  .side-more{ background:none; border:none; padding:0; margin-top:3px; font-size:.74rem; font-weight:700; color:var(--green-dark); cursor:pointer; }
   .side-cta{ display:flex; flex-direction:column; gap:8px; margin-top:18px; }
   @media(max-width:920px){ .side-cta{ display:none; } }
   .side-cta .btn{ width:100%; text-align:center; padding:13px 18px; font-size:.92rem; }

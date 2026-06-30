@@ -462,7 +462,15 @@ function render(){
   const cleanTags = (u.tags||[]).filter(t=>!['public','private','military','federal','punjab','sindh','kpk','balochistan','ajk','gilgitbaltistan'].includes(t)).slice(0,3);
 
   const isEmptyVal = v => !v || ['—','-','n/a','na','tbd'].includes(String(v).trim().toLowerCase());
-  const sideRow = (icn,k,v) => isEmptyVal(v) ? '' : `<div class="side-row"><div class="side-icn">${icn}</div><div><div class="side-k">${k}</div><div class="side-v">${esc(v)}</div></div></div>`;
+  const sideRow = (icn,k,v) => {
+    if(isEmptyVal(v)) return '';
+    const long = String(v).length > 70;
+    return `<div class="side-row"><div class="side-icn">${icn}</div><div>
+      <div class="side-k">${k}</div>
+      <div class="side-v${long?' clamp':''}">${esc(v)}</div>
+      ${long?`<button class="side-more" onclick="this.previousElementSibling.classList.toggle('open');this.textContent=this.previousElementSibling.classList.contains('open')?'Show less':'Show more'">Show more</button>`:''}
+    </div></div>`;
+  };
 
   $('content').innerHTML = `
   <div class="hero-band">
