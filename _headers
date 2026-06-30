@@ -6,6 +6,8 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
   X-XSS-Protection: 0
+  X-Robots-Tag: noai, noimageai
+  Content-Security-Policy: frame-ancestors 'none'
 
 # ─── Long-lived assets ───
 /favicon.png
