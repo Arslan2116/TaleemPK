@@ -121,7 +121,7 @@
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 
-// ── Blog posts (same as index.html NEWS_POSTS) ──
+// ── Blog posts — each links to its own static HTML page ──
 const POSTS = [
   {
     id: 4,
@@ -131,20 +131,7 @@ const POSTS = [
     date: "2026-05-30",
     author: "TaleemPK Team",
     excerpt: "Entry tests can make or break your admission. Here is a practical, week-by-week strategy to prepare for ECAT and MDCAT without burning out.",
-    body: `
-      <p>For most engineering and medical aspirants, the entry test carries the highest weightage in the final merit. A focused study plan matters more than long, unstructured hours.</p>
-      <h3>Step 1: Know the Pattern</h3>
-      <p>Download the official syllabus for <strong>ECAT</strong> (engineering) or <strong>MDCAT</strong> (medical). Both are largely based on the FSc curriculum, so your textbooks are your best resource.</p>
-      <h3>Step 2: Build a Weekly Plan</h3>
-      <ul>
-        <li><strong>Weeks 1–4:</strong> Cover the full syllabus subject by subject.</li>
-        <li><strong>Weeks 5–8:</strong> Solve past papers and topic-wise MCQs daily.</li>
-        <li><strong>Final 2 weeks:</strong> Full-length timed mock tests to build speed and accuracy.</li>
-      </ul>
-      <h3>Step 3: Review Your Mistakes</h3>
-      <p>Maintain an error log. Revising the questions you got wrong is the fastest way to improve your score.</p>
-      <p><em>Tip: Use the <a href="/">Admission Predictor on TaleemPK</a> to see which universities match your expected aggregate.</em></p>
-    `
+    url: "/blog/entry-test-preparation-ecat-mdcat"
   },
   {
     id: 1,
@@ -154,17 +141,7 @@ const POSTS = [
     date: "2026-05-28",
     author: "TaleemPK Team",
     excerpt: "Most universities weigh Matric, Intermediate, and the entry test differently. Learn the standard aggregate formula and how to estimate your merit before applying.",
-    body: `
-      <p>Your <strong>aggregate</strong> (also called merit percentage) decides which universities you can get into. Each university uses its own weightage, but the most common formula in Pakistan is:</p>
-      <ul>
-        <li><strong>Matric:</strong> 10%</li>
-        <li><strong>Intermediate / FSc:</strong> 40%</li>
-        <li><strong>Entry Test (e.g. ECAT, MDCAT, NTS):</strong> 50%</li>
-      </ul>
-      <h3>Example</h3>
-      <p>If a student scores 85% in Matric, 80% in FSc, and 70% in the entry test, the aggregate is roughly (8.5 + 32 + 35) = <strong>75.5%</strong>.</p>
-      <p>Always check each university's official prospectus, as weightage varies — engineering and medical universities especially rely heavily on the entry test.</p>
-    `
+    url: "/blog/university-aggregate-merit-pakistan"
   },
   {
     id: 2,
@@ -174,16 +151,7 @@ const POSTS = [
     date: "2026-05-20",
     author: "TaleemPK Team",
     excerpt: "From the HEC Need-Based Scholarship to Ehsaas Undergraduate Scholarships — a quick overview of major funding options and who qualifies.",
-    body: `
-      <p>Higher education can be expensive, but several scholarships make it affordable for deserving students:</p>
-      <ul>
-        <li><strong>Ehsaas Undergraduate Scholarship:</strong> For students from low-income families. Covers full tuition at public universities.</li>
-        <li><strong>HEC Need-Based Scholarship:</strong> Available at most HEC-recognized universities. Apply through your university's financial aid office.</li>
-        <li><strong>PEEF Scholarship:</strong> Punjab Educational Endowment Fund — for Punjab domicile holders with good academic records.</li>
-        <li><strong>Prime Minister's Laptop Scheme:</strong> Laptops for top-performing students at public universities.</li>
-      </ul>
-      <p>Check the <a href="/">Scholarships section on TaleemPK</a> for deadlines and eligibility details.</p>
-    `
+    url: "/blog/scholarships-pakistan-2026"
   },
   {
     id: 3,
@@ -193,24 +161,7 @@ const POSTS = [
     date: "2026-05-10",
     author: "TaleemPK Team",
     excerpt: "Lower fees vs better facilities — the public vs private debate is real. Here is how to think through the decision based on your field, budget, and goals.",
-    body: `
-      <p>Choosing between a public and private university is one of the most important decisions a Pakistani student makes. Here is a balanced breakdown:</p>
-      <h3>Public Universities</h3>
-      <ul>
-        <li>Lower fees (PKR 30k–150k/year typically)</li>
-        <li>Strong research culture and faculty at top institutions (NUST, QAU, UET)</li>
-        <li>Competitive admission — merit-based entry tests required</li>
-        <li>Government recognition and employer trust</li>
-      </ul>
-      <h3>Private Universities</h3>
-      <ul>
-        <li>More flexible admission criteria</li>
-        <li>Modern campuses and industry linkages (LUMS, GIKI, Habib)</li>
-        <li>Higher fees (PKR 200k–800k/year), but scholarships available</li>
-        <li>Smaller class sizes and more personalized attention</li>
-      </ul>
-      <p>Use the <a href="/">Compare tool on TaleemPK</a> to put your shortlisted universities side by side before deciding.</p>
-    `
+    url: "/blog/public-vs-private-universities-pakistan"
   }
 ];
 
@@ -345,7 +296,7 @@ function renderListing(allPosts){
     </div>
     <div class="blog-grid">
       ${allPosts.map(p=>`
-        <a href="/blog/${toSlug(p.title)}" class="blog-card">
+        <a href="${p.url||'/blog/'+toSlug(p.title)}" class="blog-card">
           <div class="blog-card-banner">${p.icon||'📰'}</div>
           <div class="blog-card-body">
             <div class="blog-card-cat">${bEsc(p.category||'Article')}</div>

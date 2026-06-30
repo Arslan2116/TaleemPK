@@ -1,1 +1,2 @@
-/blog/* /blog.html 200
+# Blog article slugs route to individual static HTML files in /blog/ folder
+# No rewrite rules needed — Cloudflare Workers serves .html files at clean URLs automatically
