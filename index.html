@@ -147,6 +147,8 @@
     /* Cards */
     .uni-card { background:#1a2635; border-color:#2d3f55; }
     .uni-card:hover { background:#1f2f42; }
+    .uni-card.is-top3 { background-image:linear-gradient(#1a2635,#1a2635),linear-gradient(135deg,#FFD56B 0%,#FFB800 50%,#FFD56B 100%); }
+    .uni-card.is-top3:hover { background-image:linear-gradient(#1f2f42,#1f2f42),linear-gradient(135deg,#FFD56B 0%,#FFB800 50%,#FFD56B 100%); }
     .uni-name { color:#e2ecf8; }
     .uni-location, .uni-fee-label { color:#7a8fa8; }
     /* Nav */
@@ -183,12 +185,20 @@
     .search-suggestions { background:#1a2635; border-color:#2d3f55; }
     .sug-item:hover { background:#2d3f55; }
     /* Tags */
+    .tag { background:#2d3f55; color:#a0b0c4; }
     .tag.public { background:#0d2040; color:#7ab3e0; }
     .tag.private { background:#1a1530; color:#b39ddb; }
+    .tag.engineering { background:#0d2b1a; color:#4caf7d; }
+    .tag.medical { background:#2b1500; color:#ff8a50; }
+    .tag.business { background:#1a1230; color:#9c7fe0; }
+    .tag.arts { background:#2b2200; color:#ffc947; }
     /* Footer */
     footer { background:#0a1220; }
     /* Recently viewed */
-    .rec-chip { background:#1a2635; border-color:#2d3f55; }
+    .recent-strip { background:#1a2635; border-color:#2d3f55; }
+    .rec-chip { background:#2d3f55; border-color:#3d5068; }
+    .rec-chip:hover { background:#3d5068; border-color:var(--green); }
+    .rec-chip-name { color:#e2ecf8; }
     /* Skeleton */
     .skel { background:linear-gradient(90deg,#1a2635 25%,#2d3f55 50%,#1a2635 75%); }
     /* Stat cards */
@@ -664,6 +674,7 @@
     font-size:0.72rem; font-weight:600; padding:3px 10px;
     border-radius:20px; background:var(--gray-100); color:var(--gray-600);
     display: inline-flex; align-items: center; gap: 4px;
+    text-transform: capitalize;
   }
   .tag.public { background:#E3F2FD; color:#1565C0; }
   .tag.private { background:#FCE4EC; color:#C62828; }
