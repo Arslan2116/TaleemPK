@@ -9,7 +9,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 
 <!-- ═══ SEO: PRIMARY ═══ -->
-<title>TaleemPK — Pakistan University Admissions 2025 | Fees, Merit Lists & Scholarships</title>
+<title>TaleemPK — Pakistan University Admissions 2026 | Fees, Merit Lists & Scholarships</title>
 <meta name="description" content="Compare fees, merit lists & admissions of 272 HEC-recognized universities in Pakistan. NUST, LUMS, IBA, FAST, COMSATS & more. Free admission predictor, fee calculator & scholarship finder.">
 <meta name="keywords" content="universities in pakistan, pakistan university admissions 2025, university fees pakistan, merit list 2025, hec universities, nust admission, lums fees, iba karachi, fast nuces, comsats, engineering universities pakistan, medical universities pakistan, scholarships pakistan 2025">
 <meta name="author" content="TaleemPK">
@@ -31,7 +31,7 @@
 <!-- ═══ SEO: TWITTER CARD ═══ -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@TaleemPK_">
-<meta name="twitter:title" content="TaleemPK — Pakistan University Admissions 2025 | Fees, Merit Lists & Scholarships">
+<meta name="twitter:title" content="TaleemPK — Pakistan University Admissions 2026 | Fees, Merit Lists & Scholarships">
 <meta name="twitter:description" content="Compare fees, merit lists & admissions of 272 HEC-recognized universities. NUST, LUMS, IBA, FAST & more. Free tools for Pakistani students.">
 <meta name="twitter:image" content="https://taleempk.pk/og-image.png">
 
@@ -130,6 +130,81 @@
     --radius: 16px;
     --radius-sm: 8px;
   }
+  /* ── Dark mode ── */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --white: #1a2635;
+      --gray-100: #1f2f42;
+      --gray-200: #2d3f55;
+      --gray-400: #7a8fa8;
+      --gray-600: #a0b0c4;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+      --shadow-md: 0 8px 32px rgba(0,0,0,0.4);
+      --shadow-lg: 0 24px 64px rgba(0,0,0,0.5);
+      --green-light: #0d2b1a;
+    }
+    body { background:#111d2b; color:#d4e0ed; }
+    /* Cards */
+    .uni-card { background:#1a2635; border-color:#2d3f55; }
+    .uni-card:hover { background:#1f2f42; }
+    .uni-name { color:#e2ecf8; }
+    .uni-location, .uni-fee-label { color:#7a8fa8; }
+    /* Nav */
+    nav { background:rgba(10,22,40,0.98); }
+    .nav-dropdown-menu { background:#1a2635; border-color:#2d3f55; }
+    .nav-dropdown-menu button:hover { background:#2d3f55; }
+    /* Filter bar */
+    .filter-section { background:#111d2b; border-color:#2d3f55; }
+    .filter-btn { background:#1a2635; color:#d4e0ed; border-color:#2d3f55; }
+    .filter-btn:hover { background:#2d3f55; }
+    .filter-btn.active { background:var(--green); color:#0A1628; }
+    .city-filter { background:#1a2635; color:#d4e0ed; border-color:#2d3f55; }
+    /* Tools bar */
+    .tools-bar { background:#111d2b; border-color:#2d3f55; }
+    .tool-btn { background:#1a2635; color:#d4e0ed; border-color:#2d3f55; }
+    .tool-btn:hover { background:#2d3f55; }
+    /* Modals */
+    .modal, .fee-modal, .predictor-modal, .auth-modal { background:#1a2635; color:#d4e0ed; }
+    .modal-close, .predictor-close { background:#2d3f55; color:#d4e0ed; }
+    /* Inputs */
+    input, select, textarea { background:#111d2b; color:#d4e0ed; border-color:#2d3f55; }
+    input::placeholder { color:#7a8fa8; }
+    /* Cards in compare */
+    .cmp-row { border-color:#2d3f55; }
+    .cmp-row:nth-child(even) { background:#1f2f42; }
+    /* Fee rows */
+    .fee-row:nth-child(odd) { background:#1f2f42; }
+    /* Sections */
+    .news-section, .blog-section, .about-section { background:#111d2b; }
+    .news-card, .blog-card { background:#1a2635; border-color:#2d3f55; }
+    /* Search */
+    .search-box { background:#1a2635; border-color:#2d3f55; }
+    #search { background:transparent; color:#d4e0ed; }
+    .search-suggestions { background:#1a2635; border-color:#2d3f55; }
+    .sug-item:hover { background:#2d3f55; }
+    /* Tags */
+    .tag.public { background:#0d2040; color:#7ab3e0; }
+    .tag.private { background:#1a1530; color:#b39ddb; }
+    /* Footer */
+    footer { background:#0a1220; }
+    /* Recently viewed */
+    .rec-chip { background:#1a2635; border-color:#2d3f55; }
+    /* Skeleton */
+    .skel { background:linear-gradient(90deg,#1a2635 25%,#2d3f55 50%,#1a2635 75%); }
+    /* Stat cards */
+    .stat { background:#1a2635; border-color:#2d3f55; }
+    /* Shortlist/compare bar */
+    .compare-bar { background:#1a2635; border-color:#2d3f55; }
+    .compare-chip { background:#2d3f55; color:#d4e0ed; }
+    /* Merit table */
+    .merit-table tr:nth-child(even) td { background:#1f2f42; }
+    .merit-table th { background:#2d3f55; }
+    /* Detail modal */
+    #detailModal { background:#1a2635; }
+    .detail-tab { background:#1f2f42; color:#a0b0c4; }
+    .detail-tab.active { background:var(--green); color:#0A1628; }
+  }
+
   * { margin:0; padding:0; box-sizing:border-box; }
   html { scroll-behavior: smooth; }
 
@@ -2111,7 +2186,7 @@
     <div class="stat"><div class="stat-icon"><span data-icon="building2" data-size="22"></span></div><div class="stat-num" id="statUnis">272</div><div class="stat-label">HEC Universities</div></div>
     <div class="stat"><div class="stat-icon"><span data-icon="bookOpen" data-size="22"></span></div><div class="stat-num" id="statProgs">260+</div><div class="stat-label">Programs Listed</div></div>
     <div class="stat"><div class="stat-icon"><span data-icon="check" data-size="22"></span></div><div class="stat-num">100%</div><div class="stat-label">Free to Use</div></div>
-    <div class="stat"><div class="stat-icon"><span data-icon="mapPin" data-size="22"></span></div><div class="stat-num" id="statCities">70+</div><div class="stat-label">Cities Covered</div></div>
+    <div class="stat"><div class="stat-icon"><span data-icon="calendarCheck" data-size="22"></span></div><div class="stat-num">2026</div><div class="stat-label">Data Updated</div></div>
   </div>
   <a class="hero-scroll" href="#universities"><span>↓</span>Explore Universities</a>
 </section>
@@ -2127,12 +2202,12 @@
     <button class="filter-btn filter-with-icon" onclick="filterUnis('medical', this)" data-i18n="filter_medical" data-prefix-icon="stethoscope">Medical</button>
     <button class="filter-btn filter-with-icon" onclick="filterUnis('business', this)" data-i18n="filter_business" data-prefix-icon="briefcase">Business</button>
     <button class="filter-btn filter-with-icon" onclick="filterUnis('federal', this)" data-i18n="filter_federal" data-prefix-icon="shield">Federal</button>
-    <button class="filter-btn" onclick="filterUnis('punjab', this)" data-i18n="filter_punjab">🌾 Punjab</button>
-    <button class="filter-btn" onclick="filterUnis('sindh', this)" data-i18n="filter_sindh">🌊 Sindh</button>
-    <button class="filter-btn" onclick="filterUnis('kpk', this)" data-i18n="filter_kpk">🏔️ KPK</button>
-    <button class="filter-btn" onclick="filterUnis('balochistan', this)" data-i18n="filter_balochistan">🏜️ Balochistan</button>
-    <button class="filter-btn" onclick="filterUnis('ajk', this)" data-i18n="filter_ajk">🏞️ AJK</button>
-    <button class="filter-btn" onclick="filterUnis('gilgitbaltistan', this)" data-i18n="filter_gb">⛰️ GB</button>
+    <button class="filter-btn filter-with-icon" onclick="filterUnis('punjab', this)" data-i18n="filter_punjab" data-prefix-icon="mapPin">Punjab</button>
+    <button class="filter-btn filter-with-icon" onclick="filterUnis('sindh', this)" data-i18n="filter_sindh" data-prefix-icon="mapPin">Sindh</button>
+    <button class="filter-btn filter-with-icon" onclick="filterUnis('kpk', this)" data-i18n="filter_kpk" data-prefix-icon="mapPin">KPK</button>
+    <button class="filter-btn filter-with-icon" onclick="filterUnis('balochistan', this)" data-i18n="filter_balochistan" data-prefix-icon="mapPin">Balochistan</button>
+    <button class="filter-btn filter-with-icon" onclick="filterUnis('ajk', this)" data-i18n="filter_ajk" data-prefix-icon="mapPin">AJK</button>
+    <button class="filter-btn filter-with-icon" onclick="filterUnis('gilgitbaltistan', this)" data-i18n="filter_gb" data-prefix-icon="mapPin">GB</button>
     <select id="cityFilter" class="city-filter" onchange="filterByCity(this.value)" aria-label="Filter by city">
       <option value="">All Cities</option>
     </select>
@@ -3375,8 +3450,8 @@ const T = {
     stat1_label:'Top Universities', stat2_label:'Programs Listed', stat3_label:'Students Helped', stat4_label:'Cities Covered',
     filter_label:'Filter:', filter_all:'All (272)', filter_public:'Public', filter_private:'Private',
     filter_engineering:'Engineering', filter_medical:'Medical', filter_business:'Business',
-    filter_federal:'Federal', filter_punjab:'🌾 Punjab', filter_sindh:'🌊 Sindh',
-    filter_kpk:'🏔️ KPK', filter_balochistan:'🏜️ Balochistan', filter_ajk:'🏞️ AJK', filter_gb:'⛰️ GB',
+    filter_federal:'Federal', filter_punjab:'Punjab', filter_sindh:'Sindh',
+    filter_kpk:'KPK', filter_balochistan:'Balochistan', filter_ajk:'AJK', filter_gb:'GB',
     fee_label:'FEE/SEMESTER', merit_label:'MERIT / ENTRY',
     btn_compare:'+ Compare', btn_added:'✓ Added', btn_details:'Details →',
     tag_public:'Public', tag_private:'Private',
