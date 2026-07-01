@@ -225,9 +225,15 @@ async function load(){
     if(!match){ $('content').innerHTML='<div class="loading">University not found. <a href="/">Go back</a></div>'; return; }
     id = match.id;
   }
-  const { data, error } = await sb.from('institutions')
+  let { data, error } = await sb.from('institutions')
     .select('id,name,full_name,city,province,sector,type,icon,rank,fee,fee_num,fee_year,fee_note,merit,entry,programs,seats,established,website,logo_url,description,highlights,scholarships,hostel,tags,data_updated,admission_deadline,admission_deadline_note,fee_details(label,value,sort_order)')
     .eq('id',id).single();
+  // Fallback: deadline columns may not exist yet (migration pending)
+  if(error){
+    ({ data, error } = await sb.from('institutions')
+      .select('id,name,full_name,city,province,sector,type,icon,rank,fee,fee_num,fee_year,fee_note,merit,entry,programs,seats,established,website,logo_url,description,highlights,scholarships,hostel,tags,data_updated,fee_details(label,value,sort_order)')
+      .eq('id',id).single());
+  }
   if(error || !data){ $('content').innerHTML='<div class="loading">University not found. <a href="/">Go back</a></div>'; return; }
   UNI = data;
   render();
