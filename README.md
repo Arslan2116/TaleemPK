@@ -1,6 +1,6 @@
 # TaleemPK
 
-Pakistan's #1 university comparison platform — compare 272 HEC-recognized universities by fees, merit, programs, and location.
+Pakistan's #1 university comparison platform — compare 270 HEC-recognized universities by fees, merit, programs, and location.
 
 ## Features
 - Search universities & programs (with smart aliases)
