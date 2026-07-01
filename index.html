@@ -446,7 +446,7 @@
   }
   .stat:last-child { border-right:none; }
   .stat-icon {
-    font-size:1.3rem; margin-bottom:8px;
+    font-size:1.3rem; margin:0 auto 8px;
     width:36px; height:36px; display:flex; align-items:center; justify-content:center;
     background:rgba(0,200,83,0.12); border-radius:10px; color:var(--green);
   }
@@ -462,6 +462,20 @@
     cursor:pointer; text-decoration:none;
   }
   .hero-scroll span { font-size:1rem; }
+  /* Tablet: 4-across stats clipped at the right edge; hero-scroll arrow sat on top of them */
+  @media (max-width:920px) {
+    .hero-stats { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+    .stat { border-right:none; }
+    .hero-scroll { display:none; }
+    /* 769–920px: links were clipping under the Login button */
+    .nav-links { gap:14px; }
+    .nav-links a { font-size:0.8rem; }
+    .nav-cta { padding:8px 14px; font-size:0.8rem; }
+  }
+  /* Mobile: title wraps mid-phrase, leaving the em-dash orphaned at a line end */
+  @media (max-width:600px) {
+    .hero .hero-dash, #hero-h1 br { display:none; }
+  }
   @keyframes float {
     0%,100% { transform:translateX(-50%) translateY(0); }
     50% { transform:translateX(-50%) translateY(6px); }
@@ -648,7 +662,7 @@
     margin-top:auto;                          /* push info+footer to the bottom */
   }
   .info-item { min-width:0; }
-  .info-key { font-size:0.72rem; color:var(--gray-600); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+  .info-key { font-size:0.75rem; color:var(--gray-600); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
   .info-val {
     font-size:0.92rem; font-weight:700; color:var(--navy); margin-top:2px;
     /* Clamp to 2 lines so cards stay even when uni has long merit/entry text */
@@ -1261,6 +1275,8 @@
   }
   .back-to-top.show { opacity:1; visibility:visible; transform:translateY(0); }
   .back-to-top:hover { background:var(--green); color:var(--navy); }
+  /* Mobile: chat bubble already occupies bottom-right — stacking two FABs covered card buttons */
+  @media(max-width:780px){ .back-to-top { display:none; } }
 
   /* ───── AUTH MODAL ───── */
   .auth-overlay{ display:none; position:fixed; inset:0; z-index:800; /* auth */ background:rgba(10,22,40,.6); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:20px; }
@@ -1706,7 +1722,7 @@
 
   /* ───── STUDENT TOOLS BAR ───── */
   .tools-bar {
-    display:flex; gap:8px; margin:14px 5% 0; flex-wrap:wrap;
+    display:flex; gap:8px; margin:14px 5% 0; flex-wrap:wrap; justify-content:center;
   }
   .tool-btn {
     display:flex; align-items:center; gap:7px;
@@ -2075,8 +2091,10 @@
     .nav-links.open .nav-dropdown.open .nav-dropdown-menu { display:block; }
     .nav-links.open .nav-dropdown-menu button { padding:12px 14px; font-size:0.95rem; }
     .nav-cta { display:none; }   /* on mobile, login moves into the menu */
-    .hero-stats { gap:28px; }
+    .hero-stats { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+    .stat { border-right:none; padding:20px 12px; }
     .stat-num { font-size:1.5rem; }
+    .hero-scroll { display:none; }  /* overlapped the stats row on tablet/mobile heights */
     /* (uni-grid columns handled by its own breakpoints: 2-col ≤860px, 1-col ≤520px —
        do NOT force 1fr here or tablets lose the 2-column layout) */
     .detail-grid { grid-template-columns:1fr; }
@@ -6782,11 +6800,17 @@ function buildQAHTML(uniId) {
   `;
 }
 
+// Multi-campus cities: show main city + count instead of a truncated slash-list
+function cityShort(city){
+  const parts = String(city||'').split('/').map(s=>s.trim()).filter(Boolean);
+  if(parts.length <= 1) return city||'';
+  return `${parts[0]} +${parts.length-1} campuses`;
+}
+
 function cardRating(uniId){
   const a = RATING_AGG[uniId];
-  if(!a || !a.count){
-    return `<div class="card-rating none"><span class="cr-stars">☆☆☆☆☆</span><span class="cr-count">No reviews yet</span></div>`;
-  }
+  // No reviews → render nothing; empty grey stars on 260+ cards made the site look deserted
+  if(!a || !a.count){ return ''; }
   const avg = a.sum/a.count;
   const rounded = Math.round(avg);
   const stars = '★★★★★'.slice(0,rounded) + '☆☆☆☆☆'.slice(0,5-rounded);
@@ -6833,7 +6857,7 @@ function renderCards(unis) {
         u.rank?`<div class="uni-rank ${u.rank<=3?'top3':''}">${u.rank<=3?icon('trophy',{size:12})+' ':''}#${u.rank}</div>`:''}
       </div>
       <div class="uni-name">${escHTML(u.name)}</div>
-      <div class="uni-location" title="${escHTML(u.city)}"><span class="uni-loc-text">${escHTML(u.city)}</span></div>
+      <div class="uni-location" title="${escHTML(u.city)}"><span class="uni-loc-text">${escHTML(cityShort(u.city))}</span></div>
       ${cardRating(u.id)}
       <div class="uni-tags">
         <span class="tag ${u.type}"><span data-icon="${u.type==='public'?'building2':'briefcase'}" data-size="12"></span>${u.type==='public'?t('tag_public'):t('tag_private')}</span>
