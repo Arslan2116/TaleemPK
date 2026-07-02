@@ -182,6 +182,29 @@ function deadlineBadge(u){
   </div>`;
 }
 
+// ── Latest Updates (scraped from the university's own website) ──
+const UPD_ICON = { announcement:'📢', deadline:'⏰', fee:'💰', program:'📚' };
+async function loadUpdates(){
+  if(!UNI) return;
+  try{
+    const { data, error } = await sb.from('uni_updates')
+      .select('title,url,kind,found_at')
+      .eq('uni_id', UNI.id).neq('status','dismissed')
+      .order('found_at',{ascending:false}).limit(5);
+    if(error || !data || !data.length) return;
+    const fmt = d => { try{ return new Date(d).toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return ''; } };
+    document.getElementById('updatesList').innerHTML = data.map(r=>`
+      <div class="upd-item">
+        <span class="upd-icn">${UPD_ICON[r.kind]||'📢'}</span>
+        <div class="upd-body">
+          ${r.url?`<a href="${esc(r.url)}" target="_blank" rel="noopener nofollow" class="upd-title">${esc(r.title)}</a>`:`<span class="upd-title">${esc(r.title)}</span>`}
+          <span class="upd-date">${fmt(r.found_at)}</span>
+        </div>
+      </div>`).join('');
+    document.getElementById('latestUpdates').style.display='';
+  }catch(e){ /* table may not exist yet — section stays hidden */ }
+}
+
 // ── Similar Universities (same type & overlapping tags/city) ──
 async function loadSimilar(){
   if(!UNI) return;
@@ -241,6 +264,7 @@ async function load(){
   setTimeout(drawMeritChart, 100);
   setTimeout(buildAggCalc, 50);
   loadReviews(); loadQA();
+  loadUpdates();
   loadSimilar();
   // Mobile sticky action bar
   if(window.matchMedia('(max-width:780px)').matches){
@@ -566,6 +590,12 @@ function render(){
           <div class="sec-head"><div class="icn">✨</div><h2>Highlights</h2></div>
           <div class="hl">${u.highlights.map(h=>`<span>${esc(h)}</span>`).join('')}</div>
         </div>`:''}
+
+      <div class="sec" id="latestUpdates" style="display:none">
+        <div class="sec-head"><div class="icn">📢</div><h2>Latest Updates <span class="count" style="background:rgba(0,200,83,0.15);color:#00C853">From official website</span></h2></div>
+        <div id="updatesList"></div>
+        <div class="muted" style="font-size:.75rem;margin-top:10px;">Auto-collected from ${esc(u.name)}'s official website — always verify details on the source page.</div>
+      </div>
 
       <div class="sec">
         <div class="sec-head"><div class="icn">💬</div><h2>Student Reviews</h2></div>
