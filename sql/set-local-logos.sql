@@ -10,7 +10,6 @@ UPDATE institutions SET logo_url = '/logos/8.png' WHERE id = 8;
 UPDATE institutions SET logo_url = '/logos/9.png' WHERE id = 9;
 UPDATE institutions SET logo_url = '/logos/10.png' WHERE id = 10;
 UPDATE institutions SET logo_url = '/logos/11.png' WHERE id = 11;
-UPDATE institutions SET logo_url = '/logos/12.gif' WHERE id = 12;
 UPDATE institutions SET logo_url = '/logos/12.png' WHERE id = 12;
 UPDATE institutions SET logo_url = '/logos/13.svg' WHERE id = 13;
 UPDATE institutions SET logo_url = '/logos/14.png' WHERE id = 14;
