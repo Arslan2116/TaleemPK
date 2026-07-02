@@ -13,6 +13,10 @@ import json, re, io, os, ssl, sys, hashlib, urllib.request, urllib.parse
 import concurrent.futures
 from html.parser import HTMLParser
 
+# Windows consoles default to cp1252 — emoji/curly quotes in titles crash print()
+try: sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+except Exception: pass
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 STATE_PATH = os.path.join(ROOT, 'scripts', 'scraper', 'state.json')
 
@@ -72,6 +76,7 @@ def scrape_uni(u):
             except Exception: pass
             for text, href in p.links:
                 if len(text)<15 or len(text)>160: continue
+                if '@' in text or text.startswith('http'): continue   # emails / bare URLs
                 if NOISE.match(text) or not KEYWORDS.search(text): continue
                 absu=urllib.parse.urljoin(site+path+'/', href or '')
                 if urllib.parse.urlparse(absu).netloc.replace('www.','') not in site:
@@ -90,8 +95,11 @@ def main():
     print(f'scraping {len(unis)} universities...')
 
     state={}
-    if os.path.exists(STATE_PATH):
+    baseline = not os.path.exists(STATE_PATH)
+    if not baseline:
         state=json.load(io.open(STATE_PATH, encoding='utf-8'))
+    if baseline:
+        print('first run — building baseline snapshot, nothing will be inserted')
 
     new_items=[]
     def work(u):
@@ -115,7 +123,9 @@ def main():
     for it in new_items[:40]:
         print(f"  [{it['kind']}] {it['uni_name']}: {it['title'][:70]}")
 
-    if new_items and SERVICE:
+    if baseline:
+        print('baseline complete — future runs will report only NEW items')
+    elif new_items and SERVICE:
         body=json.dumps(new_items).encode()
         req=urllib.request.Request(BASE+'/rest/v1/uni_updates', data=body, method='POST',
             headers={'apikey':SERVICE,'Authorization':'Bearer '+SERVICE,
