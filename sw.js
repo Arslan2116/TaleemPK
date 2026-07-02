@@ -22,6 +22,9 @@ const PRECACHE_URLS = [
   // split-out core assets (post perf refactor)
   '/styles.css?v=1',
   '/uni-data.js?v=1',
+  '/app-core.js?v=1',
+  '/app.js?v=1',
+  '/university.css?v=1',
   '/university.js',
   '/merit-formulas.js',
   '/gpa-systems.js'
