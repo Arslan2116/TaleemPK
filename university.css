@@ -221,10 +221,14 @@
   .sim-name{font-weight:800;font-size:.92rem;margin-bottom:3px;}
   .sim-meta{font-size:.74rem;color:var(--gray-400);margin-bottom:8px;}
   .sim-badge{display:inline-block;font-size:.7rem;font-weight:700;background:var(--gray-100);color:var(--gray-600);padding:3px 10px;border-radius:20px;}
-  .fee-row{display:flex;justify-content:space-between;gap:16px;padding:10px 14px;border-radius:8px;}
+  .fee-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 14px;border-radius:8px;}
   .fee-row:nth-child(odd){background:var(--gray-100);}
-  .fee-row-k{font-size:.85rem;color:var(--gray-600);}
-  .fee-row-v{font-size:.85rem;font-weight:700;color:var(--navy);white-space:nowrap;}
+  .fee-row-k{font-size:.85rem;color:var(--gray-600);flex:1 1 52%;}
+  .fee-row-v{font-size:.85rem;font-weight:700;color:var(--navy);text-align:right;flex:0 1 auto;}
+  @media(max-width:600px){
+    .fee-row{gap:10px;padding:10px 12px;}
+    .fee-row-k,.fee-row-v{font-size:.8rem;}
+  }
   .fee-note{font-size:.78rem;color:var(--gray-400);font-style:italic;margin-top:10px;}
   .prog-group{margin-bottom:16px;}
   .prog-group-title{font-size:.78rem;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;}
