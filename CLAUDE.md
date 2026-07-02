@@ -42,10 +42,16 @@ Split assets are referenced as `/file.js?v=N`. When you change `styles.css`, `un
 3. Bump `CACHE_VERSION` in `sw.js`
 Otherwise returning visitors keep the old cached copy.
 
-## Data: two sources of truth (known debt)
+## Data: Supabase is the single source of truth
 
-- `uni-data.js` seed renders instantly; Supabase `institutions` hydrates/overrides at runtime.
-- **Any data fix must go to BOTH** or they drift (past bugs: city names, counts).
+- `uni-data.js` seed is **generated** from the DB: `python scripts/sync-uni-data.py`
+  (then bump `?v=N` for uni-data.js in index.html + sw.js, and `CACHE_VERSION`).
+- Workflow for any data change: fix it in Supabase → run the sync script → commit.
+  Never hand-edit the UNIVERSITIES array.
+- `DATA_UPDATES` is intentionally `{}` now; the tail of uni-data.js (LOGO_OVERRIDES,
+  logo helpers, MERIT_MAP) is hand-maintained and preserved by the sync script.
+- `meritMin`: curated `MERIT_MAP` wins over free-text parsing — both in `mapInstitution()`
+  (app.js) and the sync script. Keep the two mappings in sync.
 - Counts ("270 HEC Universities") are hardcoded in index.html/README — update on add/delete.
 
 ## Editing the 272 static pages
