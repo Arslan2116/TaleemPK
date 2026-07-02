@@ -3117,7 +3117,10 @@ function mapInstitution(row){
     city: row.city, province: row.province, type: row.sector, icon: row.icon,
     tags: row.tags || [], fee: row.fee, feeNum: row.fee_num || 0,
     feeYear: row.fee_year || undefined, feeNote: row.fee_note || undefined,
-    merit: row.merit, meritMin: _parseMeritMin(row.merit), entry: row.entry,
+    merit: row.merit,
+    // Curated MERIT_MAP wins over free-text parsing — "NET-1 to NET-4" parses as 10 otherwise
+    meritMin: (typeof MERIT_MAP !== 'undefined' && MERIT_MAP[row.id]) || _parseMeritMin(row.merit),
+    entry: row.entry,
     programs: row.programs || [],
     seats: row.seats, established: row.established, website: row.website,
     logoUrl: row.logo_url || '',
