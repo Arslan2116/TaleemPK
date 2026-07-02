@@ -3398,3 +3398,25 @@ window.addEventListener('scroll', function(){
 setTimeout(()=>{
   document.querySelectorAll('.hiw-step.fade-in').forEach(el=>observer.observe(el));
 },500);
+
+// ── Announcement ticker: hydrate from site_announcements (admin-approved scraped items) ──
+// Falls back silently to the static HTML items if the table is empty/unreachable.
+(async function hydrateAnnouncements(){
+  try{
+    const r = await fetch(SUPABASE.url + '/rest/v1/site_announcements?select=icon,text,url&active=eq.true&order=sort_order.asc,created_at.desc&limit=20', {
+      headers:{ apikey: SUPABASE.key, Authorization: 'Bearer ' + SUPABASE.key }
+    });
+    if(!r.ok) return;
+    const rows = await r.json();
+    if(!Array.isArray(rows) || !rows.length) return;
+    const track = document.getElementById('anncTrack');
+    if(!track) return;
+    const item = a => {
+      const body = `${a.icon||'📢'} ${escHTML(a.text)}`;
+      return a.url ? `<a class="annc-item" href="${escHTML(a.url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">${body}</a>`
+                   : `<span class="annc-item">${body}</span>`;
+    };
+    const html = rows.map(item).join('');
+    track.innerHTML = html + html;  // doubled for seamless marquee loop
+  }catch(e){ /* static fallback stays */ }
+})();

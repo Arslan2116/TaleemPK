@@ -96,6 +96,7 @@
       <button class="tab" data-panel="res"  onclick="showPanel('res',this)">📊 Results</button>
       <button class="tab" data-panel="schol" onclick="showPanel('schol',this)">🎓 Scholarships</button>
       <button class="tab" data-panel="deadline" onclick="showPanel('deadline',this)">⏰ Deadline</button>
+      <button class="tab" data-panel="scraped" onclick="showPanel('scraped',this);loadScraped()">🔎 Scraped</button>
     </div>
 
     <!-- Institutions -->
@@ -208,6 +209,19 @@
         </div>
         <div class="save-row"><button class="btn" onclick="saveDeadline()">Save Deadline</button><span class="msg" id="deadlineMsg"></span></div>
       </div>
+    </div>
+
+    <!-- Scraped updates review queue -->
+    <div class="panel" id="panel-scraped">
+      <h2>Scraped University Updates</h2>
+      <div class="hint">The scraper visits every university site twice a month and drops new announcements here.
+        <strong>Publish</strong> puts an item in the homepage ticker; <strong>Dismiss</strong> hides it forever.
+        Deadline/fee items: verify on the source page, then update via the ⏰ Deadline tab or Institutions tab.</div>
+      <div class="save-row">
+        <button class="btn" onclick="loadScraped()">↻ Refresh</button>
+        <span class="msg" id="scrapedMsg"></span>
+      </div>
+      <div id="scrapedList" style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">Loading…</div>
     </div>
 
   </div>
@@ -375,6 +389,46 @@ async function saveDeadline(){
   const { error } = await sb.from('institutions').update(row).eq('id', _deadlineSelectedId);
   if(error){ flash('deadlineMsg', error.message, false); return; }
   flash('deadlineMsg','✅ Deadline saved!', true);
+}
+
+// ── Scraped updates review queue ──
+const KIND_ICON = { announcement:'📢', deadline:'⏰', fee:'💰', program:'📚' };
+async function loadScraped(){
+  const list = $('scrapedList');
+  list.innerHTML = 'Loading…';
+  const { data, error } = await sb.from('uni_updates')
+    .select('id,uni_id,uni_name,kind,title,url,found_at')
+    .eq('status','pending').order('found_at',{ascending:false}).limit(200);
+  if(error){ list.innerHTML = '<em>'+escHTML(error.message)+'</em>'; return; }
+  if(!data || !data.length){ list.innerHTML = '<em>No pending items — all caught up! 🎉</em>'; return; }
+  list.innerHTML = data.map(r=>`
+    <div style="border:1px solid #2a3a55;border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <span style="font-size:1.1rem;">${KIND_ICON[r.kind]||'📢'}</span>
+      <div style="flex:1;min-width:220px;">
+        <div style="font-weight:700;">${escHTML(r.uni_name||'')} <span style="opacity:.55;font-size:.75rem;">· ${escHTML(r.kind)} · ${escHTML((r.found_at||'').slice(0,10))}</span></div>
+        <div style="font-size:.9rem;">${r.url?`<a href="${safeUrl(r.url)}" target="_blank" rel="noopener" style="color:#7fd6a0;">${escHTML(r.title)}</a>`:escHTML(r.title)}</div>
+      </div>
+      <button class="btn" style="padding:7px 14px;" onclick="publishScraped(${r.id}, this)">📢 Publish</button>
+      <button class="btn" style="padding:7px 14px;background:#44506a;" onclick="dismissScraped(${r.id}, this)">✕ Dismiss</button>
+    </div>`).join('');
+}
+async function publishScraped(id, btn){
+  btn.disabled = true;
+  const { data: rows, error: e1 } = await sb.from('uni_updates').select('*').eq('id', id).limit(1);
+  if(e1 || !rows.length){ flash('scrapedMsg', (e1&&e1.message)||'Not found', false); btn.disabled=false; return; }
+  const r = rows[0];
+  const { error: e2 } = await sb.from('site_announcements')
+    .insert({ icon: KIND_ICON[r.kind]||'📢', text: `${r.uni_name} — ${r.title}`, url: r.url||null });
+  if(e2){ flash('scrapedMsg', e2.message, false); btn.disabled=false; return; }
+  await sb.from('uni_updates').update({status:'approved'}).eq('id', id);
+  flash('scrapedMsg','✅ Published to homepage ticker!', true);
+  loadScraped();
+}
+async function dismissScraped(id, btn){
+  btn.disabled = true;
+  const { error } = await sb.from('uni_updates').update({status:'dismissed'}).eq('id', id);
+  if(error){ flash('scrapedMsg', error.message, false); btn.disabled=false; return; }
+  loadScraped();
 }
 
 checkSession();
