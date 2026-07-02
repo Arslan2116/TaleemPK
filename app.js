@@ -1515,7 +1515,7 @@ function calculateMerit() {
 //  STUDENT TOOL 3 — ADMISSION CALENDAR
 // ════════════════════════════════════════════
 let _calFilter = 'all';
-const TODAY = new Date('2026-05-23');
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 
 function toggleCalendar() {
   const sec = document.getElementById('calendarSection');
@@ -1531,9 +1531,60 @@ function filterCal(type, btn) {
   renderCalendar();
 }
 
+// ── Dynamic calendar events: admin-set deadlines + scraped items with parseable dates ──
+let DYNAMIC_DATES = [];
+function _parseEventDate(text){
+  // "15 August 2026", "Aug 15, 2026", "15-08-2026", "2026-08-15"
+  const MON='jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec';
+  let m = text.match(new RegExp(`(\\d{1,2})\\s*(?:st|nd|rd|th)?\\s+(${MON})[a-z]*\\.?,?\\s*(20\\d{2})?`,'i'))
+       || text.match(new RegExp(`(${MON})[a-z]*\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s*(20\\d{2})?`,'i'));
+  if(m){
+    const months={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+    const isDayFirst = /^\d/.test(m[1]);
+    const day  = parseInt(isDayFirst ? m[1] : m[2]);
+    const mon  = months[(isDayFirst ? m[2] : m[1]).slice(0,3).toLowerCase()];
+    let year = m[3] ? parseInt(m[3]) : new Date().getFullYear();
+    let d = new Date(year, mon, day);
+    if(!m[3] && d < new Date(Date.now()-30*86400000)) { year++; d = new Date(year, mon, day); } // no year + past → next year
+    // build ISO locally — toISOString() shifts to UTC and loses a day in PKT
+    if(day>=1 && day<=31 && !isNaN(d)) return `${year}-${String(mon+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  }
+  m = text.match(/(20\d{2})-(\d{2})-(\d{2})/) || text.match(/(\d{1,2})[-/](\d{1,2})[-/](20\d{2})/);
+  if(m) return m[1].length===4 ? `${m[1]}-${m[2]}-${m[3]}` : `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  return null;
+}
+async function loadDynamicDates(){
+  const H = { apikey: SUPABASE.key, Authorization: 'Bearer ' + SUPABASE.key };
+  const out = [];
+  try{
+    // 1. Admin-set admission deadlines (institutions table)
+    const r1 = await fetch(SUPABASE.url + '/rest/v1/institutions?select=name,admission_deadline,admission_deadline_note&admission_deadline=not.is.null', {headers:H});
+    if(r1.ok) (await r1.json()).forEach(x => out.push({
+      uni: x.name, ev: 'Admission Deadline' + (x.admission_deadline_note ? ' — ' + x.admission_deadline_note : ''),
+      date: x.admission_deadline, type: 'deadline'
+    }));
+    // 2. Scraped updates whose titles contain a parseable date
+    const r2 = await fetch(SUPABASE.url + '/rest/v1/uni_updates?select=uni_name,title,kind&status=neq.dismissed&order=found_at.desc&limit=100', {headers:H});
+    if(r2.ok) (await r2.json()).forEach(x => {
+      const date = _parseEventDate(x.title || '');
+      if(!date) return;
+      const type = /entry\s*test|\bnet\b|mdcat|ecat|\bnat\b|\bgat\b|admission\s*test/i.test(x.title) ? 'test'
+                 : /merit\s*list/i.test(x.title) ? 'merit'
+                 : x.kind === 'deadline' || /deadline|last\s*date/i.test(x.title) ? 'deadline' : 'open';
+      out.push({ uni: x.uni_name, ev: x.title.slice(0,90), date, type });
+    });
+  }catch(e){ /* offline / tables missing — static calendar still works */ }
+  // Dedupe against static + within itself (same uni + date + type)
+  const seen = new Set(ADMISSION_DATES.map(e=>`${e.uni}|${e.date}|${e.type}`));
+  DYNAMIC_DATES = out.filter(e => { const k=`${e.uni}|${e.date}|${e.type}`; if(seen.has(k)) return false; seen.add(k); return true; });
+  if(document.getElementById('calEvents')) renderCalendar();
+}
+// Deferred: SUPABASE const is declared further down this file — calling now would hit the TDZ
+document.addEventListener('DOMContentLoaded', loadDynamicDates);
+
 function renderCalendar() {
   const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const events = ADMISSION_DATES
+  const events = ADMISSION_DATES.concat(DYNAMIC_DATES)
     .filter(e => _calFilter==='all' || e.type===_calFilter)
     .sort((a,b)=>new Date(a.date)-new Date(b.date));
   if(!events.length){ document.getElementById('calEvents').innerHTML='<div class="cal-empty">No events for this filter.</div>'; return; }
@@ -3403,11 +3454,19 @@ setTimeout(()=>{
 // Falls back silently to the static HTML items if the table is empty/unreachable.
 (async function hydrateAnnouncements(){
   try{
-    const r = await fetch(SUPABASE.url + '/rest/v1/site_announcements?select=icon,text,url&active=eq.true&order=sort_order.asc,created_at.desc&limit=20', {
-      headers:{ apikey: SUPABASE.key, Authorization: 'Bearer ' + SUPABASE.key }
-    });
-    if(!r.ok) return;
-    const rows = await r.json();
+    const H = { apikey: SUPABASE.key, Authorization: 'Bearer ' + SUPABASE.key };
+    // Admin-curated items first…
+    const r = await fetch(SUPABASE.url + '/rest/v1/site_announcements?select=icon,text,url&active=eq.true&order=sort_order.asc,created_at.desc&limit=12', { headers: H });
+    const rows = r.ok ? await r.json() : [];
+    // …then the freshest scraped updates (last 30 days) auto-appended
+    try{
+      const since = new Date(Date.now() - 30*86400000).toISOString();
+      const r2 = await fetch(SUPABASE.url + `/rest/v1/uni_updates?select=uni_name,title,url,kind&status=neq.dismissed&found_at=gte.${since}&order=found_at.desc&limit=8`, { headers: H });
+      if(r2.ok){
+        const icons = { announcement:'📢', deadline:'⏰', fee:'💰', program:'📚' };
+        (await r2.json()).forEach(x => rows.push({ icon: icons[x.kind]||'📢', text: `${x.uni_name} — ${x.title}`, url: x.url }));
+      }
+    }catch(e){}
     if(!Array.isArray(rows) || !rows.length) return;
     const track = document.getElementById('anncTrack');
     if(!track) return;
