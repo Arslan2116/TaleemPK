@@ -33,26 +33,42 @@ page_path = os.path.join(ROOT, 'blog', slug + '.html')
 if os.path.exists(page_path):
     print('digest for today already exists'); sys.exit(0)
 
-# group by university
-groups = {}
-for it in items:
-    groups.setdefault(it['uni_name'] or 'Other', []).append(it)
-KIND = {'announcement':'📢','deadline':'⏰','fee':'💰','program':'📚'}
+# Categorise each item, then group by category → university
 esc = html.escape
+def category(it):
+    t = (it['title'] or '')
+    if it['kind'] == 'fee' or re.search(r'fee', t, re.I): return 'fees'
+    if re.search(r'scholarship|financial aid|endowment|stipend', t, re.I): return 'scholarships'
+    if it['kind'] == 'deadline' or re.search(r'entry\s*test|mdcat|ecat|\bnet\b|\bnat\b|\bgat\b|deadline|last\s*date|merit\s*list|result', t, re.I): return 'tests'
+    return 'admissions'
+
+CATS = [
+    ('admissions',   '🎓 Admissions & Announcements'),
+    ('scholarships', '💰 Scholarships & Financial Aid'),
+    ('fees',         '🧾 Fee Updates'),
+    ('tests',        '📝 Tests, Deadlines & Merit Lists'),
+]
+by_cat = {}
+for it in items:
+    by_cat.setdefault(category(it), {}).setdefault(it['uni_name'] or 'Other', []).append(it)
 
 sections = []
-for uni in sorted(groups):
-    rows = ''.join(
-        f'<li>{KIND.get(it["kind"],"📢")} '
-        + (f'<a href="{esc(it["url"])}" target="_blank" rel="noopener nofollow">{esc(it["title"])}</a>' if it.get('url') else esc(it['title']))
-        + '</li>'
-        for it in groups[uni][:6])
-    sections.append(f'<h3>{esc(uni)}</h3><ul>{rows}</ul>')
+for key, label in CATS:
+    unis = by_cat.get(key)
+    if not unis: continue
+    sections.append(f'<h3>{label}</h3>')
+    for uni in sorted(unis):
+        rows = ''.join(
+            (f'<a href="{esc(it["url"])}" target="_blank" rel="noopener nofollow">{esc(it["title"])}</a>' if it.get('url') else esc(it['title']))
+            .join(['<li>', '</li>'])
+            for it in unis[uni][:6])
+        sections.append(f'<p><strong>{esc(uni)}</strong></p><ul>{rows}</ul>')
 
+uni_count = len({it['uni_name'] for it in items})
 excerpt = (f'Latest admission announcements, deadlines and fee updates from '
-           f'{len(groups)} Pakistani universities — collected from official websites.')
+           f'{uni_count} Pakistani universities — collected from official websites.')
 body = (f'<p>Here are the latest updates our system collected from official university websites '
-        f'over the past two weeks — {len(items)} announcements across <strong>{len(groups)} universities</strong>. '
+        f'over the past two weeks — {len(items)} announcements across <strong>{uni_count} universities</strong>. '
         f'Links go to the original source pages; always confirm details there.</p>'
         + ''.join(sections)
         + '<p><em>This digest is generated automatically from official university websites. '
