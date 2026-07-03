@@ -317,9 +317,12 @@ function renderListing(allPosts){
 async function init(){
   const pathMatch = location.pathname.match(/\/blog\/([^/?#]+)/);
   if(!pathMatch){
-    // No slug — show blog listing
+    // No slug — show blog listing (auto-generated digests + curated posts + DB posts)
+    let digests = [];
+    try{ digests = await (await fetch('/blog-index.json', {cache:'no-store'})).json(); }catch(e){}
     const dbPosts = await fetchSupabasePosts();
-    const allPosts = dbPosts.length ? [...POSTS, ...dbPosts] : POSTS;
+    const allPosts = [...(Array.isArray(digests)?digests:[]), ...POSTS, ...dbPosts]
+      .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
     renderListing(allPosts);
     return;
   }
