@@ -127,11 +127,17 @@ def main():
         print('baseline complete — future runs will report only NEW items')
     elif new_items and SERVICE:
         body=json.dumps(new_items).encode()
-        req=urllib.request.Request(BASE+'/rest/v1/uni_updates', data=body, method='POST',
+        # on_conflict=content_hash is required for ignore-duplicates to work in PostgREST —
+        # without it a re-found item (e.g. after a failed state commit) 409s and kills the run
+        req=urllib.request.Request(BASE+'/rest/v1/uni_updates?on_conflict=content_hash', data=body, method='POST',
             headers={'apikey':SERVICE,'Authorization':'Bearer '+SERVICE,
                      'Content-Type':'application/json','Prefer':'resolution=ignore-duplicates'})
-        urllib.request.urlopen(req, timeout=60)
-        print('inserted into uni_updates (pending review)')
+        try:
+            urllib.request.urlopen(req, timeout=60)
+            print('inserted into uni_updates (pending review)')
+        except urllib.error.HTTPError as e:
+            print('insert failed:', e.code, e.read().decode('utf-8','ignore')[:300])
+            sys.exit(1)
     elif new_items:
         print('SUPABASE_SERVICE_KEY not set — dry run, nothing inserted')
 
