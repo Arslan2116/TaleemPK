@@ -716,6 +716,21 @@ function renderNews(){
   const va = document.getElementById('newsViewAll');
   if(va) va.style.display = NEWS_POSTS.length > 3 ? '' : 'none';
 }
+// New posts (manual articles + auto digests) live in /blog-index.json — merge them in
+// so the homepage always shows the freshest three without editing this file.
+(async function hydrateNews(){
+  try{
+    const r = await fetch('/blog-index.json', {cache:'no-store'});
+    if(!r.ok) return;
+    const idx = await r.json();
+    if(!Array.isArray(idx) || !idx.length) return;
+    idx.slice().reverse().forEach(p => {
+      if(!NEWS_POSTS.some(x => x.url === p.url || x.title === p.title)) NEWS_POSTS.unshift(p);
+    });
+    NEWS_POSTS.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    renderNews();
+  }catch(e){}
+})();
 function renderBlogPage(){
   const grid = document.getElementById('blogPageGrid');
   if(!grid) return;
