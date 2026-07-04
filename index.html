@@ -110,7 +110,7 @@
 <script defer src="/config.js"></script>
 <script defer src="/gpa-systems.js"></script>
 <script defer src="/chat-widget.js"></script>
-<link rel="stylesheet" href="/styles.css?v=1">
+<link rel="stylesheet" href="/styles.css?v=2">
 </head>
 <body>
 
@@ -197,6 +197,16 @@
     <button class="hero-chip" onclick="filterUnis('business',document.querySelector('.filter-btn:nth-child(7)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="briefcase" data-size="14"></span> Business</button>
     <button class="hero-chip" onclick="filterUnis('public',document.querySelector('.filter-btn:nth-child(3)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="building2" data-size="14"></span> Public</button>
     <button class="hero-chip" onclick="filterUnis('private',document.querySelector('.filter-btn:nth-child(4)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="briefcase" data-size="14"></span> Private</button>
+  </div>
+  <div class="hero-popular">
+    <span class="hero-popular-label">Popular:</span>
+    <a href="/university/nust" class="hero-pop-link">NUST</a>
+    <a href="/university/lums" class="hero-pop-link">LUMS</a>
+    <a href="/university/comsats" class="hero-pop-link">COMSATS</a>
+    <a href="/university/fast-nuces" class="hero-pop-link">FAST</a>
+    <a href="/university/uet-lahore" class="hero-pop-link">UET</a>
+    <a href="/university/iba-karachi" class="hero-pop-link">IBA</a>
+    <a href="#universities" class="hero-pop-link hero-pop-all">Browse all 270 →</a>
   </div>
   <div class="hero-stats">
     <div class="stat"><div class="stat-icon"><span data-icon="building2" data-size="22"></span></div><div class="stat-num" id="statUnis">270</div><div class="stat-label">HEC Universities</div></div>
