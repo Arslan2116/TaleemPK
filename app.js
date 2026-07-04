@@ -3467,6 +3467,17 @@ setTimeout(()=>{
 
 // ── Announcement ticker: hydrate from site_announcements (admin-approved scraped items) ──
 // Falls back silently to the static HTML items if the table is empty/unreachable.
+// Constant scroll speed regardless of content length — a fixed 35s duration made the
+// ticker race whenever scraped items grew the track.
+function setTickerSpeed(){
+  const track = document.getElementById('anncTrack');
+  if(!track) return;
+  const half = track.scrollWidth / 2;          // loop distance (content is doubled)
+  const secs = Math.max(30, Math.round(half / 60));  // ~60px per second
+  track.style.animationDuration = secs + 's';
+}
+document.addEventListener('DOMContentLoaded', setTickerSpeed);
+
 (async function hydrateAnnouncements(){
   try{
     const H = { apikey: SUPABASE.key, Authorization: 'Bearer ' + SUPABASE.key };
@@ -3492,5 +3503,6 @@ setTimeout(()=>{
     };
     const html = rows.map(item).join('');
     track.innerHTML = html + html;  // doubled for seamless marquee loop
+    setTickerSpeed();
   }catch(e){ /* static fallback stays */ }
 })();
