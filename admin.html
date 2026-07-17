@@ -104,9 +104,9 @@
       <button class="tab" data-panel="inst" onclick="showPanel('inst',this)">🏛️ Institutions</button>
       <button class="tab" data-panel="ticker" onclick="showPanel('ticker',this);loadTicker()">📢 Ticker</button>
       <button class="tab" data-panel="blog" onclick="showPanel('blog',this);loadBlogList()">📰 Blog</button>
-      <button class="tab" data-panel="note" onclick="showPanel('note',this)">📒 Notes</button>
-      <button class="tab" data-panel="res"  onclick="showPanel('res',this)">📊 Results</button>
-      <button class="tab" data-panel="schol" onclick="showPanel('schol',this)">🎓 Scholarships</button>
+      <button class="tab" data-panel="note" onclick="showPanel('note',this);loadNoteList()">📒 Notes</button>
+      <button class="tab" data-panel="res"  onclick="showPanel('res',this);loadResList()">📊 Results</button>
+      <button class="tab" data-panel="schol" onclick="showPanel('schol',this);loadScholList()">🎓 Scholarships</button>
       <button class="tab" data-panel="deadline" onclick="showPanel('deadline',this)">⏰ Deadline</button>
       <button class="tab" data-panel="scraped" onclick="showPanel('scraped',this);loadScraped()">🔎 Scraped</button>
     </div>
@@ -201,8 +201,8 @@
 
     <!-- Notes -->
     <div class="panel" id="panel-note">
-      <h2>Add Note (Download)</h2>
-      <div class="hint">Paste a public file link (PDF/Drive). File-upload storage can be added later.</div>
+      <h2 id="noteHeading">Add Note (Download)</h2>
+      <div class="hint">Paste a public file link (PDF/Drive). Search existing notes below to edit or delete.</div>
       <div class="grid2">
         <div><label>Title *</label><input id="n_title"></div>
         <div><label>Subject</label><input id="n_subject" placeholder="Physics"></div>
@@ -210,13 +210,18 @@
         <div><label>Institution ID (optional)</label><input id="n_inst" type="number" placeholder="leave blank if general"></div>
         <div class="full"><label>File URL *</label><input id="n_url" placeholder="https://..."></div>
       </div>
-      <div class="save-row"><button class="btn" onclick="saveNote()">Save Note</button><span class="msg" id="noteMsg"></span></div>
+      <div class="save-row">
+        <button class="btn" id="noteSaveBtn" onclick="saveNote()">Save Note</button>
+        <button class="btn ghost" id="noteCancelBtn" style="display:none;border-color:var(--g400);color:var(--g600)" onclick="cancelNoteEdit()">Cancel edit</button>
+        <span class="msg" id="noteMsg"></span>
+      </div>
+      <div class="recent"><h3>Existing notes</h3><div id="noteList">Loading…</div></div>
     </div>
 
     <!-- Results -->
     <div class="panel" id="panel-res">
-      <h2>Add Result / Merit List</h2>
-      <div class="hint">Add a result or merit-list entry with a link.</div>
+      <h2 id="resHeading">Add Result / Merit List</h2>
+      <div class="hint">Add a result or merit-list entry with a link. Existing entries are listed below to edit or delete.</div>
       <div class="grid2">
         <div><label>Title *</label><input id="r_title"></div>
         <div><label>Year</label><input id="r_year" type="number" placeholder="2026"></div>
@@ -224,13 +229,18 @@
         <div><label>Institution ID (optional)</label><input id="r_inst" type="number"></div>
         <div class="full"><label>File / Link URL</label><input id="r_url" placeholder="https://..."></div>
       </div>
-      <div class="save-row"><button class="btn" onclick="saveResult()">Save Result</button><span class="msg" id="resMsg"></span></div>
+      <div class="save-row">
+        <button class="btn" id="resSaveBtn" onclick="saveResult()">Save Result</button>
+        <button class="btn ghost" id="resCancelBtn" style="display:none;border-color:var(--g400);color:var(--g600)" onclick="cancelResEdit()">Cancel edit</button>
+        <span class="msg" id="resMsg"></span>
+      </div>
+      <div class="recent"><h3>Existing results</h3><div id="resList">Loading…</div></div>
     </div>
 
     <!-- Scholarships -->
     <div class="panel" id="panel-schol">
-      <h2>Add Scholarship</h2>
-      <div class="hint">Appears on the Scholarships page immediately.</div>
+      <h2 id="scholHeading">Add Scholarship</h2>
+      <div class="hint">Appears on the Scholarships page immediately. Existing scholarships are listed below to edit or delete.</div>
       <div class="grid2">
         <div><label>Title *</label><input id="s_title" placeholder="Ehsaas Undergraduate Scholarship"></div>
         <div><label>Provider</label><input id="s_provider" placeholder="HEC / Govt / University"></div>
@@ -244,7 +254,12 @@
         <div><label>Icon (emoji)</label><input id="s_icon" value="🎓"></div>
         <div><label>Featured?</label><select id="s_feat"><option value="false">No</option><option value="true">Yes</option></select></div>
       </div>
-      <div class="save-row"><button class="btn" onclick="saveScholarship()">Save Scholarship</button><span class="msg" id="scholMsg"></span></div>
+      <div class="save-row">
+        <button class="btn" id="scholSaveBtn" onclick="saveScholarship()">Save Scholarship</button>
+        <button class="btn ghost" id="scholCancelBtn" style="display:none;border-color:var(--g400);color:var(--g600)" onclick="cancelScholEdit()">Cancel edit</button>
+        <span class="msg" id="scholMsg"></span>
+      </div>
+      <div class="recent"><h3>Existing scholarships</h3><div id="scholList">Loading…</div></div>
     </div>
 
     <!-- Admission Deadline -->
@@ -410,6 +425,14 @@ async function delInstitution(id, name){
   loadRecent();
 }
 
+// Generic delete helper for simple tables
+async function delRow(table, id, title, reload){
+  if(!confirm('Delete "'+title+'"? This cannot be undone.')) return;
+  const { error } = await sb.from(table).delete().eq('id', id);
+  if(error){ alert(error.message); return; }
+  if(reload) reload();
+}
+
 // ── Save / Edit: Blog ──
 let _editingBlogId = null;
 async function saveBlog(){
@@ -466,28 +489,82 @@ async function delBlog(id, title){
   loadBlogList();
 }
 
-// ── Save: Note ──
+// ── Save / Edit: Note ──
+let _editingNoteId = null;
 async function saveNote(){
   if(!val('n_title')||!val('n_url')){ flash('noteMsg','Title and File URL are required.',false); return; }
   const url = safeUrl(val('n_url'));
   if(!url){ flash('noteMsg','File URL must be http(s) only.',false); return; }
   const row={ title:val('n_title'), subject:val('n_subject'), level:val('n_level'), file_url:url, institution_id:numOrNull('n_inst') };
-  const { error } = await sb.from('notes').insert(row);
+  let error;
+  if(_editingNoteId){ ({error} = await sb.from('notes').update(row).eq('id',_editingNoteId)); }
+  else { ({error} = await sb.from('notes').insert(row)); }
   if(error){ flash('noteMsg', error.message, false); return; }
-  flash('noteMsg','✅ Saved!', true);
-  ['n_title','n_subject','n_level','n_url','n_inst'].forEach(id=>$(id).value='');
+  flash('noteMsg', _editingNoteId?'✅ Updated!':'✅ Saved!', true);
+  cancelNoteEdit();
+  loadNoteList();
+}
+async function loadNoteList(){
+  const { data, error } = await sb.from('notes').select('id,title,subject,level').order('id',{ascending:false}).limit(40);
+  if(error){ $('noteList').innerHTML='<div class="meta">'+escHTML(error.message)+'</div>'; return; }
+  if(!data||!data.length){ $('noteList').innerHTML='<div class="meta">No notes yet.</div>'; return; }
+  $('noteList').innerHTML = data.map(n=>{
+    const t=escHTML(n.title||'');
+    return `<div class="rec-item"><div><strong>${t}</strong> <span class="meta">· ${escHTML(n.subject||'')} · ${escHTML(n.level||'')}</span></div>
+      <div style="display:flex;gap:6px;"><button class="btn" style="padding:6px 12px;font-size:.78rem;" onclick="editNote(${n.id})">Edit</button>
+      <button class="btn danger" onclick="delRow('notes',${n.id},'${t.replace(/'/g,"\\'")}',loadNoteList)">Delete</button></div></div>`;
+  }).join('');
+}
+async function editNote(id){
+  const { data, error } = await sb.from('notes').select('*').eq('id',id).single();
+  if(error||!data){ flash('noteMsg','Could not load.',false); return; }
+  $('n_title').value=data.title||''; $('n_subject').value=data.subject||''; $('n_level').value=data.level||'';
+  $('n_url').value=data.file_url||''; $('n_inst').value=data.institution_id||'';
+  _editingNoteId=id; $('noteHeading').textContent='✏️ Editing note'; $('noteSaveBtn').textContent='Update Note'; $('noteCancelBtn').style.display='';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function cancelNoteEdit(){
+  _editingNoteId=null; ['n_title','n_subject','n_level','n_url','n_inst'].forEach(id=>$(id).value='');
+  $('noteHeading').textContent='Add Note (Download)'; $('noteSaveBtn').textContent='Save Note'; $('noteCancelBtn').style.display='none';
 }
 
-// ── Save: Result ──
+// ── Save / Edit: Result ──
+let _editingResId = null;
 async function saveResult(){
   if(!val('r_title')){ flash('resMsg','Title is required.',false); return; }
   const url = val('r_url') ? safeUrl(val('r_url')) : '';
   if(val('r_url') && !url){ flash('resMsg','URL must be http(s) only.',false); return; }
   const row={ title:val('r_title'), year:numOrNull('r_year'), category:val('r_cat'), file_url:url, institution_id:numOrNull('r_inst') };
-  const { error } = await sb.from('results').insert(row);
+  let error;
+  if(_editingResId){ ({error} = await sb.from('results').update(row).eq('id',_editingResId)); }
+  else { ({error} = await sb.from('results').insert(row)); }
   if(error){ flash('resMsg', error.message, false); return; }
-  flash('resMsg','✅ Saved!', true);
-  ['r_title','r_year','r_cat','r_url','r_inst'].forEach(id=>$(id).value='');
+  flash('resMsg', _editingResId?'✅ Updated!':'✅ Saved!', true);
+  cancelResEdit();
+  loadResList();
+}
+async function loadResList(){
+  const { data, error } = await sb.from('results').select('id,title,year,category').order('id',{ascending:false}).limit(40);
+  if(error){ $('resList').innerHTML='<div class="meta">'+escHTML(error.message)+'</div>'; return; }
+  if(!data||!data.length){ $('resList').innerHTML='<div class="meta">No results yet.</div>'; return; }
+  $('resList').innerHTML = data.map(r=>{
+    const t=escHTML(r.title||'');
+    return `<div class="rec-item"><div><strong>${t}</strong> <span class="meta">· ${escHTML(String(r.year||''))} · ${escHTML(r.category||'')}</span></div>
+      <div style="display:flex;gap:6px;"><button class="btn" style="padding:6px 12px;font-size:.78rem;" onclick="editRes(${r.id})">Edit</button>
+      <button class="btn danger" onclick="delRow('results',${r.id},'${t.replace(/'/g,"\\'")}',loadResList)">Delete</button></div></div>`;
+  }).join('');
+}
+async function editRes(id){
+  const { data, error } = await sb.from('results').select('*').eq('id',id).single();
+  if(error||!data){ flash('resMsg','Could not load.',false); return; }
+  $('r_title').value=data.title||''; $('r_year').value=data.year||''; $('r_cat').value=data.category||'';
+  $('r_url').value=data.file_url||''; $('r_inst').value=data.institution_id||'';
+  _editingResId=id; $('resHeading').textContent='✏️ Editing result'; $('resSaveBtn').textContent='Update Result'; $('resCancelBtn').style.display='';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function cancelResEdit(){
+  _editingResId=null; ['r_title','r_year','r_cat','r_url','r_inst'].forEach(id=>$(id).value='');
+  $('resHeading').textContent='Add Result / Merit List'; $('resSaveBtn').textContent='Save Result'; $('resCancelBtn').style.display='none';
 }
 
 // ── Save: Scholarship ──
@@ -498,10 +575,41 @@ async function saveScholarship(){
   const row={ title:val('s_title'), provider:val('s_provider'), type:val('s_type'), level:val('s_level'),
     coverage:val('s_coverage'), deadline:val('s_deadline'), eligibility:val('s_elig'),
     apply_url:applyUrl, description:val('s_desc'), icon:val('s_icon')||'🎓', featured:(val('s_feat')==='true') };
-  const { error } = await sb.from('scholarships').insert(row);
+  let error;
+  if(_editingScholId){ ({error} = await sb.from('scholarships').update(row).eq('id',_editingScholId)); }
+  else { ({error} = await sb.from('scholarships').insert(row)); }
   if(error){ flash('scholMsg', error.message, false); return; }
-  flash('scholMsg','✅ Saved!', true);
+  flash('scholMsg', _editingScholId?'✅ Updated!':'✅ Saved!', true);
+  cancelScholEdit();
+  loadScholList();
+}
+let _editingScholId = null;
+async function loadScholList(){
+  const { data, error } = await sb.from('scholarships').select('id,title,provider,type,featured').order('id',{ascending:false}).limit(40);
+  if(error){ $('scholList').innerHTML='<div class="meta">'+escHTML(error.message)+'</div>'; return; }
+  if(!data||!data.length){ $('scholList').innerHTML='<div class="meta">No scholarships yet.</div>'; return; }
+  $('scholList').innerHTML = data.map(s=>{
+    const t=escHTML(s.title||'');
+    return `<div class="rec-item"><div><strong>${s.featured?'⭐ ':''}${t}</strong> <span class="meta">· ${escHTML(s.provider||'')} · ${escHTML(s.type||'')}</span></div>
+      <div style="display:flex;gap:6px;"><button class="btn" style="padding:6px 12px;font-size:.78rem;" onclick="editSchol(${s.id})">Edit</button>
+      <button class="btn danger" onclick="delRow('scholarships',${s.id},'${t.replace(/'/g,"\\'")}',loadScholList)">Delete</button></div></div>`;
+  }).join('');
+}
+async function editSchol(id){
+  const { data, error } = await sb.from('scholarships').select('*').eq('id',id).single();
+  if(error||!data){ flash('scholMsg','Could not load.',false); return; }
+  $('s_title').value=data.title||''; $('s_provider').value=data.provider||''; $('s_type').value=data.type||'Need-based';
+  $('s_level').value=data.level||''; $('s_coverage').value=data.coverage||''; $('s_deadline').value=data.deadline||'';
+  $('s_elig').value=data.eligibility||''; $('s_url').value=data.apply_url||''; $('s_desc').value=data.description||'';
+  $('s_icon').value=data.icon||'🎓'; $('s_feat').value=data.featured?'true':'false';
+  _editingScholId=id; $('scholHeading').textContent='✏️ Editing scholarship'; $('scholSaveBtn').textContent='Update Scholarship'; $('scholCancelBtn').style.display='';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function cancelScholEdit(){
+  _editingScholId=null;
   ['s_title','s_provider','s_level','s_coverage','s_deadline','s_elig','s_url','s_desc'].forEach(id=>$(id).value='');
+  $('s_icon').value='🎓'; $('s_feat').value='false';
+  $('scholHeading').textContent='Add Scholarship'; $('scholSaveBtn').textContent='Save Scholarship'; $('scholCancelBtn').style.display='none';
 }
 
 // ── Set Admission Deadline ──
