@@ -102,6 +102,7 @@
     <div class="tabs">
       <button class="tab active" data-panel="dash" onclick="showPanel('dash',this);loadDashboard()">📊 Dashboard</button>
       <button class="tab" data-panel="inst" onclick="showPanel('inst',this)">🏛️ Institutions</button>
+      <button class="tab" data-panel="fees" onclick="showPanel('fees',this)">💵 Fee Details</button>
       <button class="tab" data-panel="ticker" onclick="showPanel('ticker',this);loadTicker()">📢 Ticker</button>
       <button class="tab" data-panel="blog" onclick="showPanel('blog',this);loadBlogList()">📰 Blog</button>
       <button class="tab" data-panel="note" onclick="showPanel('note',this);loadNoteList()">📒 Notes</button>
@@ -160,6 +161,33 @@
         <span class="msg" id="instMsg"></span>
       </div>
       <div class="recent"><h3>Recently added</h3><div id="recentList">Loading…</div></div>
+    </div>
+
+    <!-- Fee Details -->
+    <div class="panel" id="panel-fees">
+      <h2>Detailed Fee Structure</h2>
+      <div class="hint">Search a university, then add/edit/delete the fee rows shown in its "Detailed Fee Structure" section on the site.</div>
+      <div style="background:var(--g100);border-radius:12px;padding:14px 16px;margin-bottom:18px;">
+        <label style="margin-top:0;">Search university</label>
+        <input id="fe_search" placeholder="Type a name (e.g. COMSATS)…" oninput="searchInstForFees(this.value)" autocomplete="off">
+        <div id="fe_results" style="display:flex;flex-direction:column;gap:4px;margin-top:8px;"></div>
+      </div>
+      <div id="fe_editor" style="display:none;">
+        <div style="font-weight:700;margin-bottom:12px;" id="fe_uniName"></div>
+        <div id="fe_rows" style="margin-bottom:16px;">Loading…</div>
+        <div style="border-top:1px solid var(--g200);padding-top:14px;">
+          <div style="font-weight:600;font-size:.85rem;margin-bottom:8px;" id="fe_formTitle">Add a fee row</div>
+          <div class="grid2">
+            <div class="full"><label>Label</label><input id="fe_label" placeholder="e.g. Undergraduate — per semester"></div>
+            <div class="full"><label>Value</label><input id="fe_value" placeholder="e.g. Rs. 146,000 – 160,000"></div>
+          </div>
+          <div class="save-row">
+            <button class="btn" id="feSaveBtn" onclick="saveFeeRow()">Add Row</button>
+            <button class="btn ghost" id="feCancelBtn" style="display:none;border-color:var(--g400);color:var(--g600)" onclick="cancelFeeRowEdit()">Cancel edit</button>
+            <span class="msg" id="feesMsg"></span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Ticker / Announcements -->
@@ -723,6 +751,69 @@ async function loadDashboard(){
           <span class="meta" style="${past?'color:var(--red)':'color:var(--green-dark)'}">${escHTML(u.admission_deadline)}${past?' (past)':''}</span></div>`;
       }).join('')
     : '<div class="meta">None set yet — add one from the ⏰ Deadline tab.</div>';
+}
+
+// ── Fee Details editor ──
+let _feUniId = null, _feUniName = '', _editingFeeRowId = null;
+let _feSearchTimer = null;
+function searchInstForFees(q){
+  clearTimeout(_feSearchTimer);
+  q = q.trim();
+  if(!q){ $('fe_results').innerHTML=''; return; }
+  _feSearchTimer = setTimeout(async ()=>{
+    const { data, error } = await sb.from('institutions').select('id,name,city').ilike('name','%'+q+'%').limit(8);
+    if(error || !data){ $('fe_results').innerHTML=''; return; }
+    $('fe_results').innerHTML = data.map(u=>{
+      const n=escHTML(u.name||''), c=escHTML(u.city||'');
+      return `<button type="button" class="btn" style="text-align:left;background:#fff;color:#222;border:1px solid #ddd;" onclick="pickInstForFees(${u.id},'${n.replace(/'/g,"\\'")}')">💵 ${n} <span class="meta">· ${c}</span></button>`;
+    }).join('') || '<div class="meta">No matches.</div>';
+  }, 300);
+}
+function pickInstForFees(id, name){
+  _feUniId = id; _feUniName = name;
+  $('fe_uniName').textContent = '💵 ' + name;
+  $('fe_editor').style.display = 'block';
+  $('fe_results').innerHTML = ''; $('fe_search').value = '';
+  cancelFeeRowEdit();
+  loadFeeRows();
+}
+async function loadFeeRows(){
+  const { data, error } = await sb.from('fee_details').select('*').eq('institution_id', _feUniId).order('sort_order',{ascending:true});
+  if(error){ $('fe_rows').innerHTML='<div class="meta">'+escHTML(error.message)+'</div>'; return; }
+  if(!data || !data.length){ $('fe_rows').innerHTML='<div class="meta">No fee rows yet — add the first one below.</div>'; return; }
+  $('fe_rows').innerHTML = data.map(f=>{
+    const l=escHTML(f.label||''), v=escHTML(f.value||'');
+    return `<div class="rec-item"><div><strong>${l}</strong><br><span class="meta">${v}</span></div>
+      <div style="display:flex;gap:6px;"><button class="btn" style="padding:6px 12px;font-size:.78rem;" onclick="editFeeRow(${f.id})">Edit</button>
+      <button class="btn danger" onclick="delRow('fee_details',${f.id},'${l.replace(/'/g,"\\'")}',loadFeeRows)">Delete</button></div></div>`;
+  }).join('');
+}
+async function saveFeeRow(){
+  if(!_feUniId){ flash('feesMsg','Pick a university first.',false); return; }
+  if(!val('fe_label')||!val('fe_value')){ flash('feesMsg','Label and Value are required.',false); return; }
+  let error;
+  if(_editingFeeRowId){
+    ({error} = await sb.from('fee_details').update({label:val('fe_label'), value:val('fe_value')}).eq('id',_editingFeeRowId));
+  } else {
+    // next sort_order = current max + 1
+    const { data } = await sb.from('fee_details').select('sort_order').eq('institution_id',_feUniId).order('sort_order',{ascending:false}).limit(1);
+    const next = (data && data.length) ? (data[0].sort_order||0)+1 : 0;
+    ({error} = await sb.from('fee_details').insert({institution_id:_feUniId, label:val('fe_label'), value:val('fe_value'), sort_order:next}));
+  }
+  if(error){ flash('feesMsg', error.message, false); return; }
+  flash('feesMsg', _editingFeeRowId?'✅ Row updated!':'✅ Row added!', true);
+  cancelFeeRowEdit();
+  loadFeeRows();
+}
+async function editFeeRow(id){
+  const { data, error } = await sb.from('fee_details').select('*').eq('id',id).single();
+  if(error||!data){ flash('feesMsg','Could not load row.',false); return; }
+  $('fe_label').value=data.label||''; $('fe_value').value=data.value||'';
+  _editingFeeRowId=id; $('fe_formTitle').textContent='✏️ Editing row'; $('feSaveBtn').textContent='Update Row'; $('feCancelBtn').style.display='';
+}
+function cancelFeeRowEdit(){
+  _editingFeeRowId=null; $('fe_label').value=''; $('fe_value').value='';
+  $('fe_formTitle').textContent='Add a fee row'; $('feSaveBtn').textContent='Add Row'; $('feCancelBtn').style.display='none';
 }
 
 // ── Ticker / Announcements CRUD ──
