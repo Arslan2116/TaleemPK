@@ -105,6 +105,21 @@ export default {
 
     try {
       const body = await req.json();
+
+      // ── Admin: generate a full blog draft from a scraped item (auth-gated) ──
+      if (body && body.mode === 'blog_draft') {
+        const ok = await verifyAdmin(body.token, env);
+        if (!ok) return j({ error: 'unauthorized' }, 401, CORS);
+        const item = body.item || {};
+        let uni = {};
+        if (item.uni_id) {
+          const rows = await sb(`institutions?select=name,full_name,city,sector,fee,merit,entry,programs,scholarships,description,website&id=eq.${encodeURIComponent(item.uni_id)}`, env).catch(() => []);
+          if (rows && rows[0]) uni = rows[0];
+        }
+        const article = await writeBlogDraft(item, uni, env);
+        return j(article, 200, CORS);
+      }
+
       const rawMessages = Array.isArray(body && body.messages) ? body.messages : [];
       // Trim conversation + each message
       const messages = rawMessages.slice(-MAX_MESSAGES).map(m => ({
@@ -169,6 +184,78 @@ async function sb(path, env) {
   });
   if (!r.ok) throw new Error(`Supabase ${r.status} on ${path.split('?')[0]}`);
   return r.json();
+}
+
+// ── Admin auth: verify a Supabase access token (only real admins can log in — no public signup) ──
+async function verifyAdmin(token, env) {
+  if (!token || typeof token !== 'string') return false;
+  try {
+    const r = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
+    });
+    if (!r.ok) return false;
+    const u = await r.json();
+    return !!(u && u.id);
+  } catch (_) { return false; }
+}
+
+// ── Blog draft writer: Gemini produces a full, original article (JSON out) ──
+async function writeBlogDraft(item, uni, env) {
+  const model = 'gemini-2.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`;
+  const uniName = uni.full_name || item.uni_name || 'the university';
+  const shortN = item.uni_name || uni.name || 'the university';
+  const prompt = `You are an education journalist for TaleemPK, a Pakistani university guidance site.
+Write an ORIGINAL, detailed, SEO-friendly blog article about this university announcement.
+
+ANNOUNCEMENT HEADLINE: "${item.title || ''}"
+UNIVERSITY: ${uniName}
+SOURCE URL: ${item.url || 'not provided'}
+
+VERIFIED UNIVERSITY DATA (use only these real values — never invent numbers):
+- Fee: ${uni.fee || 'unknown'}
+- Merit / eligibility: ${uni.merit || 'unknown'}
+- Entry test: ${uni.entry || 'unknown'}
+- City: ${uni.city || 'unknown'}
+- Sector: ${uni.sector || 'unknown'}
+- Scholarships: ${uni.scholarships || 'unknown'}
+- Programs: ${(uni.programs || []).slice(0, 15).join(', ') || 'unknown'}
+
+WRITING RULES:
+- 400–600 words. Clear English with a light natural Roman-Urdu touch where it fits.
+- DO NOT copy the announcement wording — summarise it in your own words and add real value/context.
+- Structure with <h3> sections: what was announced, who benefits / eligibility, a "Quick Facts" list (only include the verified values that are known, skip "unknown"), and how to apply / next steps.
+- Give practical advice a Pakistani student actually needs.
+- NEVER invent fees, dates, deadlines, merit numbers or figures not in the verified data. If unknown, tell the reader to check the official source.
+- Mention that students can compare this university and calculate merit on TaleemPK.
+- Body must be clean HTML using only <p>, <h3>, <ul>, <li>, <strong>, <em>, <a> tags.
+
+Output VALID JSON ONLY (no markdown fences): {"title": "...", "category": "Scholarships | Fee Update | Admission Guide | Admission Update", "excerpt": "one sentence, <=280 chars", "body": "<the HTML article>"}`;
+
+  const reqBody = {
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.6, maxOutputTokens: 2200, topP: 0.92, responseMimeType: 'application/json' },
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+    ],
+  };
+  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) });
+  if (!r.ok) throw new Error(`Gemini ${r.status}: ${await r.text()}`);
+  const data = await r.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+  let out;
+  try { out = JSON.parse(text); } catch (_) { out = {}; }
+  // guardrails + defaults
+  const icons = { Scholarships: '🎓', 'Fee Update': '💰', 'Admission Guide': '📝', 'Admission Update': '📢' };
+  const cat = ['Scholarships', 'Fee Update', 'Admission Guide', 'Admission Update'].includes(out.category) ? out.category : 'Admission Update';
+  return {
+    title: (out.title || `${shortN}: ${item.title || 'Update'}`).slice(0, 140),
+    category: cat,
+    icon: icons[cat] || '📢',
+    excerpt: (out.excerpt || '').slice(0, 300),
+    body: out.body || '',
+  };
 }
 
 // ── Intent detection (cheap but useful for ranking) ──

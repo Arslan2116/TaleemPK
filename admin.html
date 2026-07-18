@@ -708,49 +708,67 @@ async function loadScraped(){
       <button class="btn" style="padding:7px 14px;background:#44506a;" onclick="dismissScraped(${r.id}, this)">✕ Dismiss</button>
     </div>`).join('');
 }
-// Generate an editable blog DRAFT from a scraped item, using the university's DB data for context.
+const CHAT_API = (window.TPK_CONFIG && window.TPK_CONFIG.CHAT_API) || 'https://api.taleempk.pk/';
+// Generate an editable blog DRAFT from a scraped item.
+// Tries the AI worker (writes a full article); falls back to a DB-data template if the AI is unavailable.
 async function draftFromScraped(id, btn){
-  btn.disabled = true;
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = '✍️ Writing…';
+  const done = (msg,ok)=>{ flash('scrapedMsg', msg, ok); btn.disabled=false; btn.textContent=orig; };
   const { data: rows, error: e1 } = await sb.from('uni_updates').select('*').eq('id', id).limit(1);
-  if(e1 || !rows.length){ flash('scrapedMsg', (e1&&e1.message)||'Not found', false); btn.disabled=false; return; }
+  if(e1 || !rows.length){ done((e1&&e1.message)||'Not found', false); return; }
   const u = rows[0];
-  // pull the university's own data for real context
+  let article = await aiDraft(u);            // full AI-written article
+  let aiUsed = !!article;
+  if(!article) article = await templateDraft(u);   // graceful fallback
+  const { error: e2 } = await sb.from('blog_posts').insert({ ...article, author:'TaleemPK Team', published:false });
+  if(e2){ done(e2.message, false); return; }
+  await sb.from('uni_updates').update({status:'approved'}).eq('id', id);
+  done(aiUsed ? '✅ AI draft written! Open the 📰 Blog tab to review & publish.' : '✅ Draft created (template — AI unavailable). Edit it in the 📰 Blog tab.', true);
+  loadScraped();
+}
+// Ask the Cloudflare worker (Gemini) to write the article
+async function aiDraft(u){
+  try{
+    const { data: sess } = await sb.auth.getSession();
+    const token = sess && sess.session ? sess.session.access_token : '';
+    if(!token) return null;
+    const r = await fetch(CHAT_API, { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ mode:'blog_draft', token, item:{ title:u.title, url:u.url, uni_id:u.uni_id, uni_name:u.uni_name, kind:u.kind } }) });
+    if(!r.ok) return null;
+    const a = await r.json();
+    if(a && a.title && a.body) return { title:a.title, category:a.category||'Admission Update', icon:a.icon||'📢', excerpt:a.excerpt||'', body:a.body };
+    return null;
+  }catch(e){ return null; }
+}
+// Fallback: build a structured draft from the university's DB data (with placeholders to fill)
+async function templateDraft(u){
   let inst = {};
   if(u.uni_id){
-    const { data } = await sb.from('institutions').select('name,full_name,city,fee,merit,entry,scholarships,programs,website').eq('id', u.uni_id).single();
+    const { data } = await sb.from('institutions').select('name,full_name,city,fee,merit,entry,scholarships').eq('id', u.uni_id).single();
     if(data) inst = data;
   }
   const name = inst.full_name || u.uni_name || 'the university';
   const shortN = u.uni_name || inst.name || 'University';
-  const kindWord = { scholarship:'Scholarship', fee:'Fee Update', deadline:'Admission Deadline', announcement:'Admission Update', program:'New Program' };
-  const catMap = { fee:'Fee Update', deadline:'Admission Guide', program:'Admission Guide', announcement:'Admission Update' };
-  const cat = /scholarship/i.test(u.title) ? 'Scholarships' : (catMap[u.kind] || 'Admission Update');
-  const icon = KIND_ICON[u.kind] || '📢';
-  const title = `${shortN}: ${u.title}`.slice(0,140);
-  const excerpt = `${shortN} has announced: ${u.title}. Here's what it means for students, with ${shortN}'s fees, merit and how to apply.`.slice(0,300);
+  const cat = /scholarship/i.test(u.title) ? 'Scholarships' : ({fee:'Fee Update',deadline:'Admission Guide',program:'Admission Guide',announcement:'Admission Update'}[u.kind] || 'Admission Update');
   const esc = escHTML;
   const facts = [];
   if(inst.fee)   facts.push(`<li><strong>Fee:</strong> ${esc(inst.fee)}</li>`);
   if(inst.merit) facts.push(`<li><strong>Merit:</strong> ${esc(inst.merit)}</li>`);
   if(inst.entry) facts.push(`<li><strong>Entry Test:</strong> ${esc(inst.entry)}</li>`);
   if(inst.city)  facts.push(`<li><strong>Location:</strong> ${esc(inst.city)}</li>`);
-  const srcLink = u.url ? `<p>Read the official announcement here: <a href="${safeUrl(u.url)}" target="_blank" rel="noopener nofollow">${esc(shortN)} official website</a>.</p>` : '';
+  const srcLink = u.url ? `<p>Source: <a href="${safeUrl(u.url)}" target="_blank" rel="noopener nofollow">${esc(shortN)} official website</a>.</p>` : '';
   const uniSlug = (inst.name||shortN).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   const body =
-`<p><strong>${esc(name)}</strong> has announced: <em>${esc(u.title)}</em>. Here's a quick breakdown of what this means for prospective students — and the key facts you need before applying.</p>
+`<p><strong>${esc(name)}</strong> has announced: <em>${esc(u.title)}</em>.</p>
 <h3>What was announced</h3>
-<p>[Add 2–3 lines in your own words describing the announcement. Do NOT copy the university's text — summarise and add value.]</p>
+<p>[Add 2–3 lines in your own words — do NOT copy the university's text.]</p>
 ${facts.length?`<h3>${esc(shortN)} — Quick Facts</h3>\n<ul>${facts.join('')}</ul>`:''}
 <h3>What this means for you</h3>
-<p>[Explain who benefits, eligibility, and how to act. Add comparison or advice here.]</p>
-${inst.scholarships?`<p><strong>Scholarships:</strong> ${esc(inst.scholarships)}</p>`:''}
+<p>[Explain who benefits, eligibility, and next steps.]</p>
 ${srcLink}
-<p><em>Compare ${esc(shortN)} with other universities and calculate your merit on the <a href="/university/${uniSlug}">${esc(shortN)} page at TaleemPK</a>.</em></p>`;
-  const { error: e2 } = await sb.from('blog_posts').insert({ title, category: cat, icon, author:'TaleemPK Team', excerpt, body, published:false });
-  if(e2){ flash('scrapedMsg', e2.message, false); btn.disabled=false; return; }
-  await sb.from('uni_updates').update({status:'approved'}).eq('id', id);
-  flash('scrapedMsg','✅ Draft created! Go to the 📰 Blog tab to edit & publish it.', true);
-  loadScraped();
+<p><em>Compare on the <a href="/university/${uniSlug}">${esc(shortN)} page at TaleemPK</a>.</em></p>`;
+  return { title:`${shortN}: ${u.title}`.slice(0,140), category:cat, icon:(KIND_ICON[u.kind]||'📢'),
+    excerpt:`${shortN}: ${u.title}`.slice(0,300), body };
 }
 async function publishScraped(id, btn){
   btn.disabled = true;
