@@ -25,3 +25,10 @@ worker/.wrangler/
 merit-formulas.json
 match-map.json
 new-unis.json
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
