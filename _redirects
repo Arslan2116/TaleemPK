@@ -1,2 +1,6 @@
 # Blog article slugs route to individual static HTML files in /blog/ folder
 # No rewrite rules needed — Cloudflare Workers serves .html files at clean URLs automatically
+
+# The bare /university template page has no university selected → shows "not found".
+# Send it to the homepage universities grid (exact match only; /university/<slug> still works).
+/university / 301
