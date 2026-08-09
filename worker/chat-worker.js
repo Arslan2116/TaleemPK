@@ -380,7 +380,12 @@ ${recentBlog || '(none loaded)'}`;
   };
 
   const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (!r.ok) throw new Error(`Gemini ${r.status}: ${await r.text()}`);
+  if (!r.ok) {
+    // Return a friendly reply (HTTP 200) instead of erroring — a rate-limited
+    // free-tier key should never make the widget look "broken / can't connect".
+    if (r.status === 429) return "I'm getting a lot of questions right now 😅 — give me a few seconds and try again.";
+    return "Sorry, I hit a brief technical snag. Please try again in a moment — or explore the university pages and calculators in the meantime.";
+  }
   const data = await r.json();
   return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a reply. Please try rephrasing.';
 }
