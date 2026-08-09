@@ -527,6 +527,8 @@
     font-size:1.1rem; font-weight:800; color:var(--navy);
     margin-bottom:4px; line-height:1.3; letter-spacing:-0.01em;
   }
+  .uni-name-link { color:inherit; text-decoration:none; }
+  .uni-name-link:hover { color:var(--green-dark); }
   /* Location: single line, truncated with ellipsis so multi-city universities
      don't blow out card height (was causing a 60px height variance in the grid).
      Colour bumped from gray-400 to gray-600 for WCAG AA contrast (2.49 -> 5.7). */
@@ -581,6 +583,8 @@
     border:2px solid var(--green); background:var(--green);
     color:var(--navy); font-family:'Sora',sans-serif;
     font-size:0.82rem; font-weight:700; cursor:pointer; transition:all 0.2s;
+    display:inline-flex; align-items:center; justify-content:center;
+    text-decoration:none; text-align:center;
   }
   .btn-details:hover { background:var(--green-dark); border-color:var(--green-dark); color:#fff; }
   .btn-compare {

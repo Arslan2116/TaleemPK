@@ -671,6 +671,8 @@ function fmtNewsDate(d){
   catch(e){ return d; }
 }
 function blogSlug(title){ return (title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+// Must match the slug used by the static /university/<slug>.html pages (and openDetail)
+function uniSlug(name){ return (name||'').toLowerCase().replace(/[()]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
 function newsCardHTML(p){
   const href = p.url || `/blog/${blogSlug(p.title)}`;
   return `
@@ -2140,14 +2142,14 @@ function renderCards(unis) {
       return `<div class="match-badge ${m.cls}">${m.label}</div>`;
     })();
     return `
-    <div class="uni-card fade-in ${u.rank && u.rank<=3 ? 'is-top3':''} ${compareList.find(c=>c.id===u.id)?'selected':''}" id="card-${u.id}" style="position:relative;cursor:pointer" onclick="openDetail(${u.id})">
+    <div class="uni-card fade-in ${u.rank && u.rank<=3 ? 'is-top3':''} ${compareList.find(c=>c.id===u.id)?'selected':''}" id="card-${u.id}" style="position:relative;cursor:pointer" onclick="openDetail(${u.id})" data-slug="${uniSlug(u.name)}">
       ${matchBadge}
       <div class="uni-card-top" style="${assessMode?'margin-top:28px':''}">
         <div class="uni-icon">${u.website ? `<img src="${escHTML(logoSrc(u))}" alt="${escHTML(u.name)}" loading="lazy" onload="checkLogoSize(this,'${escHTML(u.icon||'').replace(/'/g,'')}')" onerror="handleLogoError(this,'${escHTML(u.website||'').replace(/'/g,'')}','${escHTML(u.icon||'').replace(/'/g,'')}')">` : escHTML(u.icon||'')}</div>
         ${u.basic&&!DATA_UPDATES[u.id]?`<div class="uni-rank" style="background:rgba(0,200,83,0.12);color:var(--green);font-size:0.6rem;padding:3px 7px;">HEC ✓</div>`:
         u.rank?`<div class="uni-rank ${u.rank<=3?'top3':''}">${u.rank<=3?icon('trophy',{size:12})+' ':''}#${u.rank}</div>`:''}
       </div>
-      <div class="uni-name">${escHTML(u.name)}</div>
+      <div class="uni-name"><a href="/university/${uniSlug(u.name)}" class="uni-name-link" onclick="event.stopPropagation()">${escHTML(u.name)}</a></div>
       <div class="uni-location" title="${escHTML(u.city)}"><span class="uni-loc-text">${escHTML(cityShort(u.city))}</span></div>
       ${cardRating(u.id)}
       <div class="uni-tags">
@@ -2168,7 +2170,7 @@ function renderCards(unis) {
         <button class="btn-compare" onclick="toggleCompare(${u.id}, event);event.stopPropagation()">
           ${compareList.find(c=>c.id===u.id)?t('btn_added'):t('btn_compare')}
         </button>
-        <button class="btn-details" onclick="openDetail(${u.id});event.stopPropagation()">${t('btn_details')}</button>
+        <a class="btn-details" href="/university/${uniSlug(u.name)}" onclick="openDetail(${u.id});event.stopPropagation();event.preventDefault()">${t('btn_details')}</a>
         <button class="btn-save ${isInShortlist(u.id)?'saved':''}" id="sl-btn-${u.id}" onclick="toggleShortlist(${u.id},event);event.stopPropagation()" title="Save to shortlist">${isInShortlist(u.id)?'❤️':'🤍'}</button>
       </div>
     </div>
