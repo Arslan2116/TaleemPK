@@ -673,6 +673,43 @@ function fmtNewsDate(d){
 function blogSlug(title){ return (title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
 // Must match the slug used by the static /university/<slug>.html pages (and openDetail)
 function uniSlug(name){ return (name||'').toLowerCase().replace(/[()]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+
+// Turn a long native <select> into a type-to-search dropdown (270-uni & city lists).
+// Keeps the underlying <select> as the source of truth (change events still fire).
+function makeSearchable(selectId, placeholder){
+  const sel = document.getElementById(selectId);
+  if(!sel || sel.dataset.ssDone) return;
+  sel.dataset.ssDone = '1';
+  sel.style.display = 'none';
+  const wrap = document.createElement('div'); wrap.className = 'ss-wrap';
+  const input = document.createElement('input');
+  input.type = 'text'; input.className = 'ss-input'; input.autocomplete = 'off';
+  input.placeholder = placeholder || 'Type to search…';
+  const list = document.createElement('div'); list.className = 'ss-list';
+  wrap.appendChild(input); wrap.appendChild(list);
+  sel.parentNode.insertBefore(wrap, sel.nextSibling);
+  const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const syncLabel = () => { const o = sel.options[sel.selectedIndex]; input.value = (o && o.value) ? o.textContent : ''; };
+  syncLabel();
+  const render = q => {
+    q = (q||'').toLowerCase().trim();
+    const opts = [...sel.options].filter(o => o.value && o.textContent.toLowerCase().includes(q)).slice(0,60);
+    list.innerHTML = opts.length
+      ? opts.map(o => `<div class="ss-opt" data-v="${esc(o.value)}">${esc(o.textContent)}</div>`).join('')
+      : '<div class="ss-empty">No match</div>';
+  };
+  input.addEventListener('focus', () => { render(''); input.select(); list.classList.add('open'); });
+  input.addEventListener('input', () => { render(input.value); list.classList.add('open'); });
+  input.addEventListener('blur', () => setTimeout(() => list.classList.remove('open'), 150));
+  list.addEventListener('mousedown', e => {
+    const opt = e.target.closest('.ss-opt'); if(!opt) return;
+    sel.value = opt.dataset.v;
+    sel.dispatchEvent(new Event('change', { bubbles:true }));
+    syncLabel(); list.classList.remove('open');
+  });
+  // keep the input label in sync if the select is changed programmatically
+  sel.addEventListener('change', syncLabel);
+}
 function newsCardHTML(p){
   const href = p.url || `/blog/${blogSlug(p.title)}`;
   return `
@@ -950,6 +987,7 @@ function openFeeCalc() {
       const fee=parseFeeNumeric(u.fee);
       if(fee){ const o=document.createElement('option'); o.value=u.id; o.textContent=`${u.name} — ${u.city}`; o.dataset.fee=fee; sel.appendChild(o); }
     });
+    makeSearchable('fcUni', 'Search your university…');
   }
   document.getElementById('feeResult').classList.remove('show');
   document.getElementById('feeOverlay').classList.add('open');
@@ -2532,6 +2570,7 @@ function populateCityFilter(){
   const cities = [...set].sort((a,b)=>a.localeCompare(b));
   sel.innerHTML = '<option value="">All Cities</option>' +
     cities.map(c=>`<option value="${c}">${c}</option>`).join('');
+  makeSearchable('cityFilter', 'Search city…');
 }
 
 function toggleCompare(id, e) {
