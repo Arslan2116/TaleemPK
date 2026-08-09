@@ -6,7 +6,7 @@
  *  - Supabase + Gemini API: network only (never cache user data)
  *  - Bump CACHE_VERSION on every code release to evict old caches
  */
-const CACHE_VERSION = 'tpk-v12-20260801';
+const CACHE_VERSION = 'tpk-v13-20260801';
 const RUNTIME_CACHE = 'tpk-runtime-' + CACHE_VERSION;
 const STATIC_CACHE  = 'tpk-static-'  + CACHE_VERSION;
 
@@ -89,23 +89,28 @@ self.addEventListener('fetch', event => {
 async function networkFirst(request) {
   const cache = await caches.open(RUNTIME_CACHE);
   try {
-    // 4s timeout — bail to cache if network is slow
+    // 12s timeout — slow Pakistani mobile networks need room. On timeout we serve the
+    // SAME page from cache (or an offline notice) — never the homepage, which made every
+    // slow university-page click silently land back on the homepage.
     const networkResp = await Promise.race([
       fetch(request),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))
     ]);
     if (networkResp && networkResp.ok) {
       cache.put(request, networkResp.clone()).catch(()=>{});
     }
     return networkResp;
   } catch (_) {
+    // Offline / slow — serve the REQUESTED page from cache if we have it
     const cached = await cache.match(request);
     if (cached) return cached;
-    // Last-resort offline fallback — try cached homepage
-    const home = await caches.match('/');
-    if (home) return home;
+    // Truly offline and uncached: a neutral offline notice — NOT the homepage,
+    // so a university link never silently resolves to the wrong page.
     return new Response(
-      '<h1>Offline</h1><p>TaleemPK can\'t reach the server right now. Reconnect and try again.</p>',
+      '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline — TaleemPK</title></head>'
+      + '<body style="font-family:sans-serif;text-align:center;padding:60px 20px;color:#0A1628"><h1>You’re offline</h1>'
+      + '<p style="color:#5A6478">Reconnect and reload to view this page.</p>'
+      + '<p style="margin-top:20px"><a href="/" style="color:#00A040;font-weight:700">← Go to homepage</a></p></body></html>',
       { status: 503, headers: { 'Content-Type': 'text/html' } }
     );
   }
