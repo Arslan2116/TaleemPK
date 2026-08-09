@@ -2258,7 +2258,17 @@ function filterUnis(type, btn) {
   closeOtherTools();          // close any open tool panel (map/calendar/fee)
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
+  const pf = document.getElementById('provinceFilter'); if(pf) pf.value = '';  // province is a separate control
   currentFilter = type;
+  currentPage = 1;
+  applyFilters();
+}
+// Province dropdown (replaced 7 province buttons to declutter the filter bar)
+function filterByProvince(val){
+  closeOtherTools();
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(!val){ const allBtn=document.querySelector('.filter-btn'); if(allBtn) allBtn.classList.add('active'); }
+  currentFilter = val || 'all';
   currentPage = 1;
   applyFilters();
 }

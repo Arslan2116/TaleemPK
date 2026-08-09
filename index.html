@@ -180,23 +180,16 @@
   <div class="hero-badge" data-i18n="hero_badge">Pakistan's #1 Education Comparison Platform</div>
   <h1 id="hero-h1">Choose the Right <span>University</span> <span class="hero-dash">—</span><br>All Info in One Place</h1>
   <p class="hero-urdu" id="hero-urdu">فیس، میرٹ، پروگرام — سب کچھ ایک جگہ</p>
-  <p class="hero-sub" data-i18n="hero_sub">Data on 270 HEC-recognized universities in Pakistan — fees, merit, programs. Compare side-by-side and decide your future.</p>
+  <p class="hero-sub" data-i18n="hero_sub">Compare fees, merit and programs across 270 Pakistani universities — then use free calculators to see where your marks can get you in. No signup, no ads.</p>
   <div class="hero-search-wrap">
     <div class="hero-search">
-      <input type="text" id="heroSearch" placeholder="Search university or program…" autocomplete="off"
+      <input type="text" id="heroSearch" placeholder="Search a university or program…" autocomplete="off"
              oninput="onSearchInput(this.value)"
              onkeydown="if(event.key==='Enter'){hideSuggestions();searchHero(true)}"
              onfocus="onSearchInput(this.value)">
       <button onclick="hideSuggestions();searchHero(true)" aria-label="Search" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><span data-icon="search" data-size="16"></span> <span class="search-btn-label">Search</span></button>
     </div>
     <div class="search-suggestions" id="searchSuggestions"></div>
-  </div>
-  <div class="hero-chips">
-    <button class="hero-chip" onclick="filterUnis('engineering',document.querySelector('.filter-btn:nth-child(5)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="wrench" data-size="14"></span> Engineering</button>
-    <button class="hero-chip" onclick="filterUnis('medical',document.querySelector('.filter-btn:nth-child(6)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="stethoscope" data-size="14"></span> Medical</button>
-    <button class="hero-chip" onclick="filterUnis('business',document.querySelector('.filter-btn:nth-child(7)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="briefcase" data-size="14"></span> Business</button>
-    <button class="hero-chip" onclick="filterUnis('public',document.querySelector('.filter-btn:nth-child(3)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="building2" data-size="14"></span> Public</button>
-    <button class="hero-chip" onclick="filterUnis('private',document.querySelector('.filter-btn:nth-child(4)'));document.getElementById('universities').scrollIntoView({behavior:'smooth'})"><span data-icon="briefcase" data-size="14"></span> Private</button>
   </div>
   <div class="hero-popular">
     <span class="hero-popular-label">Popular:</span>
@@ -227,13 +220,16 @@
     <button class="filter-btn filter-with-icon" onclick="filterUnis('engineering', this)" data-i18n="filter_engineering" data-prefix-icon="wrench">Engineering</button>
     <button class="filter-btn filter-with-icon" onclick="filterUnis('medical', this)" data-i18n="filter_medical" data-prefix-icon="stethoscope">Medical</button>
     <button class="filter-btn filter-with-icon" onclick="filterUnis('business', this)" data-i18n="filter_business" data-prefix-icon="briefcase">Business</button>
-    <button class="filter-btn filter-with-icon" onclick="filterUnis('federal', this)" data-i18n="filter_federal" data-prefix-icon="shield">Federal</button>
-    <button class="filter-btn filter-with-icon" onclick="filterUnis('punjab', this)" data-i18n="filter_punjab" data-prefix-icon="mapPin">Punjab</button>
-    <button class="filter-btn filter-with-icon" onclick="filterUnis('sindh', this)" data-i18n="filter_sindh" data-prefix-icon="mapPin">Sindh</button>
-    <button class="filter-btn filter-with-icon" onclick="filterUnis('kpk', this)" data-i18n="filter_kpk" data-prefix-icon="mapPin">KPK</button>
-    <button class="filter-btn filter-with-icon" onclick="filterUnis('balochistan', this)" data-i18n="filter_balochistan" data-prefix-icon="mapPin">Balochistan</button>
-    <button class="filter-btn filter-with-icon" onclick="filterUnis('ajk', this)" data-i18n="filter_ajk" data-prefix-icon="mapPin">AJK</button>
-    <button class="filter-btn filter-with-icon" onclick="filterUnis('gilgitbaltistan', this)" data-i18n="filter_gb" data-prefix-icon="mapPin">GB</button>
+    <select id="provinceFilter" class="city-filter" onchange="filterByProvince(this.value)" aria-label="Filter by province">
+      <option value="">All Provinces</option>
+      <option value="federal">Federal</option>
+      <option value="punjab">Punjab</option>
+      <option value="sindh">Sindh</option>
+      <option value="kpk">KPK</option>
+      <option value="balochistan">Balochistan</option>
+      <option value="ajk">AJK</option>
+      <option value="gilgitbaltistan">Gilgit-Baltistan</option>
+    </select>
     <select id="cityFilter" class="city-filter" onchange="filterByCity(this.value)" aria-label="Filter by city">
       <option value="">All Cities</option>
     </select>
@@ -1281,8 +1277,8 @@
   <div class="modal" id="compareModal"></div>
 </div>
 
-<script src="/app-core.js?v=1"></script>
+<script src="/app-core.js?v=2"></script>
 <script src="/uni-data.js?v=2"></script>
-<script src="/app.js?v=10"></script>
+<script src="/app.js?v=11"></script>
 </body>
 </html>

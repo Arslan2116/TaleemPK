@@ -226,7 +226,7 @@ const T = {
     hero_badge:"Pakistan's #1 Education Comparison Platform",
     hero_h1:'Choose the Right <span>University</span> <span class="hero-dash">—</span><br>All Info in One Place',
     hero_urdu:'فیس، میرٹ، پروگرام — سب کچھ ایک جگہ',
-    hero_sub:'Data on 270 HEC-recognized universities in Pakistan — fees, merit, programs. Compare side-by-side and decide your future.',
+    hero_sub:'Compare fees, merit and programs across 270 Pakistani universities — then use free calculators to see where your marks can get you in. No signup, no ads.',
     hero_search_placeholder:'Search university or program…',
     hero_search_btn:'Search',
     stat1_label:'Top Universities', stat2_label:'Programs Listed', stat3_label:'Students Helped', stat4_label:'Cities Covered',
