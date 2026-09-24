@@ -2657,8 +2657,12 @@ function openDetail(id) {
     }));
   }catch(e){}
   // Canonical detail view is the dedicated university page.
-  const _u = (window.INSTITUTIONS||[]).find(x=>x.id===id);
-  window.location.href = _u ? '/university/'+(_u.name||'').toLowerCase().replace(/[()]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') : 'university.html?id='+id;
+  // BUG FIX: previously used window.INSTITUTIONS (never set) → always fell back to
+  // university.html?id=N, which Cloudflare rewrites to /university?id=N → the
+  // /university→/ redirect then dumped the user on the HOMEPAGE. Use the real
+  // UNIVERSITIES array + shared uniSlug so the clean /university/<slug> URL is used.
+  const _u = (typeof UNIVERSITIES !== 'undefined' ? UNIVERSITIES : []).find(x => x.id === id);
+  window.location.href = _u ? '/university/' + uniSlug(_u.name) : '/university/' + id;
   return;
   /* ---- legacy modal (kept for reference, no longer used) ---- */
   const u = UNIVERSITIES.find(u=>u.id===id);
@@ -2839,7 +2843,7 @@ function openCompareModal() {
         { label:'Details', vals: list.map(u=>{
           // Fallback to ?id= if for any reason u.name is missing — guarantees the link always works
           const slug = toSlugSafe(u.name);
-          const href = slug ? `/university/${slug}` : `/university.html?id=${u.id}`;
+          const href = slug ? `/university/${slug}` : `/university/${u.id}`;  // never use .html?id= — it redirects to homepage
           return `<a href="${href}" target="_blank" rel="noopener" style="color:#00A040;font-weight:700;display:inline-flex;align-items:center;gap:4px;">View Profile ${icon('arrowRight',{size:14})}</a>`;
         }) },
       ]
