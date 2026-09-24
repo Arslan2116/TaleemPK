@@ -37,8 +37,30 @@ KEYWORDS = re.compile(
     r'admission|apply|deadline|merit\s*list|entry\s*test|fee|scholarship|'
     r'schedule|last\s*date|registration|prospectus|notification|result|'
     r'spring\s*20|fall\s*20|intake', re.I)
-# ...but not if it's obvious chrome/nav noise
-NOISE = re.compile(r'^(home|about|contact|login|apply now\W*$|read more|click here|more)$', re.I)
+# ── Junk filter (mirrors sql/dismiss-junk-scraped.sql) ──
+# A real announcement is ALWAYS kept, even if it also looks generic.
+JUNK_USEFUL = re.compile(
+    r'(scholarship|merit\s*list|fee\s*structure|admission.*open|admissions?\s*(fall|spring|20\d2)'
+    r'|entry\s*test|last\s*date|deadline|apply\s*by|test\s*date|test.*announc|result.*announc)', re.I)
+# Nav-links / generic labels (prefix match)
+JUNK_PREFIX = re.compile(
+    r'^(read\s*more|click\s*here|apply\s*(now|online|here)|view\s*all|learn\s*more|download|prospectus'
+    r'|online\s*admission|admission\s*(office|policy|criteria|contact|guide|process)|how\s*to\s*apply'
+    r'|why\s*(choose|apply)|virtual\s*tour|home|about|contact\s*us|login|sign\s*?in|feedback|gallery'
+    r'|sitemap|privacy|faq|register)', re.I)
+# Internal academic notices (not admissions info)
+JUNK_ACADEMIC = re.compile(
+    r'(summer\s*vacation|winter\s*vacation|academic\s*calendar|teaching\s*faculty|faculty\s*member'
+    r'|semester\s*exam|examination\s*notification|date\s*sheet|time\s*table|syllabus|convocation|seminar'
+    r'|workshop|webinar|guest\s*lecture|sports|society|club|roll\s*slip|roll\s*number\s*slip'
+    r'|visiting\s*faculty|list\s*of\s*graduates)', re.I)
+def is_junk(text):
+    t = (text or '').strip()
+    if JUNK_USEFUL.search(t): return False       # real announcement — always keep
+    if len(t) < 15: return True
+    if JUNK_PREFIX.match(t): return True
+    if JUNK_ACADEMIC.search(t): return True
+    return False
 
 class LinkParser(HTMLParser):
     def __init__(self):
@@ -77,7 +99,7 @@ def scrape_uni(u):
             for text, href in p.links:
                 if len(text)<15 or len(text)>160: continue
                 if '@' in text or text.startswith('http'): continue   # emails / bare URLs
-                if NOISE.match(text) or not KEYWORDS.search(text): continue
+                if not KEYWORDS.search(text) or is_junk(text): continue   # must be relevant & not junk
                 absu=urllib.parse.urljoin(site+path+'/', href or '')
                 if urllib.parse.urlparse(absu).netloc.replace('www.','') not in site:
                     # keep only same-site links
