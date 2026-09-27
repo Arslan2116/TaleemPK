@@ -38,25 +38,34 @@ KEYWORDS = re.compile(
     r'schedule|last\s*date|registration|prospectus|notification|result|'
     r'spring\s*20|fall\s*20|intake', re.I)
 # ── Junk filter (mirrors sql/dismiss-junk-scraped.sql) ──
-# A real announcement is ALWAYS kept, even if it also looks generic.
+# HARD junk = never for students; dropped EVEN IF it contains scholarship/merit/result
+# words (e.g. "Recruitment Merit Lists", "Test Result for Lecturer Positions").
+JUNK_HARD = re.compile(
+    r'(recruit|vacanc|\bhiring\b|\blecturer\b|\bprofessor\b|position[s]?\s*(of|for)|of\s*lecturer'
+    r'|appointment|tender|quotation|procurement|committee\s*meeting|\bminutes\b|dissertation'
+    r'|thesis\s*defen|\bviva\b|pedagogical|staff\s*training|non[-\s]*teaching|\bpromotion\b'
+    r'|\b(19\d2|200\d|201\d|202[0-4])\b)', re.I)   # stale years (…2024 and older)
+# A real, student-facing announcement is kept, even if it also looks generic.
 JUNK_USEFUL = re.compile(
-    r'(scholarship|merit\s*list|fee\s*structure|admission.*open|admissions?\s*(fall|spring|20\d2)'
-    r'|entry\s*test|last\s*date|deadline|apply\s*by|test\s*date|test.*announc|result.*announc)', re.I)
+    r'(scholarship|merit\s*list|fee\s*structure|admission.*open|admissions?\s*(fall|spring|20[2-9]\d)'
+    r'|entry\s*test|last\s*date|deadline|apply\s*by|test\s*date|test.*announc|result.*announc|fellowship)', re.I)
 # Nav-links / generic labels (prefix match)
 JUNK_PREFIX = re.compile(
-    r'^(read\s*more|click\s*here|apply\s*(now|online|here)|view\s*all|learn\s*more|download|prospectus'
-    r'|online\s*admission|admission\s*(office|policy|criteria|contact|guide|process)|how\s*to\s*apply'
+    r'^([»\-\s]*)(read\s*more|click\s*here|apply\s*(now|online|here|for\s*(admission|hostel))|view\s*all|learn\s*more|download|prospectus'
+    r'|online\s*admission|admission\s*(office|policy|criteria|contact|guide|process|guidelines)|how\s*to\s*apply'
     r'|why\s*(choose|apply)|virtual\s*tour|home|about|contact\s*us|login|sign\s*?in|feedback|gallery'
-    r'|sitemap|privacy|faq|register)', re.I)
+    r'|sitemap|privacy|faq|register|notice$|news$|admissions?$|results?$)', re.I)
 # Internal academic notices (not admissions info)
 JUNK_ACADEMIC = re.compile(
     r'(summer\s*vacation|winter\s*vacation|academic\s*calendar|teaching\s*faculty|faculty\s*member'
-    r'|semester\s*exam|examination\s*notification|date\s*sheet|time\s*table|syllabus|convocation|seminar'
-    r'|workshop|webinar|guest\s*lecture|sports|society|club|roll\s*slip|roll\s*number\s*slip'
-    r'|visiting\s*faculty|list\s*of\s*graduates)', re.I)
+    r'|semester[-\s]*(i|ii|iii|iv|v|\d)|semester\s*exam|examination\s*notification|exam\s*20\d\d|date\s*sheet'
+    r'|time\s*table|syllabus|convocation|seminar|workshop|webinar|guest\s*lecture|sports|society|\bclub\b'
+    r'|roll\s*(no|number)?\s*slip|visiting\s*faculty|list\s*of\s*graduates|certificate\s*course'
+    r'|guidelines?\s*/?\s*faqs?|department\b|dept\b|instructions\s*(and|for))', re.I)
 def is_junk(text):
     t = (text or '').strip()
-    if JUNK_USEFUL.search(t): return False       # real announcement — always keep
+    if JUNK_HARD.search(t): return True          # jobs / internal / stale — always drop
+    if JUNK_USEFUL.search(t): return False        # real student announcement — keep
     if len(t) < 15: return True
     if JUNK_PREFIX.match(t): return True
     if JUNK_ACADEMIC.search(t): return True

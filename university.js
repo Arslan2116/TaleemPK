@@ -192,6 +192,19 @@ const UPD_CATS = [
   { key:'program',  icon:'📚', label:'New Programs',           re:/new\s*program|launch|introduc|now\s*offering|degree\s*program|phd\s*program|ms\s*program/i },
   { key:'admission',icon:'🎓', label:'Admissions & Notices',   re:/admission|apply|open|notice|prospectus|induction|registration/i },
 ];
+// Display-time junk guard (mirrors the scraper filter) — so even if something slips
+// into the DB, it never appears on a university page. Keep in sync with scrape.py is_junk.
+const UPD_HARD = /(recruit|vacanc|\bhiring\b|\blecturer\b|\bprofessor\b|position[s]?\s*(of|for)|of\s*lecturer|appointment|tender|quotation|procurement|committee\s*meeting|\bminutes\b|dissertation|thesis\s*defen|\bviva\b|pedagogical|non[-\s]*teaching|\bpromotion\b|\b(19\d2|200\d|201\d|202[0-4])\b)/i;
+const UPD_USEFUL = /(scholarship|merit\s*list|fee\s*structure|admission.*open|admissions?\s*(fall|spring|20[2-9]\d)|entry\s*test|last\s*date|deadline|apply\s*by|test\s*date|test.*announc|result.*announc|fellowship)/i;
+const UPD_ACADEMIC = /(summer\s*vacation|winter\s*vacation|academic\s*calendar|teaching\s*faculty|faculty\s*member|semester[-\s]*(i{1,3}|iv|v|\d)|semester\s*exam|examination\s*notification|exam\s*20\d\d|date\s*sheet|time\s*table|syllabus|convocation|seminar|workshop|webinar|guest\s*lecture|\bsports\b|society|\bclub\b|roll\s*(no|number)?\s*slip|visiting\s*faculty|list\s*of\s*graduates|certificate\s*course|guidelines?\s*\/?\s*faqs?|department\b|dept\b|instructions\s*(and|for)|dissertation)/i;
+function isJunkUpdate(t){
+  t = String(t||'').trim();
+  if(UPD_HARD.test(t)) return true;
+  if(UPD_USEFUL.test(t)) return false;
+  if(t.length < 15) return true;
+  if(UPD_ACADEMIC.test(t)) return true;
+  return false;
+}
 function classifyUpdate(title, kind){
   const t = String(title||'');
   if(kind === 'fee') return UPD_CATS[2];
@@ -205,12 +218,13 @@ async function loadUpdates(){
     const { data, error } = await sb.from('uni_updates')
       .select('title,url,kind,found_at')
       .eq('uni_id', UNI.id).neq('status','dismissed')
-      .order('found_at',{ascending:false}).limit(30);
-    if(error || !data || !data.length) return;
+      .order('found_at',{ascending:false}).limit(40);
+    let rows = (data||[]).filter(r => !isJunkUpdate(r.title));  // display-time junk guard
+    if(error || !rows.length) return;
     const fmt = d => { try{ return new Date(d).toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return ''; } };
     // group by category, preserve date order within each
     const groups = {};
-    for(const r of data){
+    for(const r of rows){
       const c = classifyUpdate(r.title, r.kind);
       (groups[c.key] || (groups[c.key] = { cat:c, items:[] })).items.push(r);
     }
