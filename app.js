@@ -667,18 +667,45 @@ function updateSlBadge() {
   if(btn) btn.classList.toggle('active', _slActive);
 }
 
+/* ── Overlay pages (About, Scholarships) ──
+   These are sections of the homepage, not separate documents, so the URL and the Back
+   button have to be driven by hand — otherwise the address bar never changes and Back
+   leaves the site instead of closing the panel. */
+// Closes whichever panel is open AND clears its hash — otherwise the URL still says
+// #about after the panel is gone, and a refresh would reopen it.
+function closeAllPages(){ closeAboutPage(); closeScholarshipsPage(); }
+
+function _pageRoute(hash){
+  try{
+    if(hash) history.pushState({tpkPage:hash}, '', '#'+hash);
+    else if(/^#(about|scholarships)$/.test(location.hash||'')) history.pushState({}, '', location.pathname+location.search);
+  }catch(e){}
+}
+// Back/Forward: drive the panels from whatever the URL now says
+window.addEventListener('popstate', function(){
+  const h = (location.hash||'').slice(1);
+  if(h==='about'){ closeScholarshipsPage(true); openAboutPage(true); }
+  else if(h==='scholarships'){ closeAboutPage(true); openScholarshipsPage(true); }
+  else closeAllPages();
+});
+
 /* ── About Page ── */
-function openAboutPage() {
-  closeBlogPage(); closeScholarshipsPage();
+// skipHistory: the caller is already handling the URL (popstate, or closing to open another)
+function openAboutPage(skipHistory) {
+  closeScholarshipsPage(true);
   document.getElementById('aboutPage').classList.add('active');
   document.body.classList.add('about-active');
+  if(!skipHistory) _pageRoute('about');
   window.scrollTo({top:0, behavior:'smooth'});
   closeNavDropdown();
 }
-function closeAboutPage() {
-  document.getElementById('aboutPage').classList.remove('active');
+function closeAboutPage(skipHistory) {
+  const el = document.getElementById('aboutPage');
+  const wasOpen = el && el.classList.contains('active');
+  if(el) el.classList.remove('active');
   document.body.classList.remove('about-active');
-  window.scrollTo({top:0, behavior:'smooth'});
+  if(wasOpen && !skipHistory) _pageRoute(null);
+  if(wasOpen) window.scrollTo({top:0, behavior:'smooth'});
 }
 
 /* ── Blog / News ── */
@@ -769,7 +796,7 @@ function renderNews(){
   grid.innerHTML = NEWS_POSTS.slice(0,3).map(newsCardHTML).join('');
   // Show/hide the "View all" button depending on how many posts exist
   const va = document.getElementById('newsViewAll');
-  if(va) va.style.display = NEWS_POSTS.length > 3 ? '' : 'none';
+  if(va) va.style.display = NEWS_POSTS.length > 3 ? 'inline-block' : 'none';
 }
 // New posts (manual articles + auto digests) live in /blog-index.json — merge them in
 // so the homepage always shows the freshest three without editing this file.
@@ -786,27 +813,6 @@ function renderNews(){
     renderNews();
   }catch(e){}
 })();
-function renderBlogPage(){
-  const grid = document.getElementById('blogPageGrid');
-  if(!grid) return;
-  grid.innerHTML = NEWS_POSTS.length
-    ? NEWS_POSTS.map(newsCardHTML).join('')
-    : '<p style="color:var(--gray-600)">No articles yet — check back soon.</p>';
-}
-function openBlogPage(){
-  closeAboutPage(); closeScholarshipsPage();
-  renderBlogPage();
-  document.getElementById('blogPage').classList.add('active');
-  document.body.classList.add('blog-active');
-  window.scrollTo({top:0, behavior:'smooth'});
-  closeNavDropdown();
-}
-function closeBlogPage(){
-  document.getElementById('blogPage').classList.remove('active');
-  document.body.classList.remove('blog-active');
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
 /* ── Scholarships ── */
 let SCHOLARSHIPS = [];
 let _scholFilter = 'all';
@@ -851,59 +857,23 @@ function filterScholarships(type, btn){
   if(btn) btn.classList.add('active');
   renderScholarships();
 }
-function openScholarshipsPage(){
-  closeAboutPage(); closeBlogPage();
+function openScholarshipsPage(skipHistory){
+  closeAboutPage(true);
   document.getElementById('scholarshipsPage').classList.add('active');
   document.body.classList.add('scholar-active');
+  if(!skipHistory) _pageRoute('scholarships');
   window.scrollTo({top:0, behavior:'smooth'});
   closeNavDropdown();
   loadScholarships();
 }
-function closeScholarshipsPage(){
-  document.getElementById('scholarshipsPage').classList.remove('active');
+function closeScholarshipsPage(skipHistory){
+  const el = document.getElementById('scholarshipsPage');
+  const wasOpen = el && el.classList.contains('active');
+  if(el) el.classList.remove('active');
   document.body.classList.remove('scholar-active');
-  window.scrollTo({top:0, behavior:'smooth'});
+  if(wasOpen && !skipHistory) _pageRoute(null);
+  if(wasOpen) window.scrollTo({top:0, behavior:'smooth'});
 }
-function openArticle(id){
-  const p = NEWS_POSTS.find(x=>x.id===id);
-  if(!p) return;
-  document.getElementById('articleModal').innerHTML = `
-    <button class="article-close" onclick="closeArticle()" aria-label="Close">×</button>
-    <span class="article-cat">${p.category||'Article'}</span>
-    <h1>${p.title}</h1>
-    <div class="article-meta">By ${p.author||'TaleemPK'} · ${fmtNewsDate(p.date)}</div>
-    <div class="article-content">${autoLinkUniversities(p.body||'<p>'+(p.excerpt||'')+'</p>')}</div>
-  `;
-  document.getElementById('articleOverlay').classList.add('show');
-  document.body.style.overflow = 'hidden';
-  // Update URL hash for shareability and crawlability
-  const slug = p.title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-  history.replaceState(null,'','#blog-'+slug);
-  // Article JSON-LD
-  const artLd = {
-    "@context":"https://schema.org",
-    "@type":"Article",
-    "headline": p.title,
-    "description": p.excerpt || p.title,
-    "author":{"@type":"Organization","name": p.author||'TaleemPK'},
-    "publisher":{"@type":"Organization","name":"TaleemPK","url":"https://taleempk.pk"},
-    "datePublished": p.date || p.created_at,
-    "dateModified": p.updated_at || p.date || p.created_at,
-    "url": "https://taleempk.pk/#blog-"+slug,
-    "mainEntityOfPage":{"@type":"WebPage","@id":"https://taleempk.pk/#blog-"+slug}
-  };
-  let as = document.getElementById('ldjson-article');
-  if(!as){ as = document.createElement('script'); as.id='ldjson-article'; as.type='application/ld+json'; document.head.appendChild(as); }
-  as.textContent = JSON.stringify(artLd);
-}
-function closeArticle(e){
-  if(!e || e.target.id==='articleOverlay' || e.target.classList.contains('article-close')){
-    document.getElementById('articleOverlay').classList.remove('show');
-    document.body.style.overflow = '';
-    history.replaceState(null,'',location.pathname);
-  }
-}
-
 /* ── Nav Dropdown ── */
 function toggleNavDropdown() {
   document.getElementById('navToolsDropdown').classList.toggle('open');
@@ -1592,7 +1562,8 @@ function toggleCalendar() {
   const sec = document.getElementById('calendarSection');
   const isOpen = sec.classList.toggle('show');
   document.getElementById('calToolBtn').classList.toggle('active', isOpen);
-  if(isOpen){ closeOtherTools('cal'); renderCalendar(); }
+  if(isOpen){ closeOtherTools('cal'); renderCalendar();
+    setTimeout(()=>sec.scrollIntoView({behavior:'smooth',block:'start'}),60); }
 }
 
 function filterCal(type, btn) {
@@ -1694,6 +1665,7 @@ function toggleMapView() {
   document.getElementById('mapToolBtn').classList.toggle('active',_mapActive);
   if(_mapActive && !_mapInit){ initMap(); _mapInit=true; }
   if(_mapActive && _mapInstance){ setTimeout(()=>_mapInstance.invalidateSize(),50); }
+  if(_mapActive) setTimeout(()=>document.getElementById('mapContainer').scrollIntoView({behavior:'smooth',block:'start'}),60);
 }
 
 function initMap() {
@@ -3527,6 +3499,10 @@ document.head.appendChild(_tpkSlideKf);
   // Deep link: open a university directly if URL has #uni-<id>
   const m = (location.hash||'').match(/^#uni-(\d+)/);
   if(m){ const uid=parseInt(m[1]); if(UNIVERSITIES.some(u=>u.id===uid)) setTimeout(()=>openDetail(uid),200); }
+  // …or the About / Scholarships panel, so those URLs are shareable
+  const ph = (location.hash||'').slice(1);
+  if(ph==='about')             setTimeout(()=>openAboutPage(true),150);
+  else if(ph==='scholarships') setTimeout(()=>openScholarshipsPage(true),150);
 })();
 
 // Back-to-top button visibility on scroll

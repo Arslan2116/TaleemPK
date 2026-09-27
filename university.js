@@ -521,7 +521,9 @@ function setSEO(){
     "name": u.full_name || u.name,
     "alternateName": u.name,
     "url": canon,
-    "logo": u.logo_url || (u.website ? 'https://www.google.com/s2/favicons?domain='+u.website+'&sz=256' : undefined),
+    // Only a self-hosted logo belongs here — Google rejects a third-party favicon URL
+    // as an organization logo, so omit the field rather than advertise one.
+    "logo": u.logo_url ? new URL(u.logo_url, location.origin).href : undefined,
     "description": u.description || d,
     "address": u.city ? {"@type":"PostalAddress","addressLocality":u.city.split('/')[0].trim(),"addressRegion":u.province||'','addressCountry':'PK'} : undefined,
     "foundingDate": u.established ? String(u.established) : undefined,

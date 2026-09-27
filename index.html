@@ -110,7 +110,7 @@
 <script defer src="/config.js"></script>
 <script defer src="/gpa-systems.js"></script>
 <script defer src="/chat-widget.js"></script>
-<link rel="stylesheet" href="/styles.css?v=4">
+<link rel="stylesheet" href="/styles.css?v=5">
 </head>
 <body>
 
@@ -136,13 +136,13 @@
 
 <!-- NAV -->
 <nav>
-  <a href="#" class="nav-logo" onclick="closeAboutPage();closeBlogPage();closeScholarshipsPage();window.scrollTo({top:0,behavior:'smooth'});return false">
+  <a href="#" class="nav-logo" onclick="closeAllPages();window.scrollTo({top:0,behavior:'smooth'});return false">
     <div class="logo-icon"><span data-icon="graduationCap" data-size="20"></span></div>
     Taleem<span>PK</span>
   </a>
   <ul class="nav-links">
-    <li><a href="#universities" onclick="closeMobileMenu();closeAboutPage();closeBlogPage();closeScholarshipsPage();setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60);return false">Universities</a></li>
-    <li><a href="#" onclick="closeMobileMenu();closeAboutPage();closeBlogPage();closeScholarshipsPage();(compareList.length>=2?openCompareModal():setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60));return false">Compare</a></li>
+    <li><a href="#universities" onclick="closeMobileMenu();closeAllPages();setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60);return false">Universities</a></li>
+    <li><a href="#" onclick="closeMobileMenu();closeAllPages();(compareList.length>=2?openCompareModal():setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60));return false">Compare</a></li>
 
     <!-- Tools dropdown -->
     <li class="nav-dropdown" id="navToolsDropdown">
@@ -150,23 +150,23 @@
         Tools <span class="chevron">▼</span>
       </button>
       <div class="nav-dropdown-menu" id="navDropdownMenu">
-        <button onclick="openFeeCalc();closeNavDropdown()"><span class="ndm-icon" data-icon="calculator"></span> Fee Calculator</button>
-        <button onclick="openMeritCalc();closeNavDropdown()"><span class="ndm-icon" data-icon="ruler"></span> Merit Calculator</button>
-        <button onclick="openCgpaCalc();closeNavDropdown()"><span class="ndm-icon" data-icon="graduationCap"></span> CGPA Calculator</button>
-        <button onclick="openScholMatch();closeNavDropdown()"><span class="ndm-icon" data-icon="gift"></span> Scholarship Matcher</button>
-        <button onclick="toggleCalendar();closeNavDropdown()"><span class="ndm-icon" data-icon="calendar"></span> Admission Dates</button>
-        <button onclick="toggleMapView();closeNavDropdown()"><span class="ndm-icon" data-icon="map"></span> Map View</button>
-        <button onclick="openPredictor();closeNavDropdown()"><span class="ndm-icon" data-icon="target"></span> Merit Predictor</button>
+        <button onclick="closeAllPages();openFeeCalc();closeNavDropdown()"><span class="ndm-icon" data-icon="calculator"></span> Fee Calculator</button>
+        <button onclick="closeAllPages();openMeritCalc();closeNavDropdown()"><span class="ndm-icon" data-icon="ruler"></span> Merit Calculator</button>
+        <button onclick="closeAllPages();openCgpaCalc();closeNavDropdown()"><span class="ndm-icon" data-icon="graduationCap"></span> CGPA Calculator</button>
+        <button onclick="closeAllPages();openScholMatch();closeNavDropdown()"><span class="ndm-icon" data-icon="gift"></span> Scholarship Matcher</button>
+        <button onclick="closeAllPages();toggleCalendar();closeNavDropdown()"><span class="ndm-icon" data-icon="calendar"></span> Admission Dates</button>
+        <button onclick="closeAllPages();toggleMapView();closeNavDropdown()"><span class="ndm-icon" data-icon="map"></span> Map View</button>
+        <button onclick="closeAllPages();openPredictor();closeNavDropdown()"><span class="ndm-icon" data-icon="target"></span> Merit Predictor</button>
         <div class="nav-dropdown-divider"></div>
-        <button onclick="toggleShortlistFilter();closeNavDropdown()"><span class="ndm-icon" data-icon="heart"></span> My Shortlist</button>
+        <button onclick="closeAllPages();toggleShortlistFilter();closeNavDropdown()"><span class="ndm-icon" data-icon="heart"></span> My Shortlist</button>
         <div class="nav-dropdown-divider"></div>
         <button id="tpkInstallBtn" onclick="tpkInstall();closeNavDropdown()"><span class="ndm-icon" data-icon="download"></span> Install App</button>
       </div>
     </li>
 
-    <li><a href="#" onclick="closeMobileMenu();closeAboutPage();openBlogPage();return false">Blog</a></li>
-    <li><a href="#" onclick="closeMobileMenu();openScholarshipsPage();return false">Scholarships</a></li>
-    <li><a href="#" onclick="openAboutPage();closeMobileMenu();return false">About</a></li>
+    <li><a href="/blog" onclick="closeMobileMenu()">Blog</a></li>
+    <li><a href="#" onclick="closeMobileMenu();closeAllPages();openScholarshipsPage();return false">Scholarships</a></li>
+    <li><a href="#" onclick="closeAllPages();openAboutPage();closeMobileMenu();return false">About</a></li>
     <li class="mobile-auth-item"><a href="#" id="authNavBtnMobile" onclick="onAuthNavClick();return false">🔐 Login / Sign Up</a></li>
   </ul>
   <button class="nav-cta" id="authNavBtn" onclick="onAuthNavClick()">Login / Sign Up</button>
@@ -425,22 +425,10 @@
       <h2>📰 Blog &amp; News</h2>
       <p>Admission guides, scholarship updates, and career advice for Pakistani students.</p>
     </div>
-    <button class="news-viewall" id="newsViewAll" onclick="openBlogPage()">View All Articles →</button>
+    <a class="news-viewall" id="newsViewAll" href="/blog">View All Articles →</a>
   </div>
   <div class="news-grid" id="newsGrid"></div>
 </section>
-
-<!-- BLOG PAGE (all articles) -->
-<div id="blogPage">
-  <div class="about-hero">
-    <button class="about-back" onclick="closeBlogPage()">← Back to Home</button>
-    <h2>📰 Blog &amp; <span>News</span></h2>
-    <p>All admission guides, scholarship updates, test-prep tips, and career advice for Pakistani students — in one place.</p>
-  </div>
-  <div class="blog-page-body">
-    <div class="news-grid" id="blogPageGrid"></div>
-  </div>
-</div>
 
 <!-- SCHOLARSHIPS PAGE -->
 <div id="scholarshipsPage">
@@ -458,11 +446,6 @@
     </div>
     <div class="schol-grid" id="scholGrid"><p style="color:var(--gray-600)">Loading scholarships…</p></div>
   </div>
-</div>
-
-<!-- ARTICLE READER MODAL -->
-<div class="article-overlay" id="articleOverlay" onclick="closeArticle(event)">
-  <div class="article-modal" id="articleModal"></div>
 </div>
 
 <!-- ABOUT PAGE -->
@@ -643,7 +626,7 @@
       <div class="footer-links">
         <a href="#" onclick="closeAboutPage();setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),100);return false">Universities</a>
         <a href="#" onclick="closeAboutPage();setTimeout(()=>document.getElementById('how').scrollIntoView({behavior:'smooth'}),100);return false">How It Works</a>
-        <a href="#" onclick="closeAboutPage();openBlogPage();return false">Blog &amp; News</a>
+        <a href="/blog">Blog &amp; News</a>
         <a href="#" onclick="openScholarshipsPage();return false">Scholarships</a>
         <a href="#" onclick="openFeeCalc();return false">Fee Calculator</a>
         <a href="#" onclick="openMeritCalc();return false">Merit Calculator</a>
@@ -1279,6 +1262,6 @@
 
 <script src="/app-core.js?v=2"></script>
 <script src="/uni-data.js?v=2"></script>
-<script src="/app.js?v=17"></script>
+<script src="/app.js?v=18"></script>
 </body>
 </html>
