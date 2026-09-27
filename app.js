@@ -324,40 +324,56 @@ const MERIT_TRENDS = {
 };
 
 // ─── ADMISSION CALENDAR 2026 ───
-const ADMISSION_DATES = [
-  {uni:'AIOU',          ev:'Spring 2026 Admission Closed',         date:'2026-05-20',type:'deadline'},
-  {uni:'NUST',          ev:'Fall 2026 Applications Open',           date:'2026-06-01',type:'open'},
-  {uni:'COMSATS',       ev:'Fall 2026 Online Apply Opens',          date:'2026-06-05',type:'open'},
-  {uni:'Multiple Unis', ev:'HEC NTS GAT General 2026',              date:'2026-06-08',type:'test'},
-  {uni:'UET Lahore',    ev:'ECAT 2026 Registration Opens',          date:'2026-06-10',type:'open'},
-  {uni:'LUMS',          ev:'Fall 2026 Application Deadline',        date:'2026-06-15',type:'deadline'},
-  {uni:'FAST NUCES',    ev:'Fall 2026 — Last Date to Apply',        date:'2026-06-20',type:'deadline'},
-  {uni:'GIKI',          ev:'Entry Test Registration Opens',         date:'2026-06-25',type:'open'},
-  {uni:'All Medical',   ev:'MDCAT 2026 Registration Opens',         date:'2026-06-30',type:'open'},
-  {uni:'NUST',          ev:'NUST NET 2026',                         date:'2026-07-13',type:'test'},
-  {uni:'LUMS',          ev:'First Merit List',                      date:'2026-07-15',type:'merit'},
-  {uni:'IBA Karachi',   ev:'IBA Admission Test 2026',               date:'2026-07-20',type:'test'},
-  {uni:'GIKI',          ev:'GIKI Entry Test 2026',                  date:'2026-07-25',type:'test'},
-  {uni:'FAST NUCES',    ev:'NU Entry Test — All Campuses',          date:'2026-07-27',type:'test'},
-  {uni:'All Eng. Unis', ev:'ECAT 2026',                             date:'2026-08-09',type:'test'},
-  {uni:'UET Lahore',    ev:'1st Merit List',                        date:'2026-08-20',type:'merit'},
-  {uni:'COMSATS',       ev:'Fall 2026 Merit List',                  date:'2026-08-22',type:'merit'},
-  {uni:'FAST NUCES',    ev:'Merit List — All Campuses',             date:'2026-08-25',type:'merit'},
-  {uni:'GIKI',          ev:'Merit List Published',                  date:'2026-08-28',type:'merit'},
-  {uni:'All Medical',   ev:'MDCAT 2026',                            date:'2026-08-30',type:'test'},
-  {uni:'NUST',          ev:'1st Merit List',                        date:'2026-09-01',type:'merit'},
-  {uni:'AIOU',          ev:'Autumn 2026 Admission Opens',           date:'2026-09-01',type:'open'},
-  {uni:'PU Lahore',     ev:'Undergraduate Merit List',              date:'2026-09-05',type:'merit'},
-  {uni:'QAU Islamabad', ev:'Merit List',                            date:'2026-09-08',type:'merit'},
-  {uni:'PMDC',          ev:'MDCAT 2026 Result Announced',           date:'2026-09-20',type:'merit'},
-  {uni:'VU',            ev:'Fall 2026 Admission Last Date',         date:'2026-09-25',type:'deadline'},
-  {uni:'NUST',          ev:'2nd Merit List',                        date:'2026-09-28',type:'merit'},
-  {uni:'Pvt. Unis',     ev:'Fall 2026 Classes Begin',               date:'2026-10-01',type:'open'},
-  {uni:'Public Unis',   ev:'Fall 2026 Classes Begin',               date:'2026-10-05',type:'open'},
-  {uni:'IBA Karachi',   ev:'Spring 2027 Application Opens',         date:'2026-11-01',type:'open'},
-  {uni:'VU',            ev:'Spring 2027 Admission Opens',           date:'2026-11-15',type:'open'},
-  {uni:'LUMS',          ev:'Spring 2027 Application Deadline',      date:'2026-12-15',type:'deadline'},
+// Annual admission cycle — stored as month-day so it recurs every year and the calendar
+// never runs dry (real, exact dates come from Supabase via loadDynamicDates()).
+// {Y} = the year the occurrence falls in, {Y1} = the year after it.
+const ADMISSION_CYCLE = [
+  {uni:'AIOU',          ev:'Spring {Y} Admission Last Date',        md:'05-20',type:'deadline'},
+  {uni:'NUST',          ev:'Fall {Y} Applications Open',            md:'06-01',type:'open'},
+  {uni:'COMSATS',       ev:'Fall {Y} Online Apply Opens',           md:'06-05',type:'open'},
+  {uni:'Multiple Unis', ev:'HEC NTS GAT General {Y}',               md:'06-08',type:'test'},
+  {uni:'UET Lahore',    ev:'ECAT {Y} Registration Opens',           md:'06-10',type:'open'},
+  {uni:'LUMS',          ev:'Fall {Y} Application Deadline',         md:'06-15',type:'deadline'},
+  {uni:'FAST NUCES',    ev:'Fall {Y} — Last Date to Apply',         md:'06-20',type:'deadline'},
+  {uni:'GIKI',          ev:'Entry Test Registration Opens',         md:'06-25',type:'open'},
+  {uni:'All Medical',   ev:'MDCAT {Y} Registration Opens',          md:'06-30',type:'open'},
+  {uni:'NUST',          ev:'NUST NET {Y}',                          md:'07-13',type:'test'},
+  {uni:'LUMS',          ev:'First Merit List',                      md:'07-15',type:'merit'},
+  {uni:'IBA Karachi',   ev:'IBA Admission Test {Y}',                md:'07-20',type:'test'},
+  {uni:'GIKI',          ev:'GIKI Entry Test {Y}',                   md:'07-25',type:'test'},
+  {uni:'FAST NUCES',    ev:'NU Entry Test — All Campuses',          md:'07-27',type:'test'},
+  {uni:'All Eng. Unis', ev:'ECAT {Y}',                              md:'08-09',type:'test'},
+  {uni:'UET Lahore',    ev:'1st Merit List',                        md:'08-20',type:'merit'},
+  {uni:'COMSATS',       ev:'Fall {Y} Merit List',                   md:'08-22',type:'merit'},
+  {uni:'FAST NUCES',    ev:'Merit List — All Campuses',             md:'08-25',type:'merit'},
+  {uni:'GIKI',          ev:'Merit List Published',                  md:'08-28',type:'merit'},
+  {uni:'All Medical',   ev:'MDCAT {Y}',                             md:'08-30',type:'test'},
+  {uni:'NUST',          ev:'1st Merit List',                        md:'09-01',type:'merit'},
+  {uni:'AIOU',          ev:'Autumn {Y} Admission Opens',            md:'09-01',type:'open'},
+  {uni:'PU Lahore',     ev:'Undergraduate Merit List',              md:'09-05',type:'merit'},
+  {uni:'QAU Islamabad', ev:'Merit List',                            md:'09-08',type:'merit'},
+  {uni:'PMDC',          ev:'MDCAT {Y} Result Announced',            md:'09-20',type:'merit'},
+  {uni:'VU',            ev:'Fall {Y} Admission Last Date',          md:'09-25',type:'deadline'},
+  {uni:'NUST',          ev:'2nd Merit List',                        md:'09-28',type:'merit'},
+  {uni:'Pvt. Unis',     ev:'Fall {Y} Classes Begin',                md:'10-01',type:'open'},
+  {uni:'Public Unis',   ev:'Fall {Y} Classes Begin',                md:'10-05',type:'open'},
+  {uni:'IBA Karachi',   ev:'Spring {Y1} Application Opens',         md:'11-01',type:'open'},
+  {uni:'VU',            ev:'Spring {Y1} Admission Opens',           md:'11-15',type:'open'},
+  {uni:'LUMS',          ev:'Spring {Y1} Application Deadline',      md:'12-15',type:'deadline'},
 ];
+
+// Resolve each recurring entry to its next occurrence: anything more than 15 days past
+// rolls to next year, so the calendar always has upcoming events in every filter.
+function buildAdmissionDates(){
+  const cut = new Date(); cut.setHours(0,0,0,0); cut.setDate(cut.getDate()-15);
+  return ADMISSION_CYCLE.map(e => {
+    let y = cut.getFullYear();
+    if(new Date(`${y}-${e.md}T00:00:00`) < cut) y++;
+    return { uni:e.uni, ev:e.ev.replace(/\{Y1\}/g, y+1).replace(/\{Y\}/g, y),
+             date:`${y}-${e.md}`, type:e.type };
+  });
+}
+const ADMISSION_DATES = buildAdmissionDates();
 
 // Study group → which tags are eligible
 // Match program names to broad eligibility categories — used by the Admission Predictor.
@@ -1650,13 +1666,13 @@ function renderCalendar() {
     const diff = Math.round((d-TODAY)/86400000);
     const urg  = diff<0?'past':diff<=7?'urgent':diff<=30?'soon':'ok';
     const daysLabel = diff<0?'Done':diff===0?'Today!':diff===1?'1 day left':`${diff} days left`;
-    const dcolor = diff<=7&&diff>=0?'#ef4444':diff<=30&&diff>=0?'#f59e0b':'var(--green-dark)';
+    const dcolor = diff<0?'var(--gray-600)':diff<=7?'#ef4444':diff<=30?'#f59e0b':'var(--green-dark)';
     const badgeMap = {test:'📝 Test',deadline:'📋 Deadline',merit:'📊 Merit List',open:'🔓 Open'};
     return `<div class="cal-event ${urg}">
       <div class="cal-date"><div class="cal-day">${d.getDate()}</div><div class="cal-mon">${MONTHS[d.getMonth()]}</div></div>
       <div class="cal-info">
         <div class="cal-uni">${e.uni}</div>
-        <div class="cal-desc">${e.ev}${diff>=0?` · <strong style="color:${dcolor}">${daysLabel}</strong>`:''}</div>
+        <div class="cal-desc">${e.ev} · <strong style="color:${dcolor}">${daysLabel}</strong></div>
       </div>
       <span class="cal-badge ${e.type}">${badgeMap[e.type]||'Event'}</span>
     </div>`;
