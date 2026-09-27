@@ -288,3 +288,9 @@
 .upd-title{ font-size:.9rem; font-weight:600; color:var(--navy,#0A1628); text-decoration:none; }
 a.upd-title:hover{ color:var(--green,#00C853); text-decoration:underline; }
 .upd-date{ font-size:.72rem; color:var(--gray-400,#868E96); }
+
+/* ── Data trust signals (accuracy) ── */
+.data-trust{ margin-top:14px; padding-top:12px; border-top:1px solid var(--gray-200,#E9ECEF); }
+.dt-verified{ font-size:.75rem; font-weight:700; color:var(--green,#00C853); margin-bottom:6px; }
+.dt-note{ font-size:.72rem; color:var(--gray-400,#868E96); line-height:1.5; }
+.dt-note a{ color:var(--green,#00C853); text-decoration:underline; }

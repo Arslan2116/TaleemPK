@@ -624,6 +624,10 @@ function render(){
           ${u.website?`<a class="btn" href="https://www.${esc(u.website)}" target="_blank" rel="noopener">🌐 Visit Official Site</a>`:''}
           <button class="btn navyb" onclick="shareUni()">🔗 Share University</button>
         </div>
+        <div class="data-trust">
+          ${u.data_updated?`<div class="dt-verified">✓ Data verified ${timeAgo(u.data_updated)}</div>`:''}
+          <div class="dt-note">Fees &amp; merit are indicative — always confirm on the ${u.website?`<a href="https://www.${esc(u.website)}" target="_blank" rel="noopener">official ${esc(u.name)} site</a>`:'official university site'} before applying or paying.</div>
+        </div>
       </div>
     </aside>
   </div>`;

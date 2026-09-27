@@ -102,6 +102,7 @@
     <div class="tabs">
       <button class="tab active" data-panel="dash" onclick="showPanel('dash',this);loadDashboard()">📊 Dashboard</button>
       <button class="tab" data-panel="inst" onclick="showPanel('inst',this)">🏛️ Institutions</button>
+      <button class="tab" data-panel="health" onclick="showPanel('health',this);loadDataHealth()">🩺 Data Health</button>
       <button class="tab" data-panel="fees" onclick="showPanel('fees',this)">💵 Fee Details</button>
       <button class="tab" data-panel="ticker" onclick="showPanel('ticker',this);loadTicker()">📢 Ticker</button>
       <button class="tab" data-panel="blog" onclick="showPanel('blog',this);loadBlogList()">📰 Blog</button>
@@ -161,6 +162,26 @@
         <span class="msg" id="instMsg"></span>
       </div>
       <div class="recent"><h3>Recently added</h3><div id="recentList">Loading…</div></div>
+    </div>
+
+    <!-- Data Health -->
+    <div class="panel" id="panel-health">
+      <h2>Data Health</h2>
+      <div class="hint">Universities with weak or missing data, most important first (by rank).
+        Fix these to keep the site accurate. Click <strong>Edit</strong> to jump straight to that university's form.
+        The <strong>⚠️ Fee/Deadline alerts</strong> below are scraped announcements that suggest a university's core data may need updating.</div>
+      <div class="dash-stats" id="healthStats" style="margin-bottom:20px;">Loading…</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+        <button class="tab active" id="hfilt-all" onclick="setHealthFilter('all',this)">All weak</button>
+        <button class="tab" id="hfilt-fee" onclick="setHealthFilter('fee',this)">Missing fee</button>
+        <button class="tab" id="hfilt-seats" onclick="setHealthFilter('seats',this)">Missing seats</button>
+        <button class="tab" id="hfilt-stale" onclick="setHealthFilter('stale',this)">Stale (&gt;6 mo)</button>
+      </div>
+      <div id="healthList">Loading…</div>
+      <div class="recent" style="margin-top:26px;">
+        <h3>⚠️ Fee / Deadline alerts (verify core data)</h3>
+        <div id="healthAlerts">Loading…</div>
+      </div>
     </div>
 
     <!-- Fee Details -->
@@ -948,6 +969,77 @@ async function delTicker(id){
   const { error } = await sb.from('site_announcements').delete().eq('id',id);
   if(error){ flash('tickerMsg', error.message, false); return; }
   loadTicker();
+}
+
+// ── Data Health ──
+let _healthCache = [], _healthFilter = 'all';
+function _isPlaceholder(v){
+  v = String(v==null?'':v).trim().toLowerCase();
+  return v==='' || ['—','-','n/a','na','tbd'].includes(v) || v.includes('check') || v.includes('website') || v.includes('coming soon');
+}
+function _isStale(d){
+  if(!d) return true;
+  const months = (Date.now() - new Date(d).getTime()) / (1000*60*60*24*30);
+  return months > 6;
+}
+function _weakReasons(u){
+  const r = [];
+  if(_isPlaceholder(u.fee))   r.push('fee');
+  if(_isPlaceholder(u.seats)) r.push('seats');
+  if(_isPlaceholder(u.merit)) r.push('merit');
+  if(_isStale(u.data_updated)) r.push('stale');
+  return r;
+}
+async function loadDataHealth(){
+  $('healthList').innerHTML = 'Loading…';
+  const { data, error } = await sb.from('institutions')
+    .select('id,name,rank,fee,seats,merit,data_updated')
+    .order('rank', { ascending:true, nullsFirst:false });
+  if(error){ $('healthList').innerHTML = '<div class="meta">'+escHTML(error.message)+'</div>'; return; }
+  _healthCache = (data||[]).map(u => ({ ...u, _reasons:_weakReasons(u) })).filter(u => u._reasons.length);
+  // stats
+  const cnt = key => _healthCache.filter(u => u._reasons.includes(key)).length;
+  const card = (n,l,alert)=>`<div class="dash-card${alert?' alert':''}"><div class="num">${n}</div><div class="lbl">${l}</div></div>`;
+  $('healthStats').innerHTML =
+    card(_healthCache.length,'Need attention', _healthCache.length>0) +
+    card(cnt('fee'),'Missing fee', cnt('fee')>0) +
+    card(cnt('seats'),'Missing seats') +
+    card(cnt('stale'),'Stale (>6 mo)');
+  renderHealthList();
+  loadHealthAlerts();
+}
+function setHealthFilter(f, btn){
+  _healthFilter = f;
+  document.querySelectorAll('#panel-health .tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderHealthList();
+}
+function renderHealthList(){
+  const rows = _healthFilter==='all' ? _healthCache : _healthCache.filter(u=>u._reasons.includes(_healthFilter));
+  if(!rows.length){ $('healthList').innerHTML='<div class="meta">Nothing here — all good! 🎉</div>'; return; }
+  const badge = r => ({fee:'💰 fee',seats:'👥 seats',merit:'🎯 merit',stale:'🕘 stale'}[r]||r);
+  $('healthList').innerHTML = rows.slice(0,120).map(u=>{
+    const tags = u._reasons.map(r=>`<span style="background:#fff3cd;color:#8a6d00;font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:4px;">${badge(r)}</span>`).join('');
+    return `<div class="rec-item"><div>${u.rank?`<span class="meta">#${u.rank}</span> `:''}<strong>${escHTML(u.name)}</strong> ${tags}</div>
+      <button class="btn" style="padding:6px 12px;font-size:.78rem;" onclick="editInstFromHealth(${u.id})">Edit</button></div>`;
+  }).join('') + (rows.length>120?`<div class="meta" style="margin-top:8px;">+${rows.length-120} more…</div>`:'');
+}
+function editInstFromHealth(id){
+  const tab = document.querySelector('.tab[data-panel="inst"]');
+  showPanel('inst', tab);
+  pickInstForEdit(id);
+}
+async function loadHealthAlerts(){
+  // scraped fee/deadline announcements → hint the uni's core data may have changed
+  const { data } = await sb.from('uni_updates')
+    .select('uni_name,title,kind,url,found_at')
+    .in('kind',['fee','deadline']).neq('status','dismissed')
+    .order('found_at',{ascending:false}).limit(25);
+  if(!data || !data.length){ $('healthAlerts').innerHTML='<div class="meta">No fee/deadline alerts.</div>'; return; }
+  $('healthAlerts').innerHTML = data.map(r=>`
+    <div class="rec-item"><div><span>${r.kind==='fee'?'💰':'⏰'}</span> <strong>${escHTML(r.uni_name||'')}</strong>
+      <span class="meta">· ${r.url?`<a href="${safeUrl(r.url)}" target="_blank" rel="noopener">${escHTML(r.title)}</a>`:escHTML(r.title)}</span></div>
+      <span class="meta">${escHTML((r.found_at||'').slice(0,10))}</span></div>`).join('');
 }
 
 checkSession();
