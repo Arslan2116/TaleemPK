@@ -482,11 +482,11 @@ function runPredictor() {
   };
 
   // Filter + sort
+  let feeUnknown = 0;
   let results = UNIVERSITIES.filter(u => {
     if(!isEligible(u, study)) return false;
     if(province && u.province !== province) return false;
     if(uniType && u.type !== uniType) return false;
-    if(maxFee !== Infinity && u.feeNum > maxFee) return false;
     if(field && FIELD_CHECK[field] && !FIELD_CHECK[field](u)) return false;
 
     // Cross-check: study group + field combo sanity
@@ -500,6 +500,16 @@ function runPredictor() {
     // FA/ICS/ICom + Engineering: BE/BS Civil etc. need FSc Pre-Eng, BUT ICS students can do BS CS, BS SE, BS IT.
     // Allow only if the uni has computing programs the student can actually enrol in.
     if(study === 'general' && field === 'engineering' && !hasProgramIn(u,'cs')) return false;
+
+    // Budget — checked last so the "no published fee" count below is accurate.
+    // 144 of 270 universities publish no fee at all (their fee reads "Check university
+    // website"), and an unknown fee is stored as 0. `0 > maxFee` is false, so they used
+    // to pass every budget silently — a student capping at 1 lakh got 4-lakh unis back.
+    // Hold them out instead, and say how many were held out.
+    if(maxFee !== Infinity){
+      if(!u.feeNum){ feeUnknown++; return false; }
+      if(u.feeNum > maxFee) return false;
+    }
 
     return true;
   });
@@ -520,14 +530,59 @@ function runPredictor() {
   const bar = document.getElementById('predictorActiveBar');
   bar.classList.add('show');
   document.getElementById('predictorActiveInfo').textContent =
-    `Showing ${results.length} universities for ${pct}% · ${study==='engineering'?'FSc Pre-Eng':study==='medical'?'FSc Pre-Medical':study==='general'?'FA/ICS/ICom':'A-Levels'}${field?' · '+field.charAt(0).toUpperCase()+field.slice(1):''}`;
+    `Showing ${results.length} universities for ${pct}% · ${study==='engineering'?'FSc Pre-Eng':study==='medical'?'FSc Pre-Medical':study==='general'?'FA/ICS/ICom':'A-Levels'}${field?' · '+field.charAt(0).toUpperCase()+field.slice(1):''}`
+    + (feeUnknown ? ` · ${feeUnknown} hidden (fee not published)` : '');
+
+  // Offer to keep the shortlist — the one moment a visitor has a reason to sign up
+  _predResultIds = results.map(u=>u.id);
+  updatePredSaveBtn();
 
   document.getElementById('universities').scrollIntoView({behavior:'smooth'});
+}
+
+/* ── Save a predictor run ──
+   The results are the only thing on this site worth an account, so this is where we
+   ask for one. Logged out, the button opens the auth modal and the save resumes after. */
+let _predResultIds = [];
+let _predSavePending = false;
+
+function updatePredSaveBtn(){
+  const btn = document.getElementById('predSaveBtn');
+  if(!btn) return;
+  const n = _predResultIds.filter(id => !isInShortlist(id)).length;
+  btn.style.display = _predResultIds.length ? 'inline-flex' : 'none';
+  btn.disabled = !n;
+  btn.textContent = n ? `♥ Save all ${n} to my shortlist` : '✓ All saved to your shortlist';
+}
+
+async function savePredictorResults(){
+  if(!_predResultIds.length) return;
+  if(!currentUser){                       // resume the save once they are in
+    _predSavePending = true;
+    openAuth();
+    return;
+  }
+  const btn = document.getElementById('predSaveBtn');
+  const todo = _predResultIds.filter(id => !isInShortlist(id));
+  if(!todo.length) return;
+  if(btn){ btn.disabled = true; btn.textContent = 'Saving…'; }
+  try{
+    const { error } = await sbClient.from('user_shortlists')
+      .insert(todo.map(id => ({ user_id: currentUser.id, institution_id: id })));
+    if(error) throw error;
+    todo.forEach(id => _shortlistIds.add(id));
+    refreshShortlistButtons();
+  }catch(e){
+    if(btn){ btn.textContent = 'Could not save — try again'; btn.disabled = false; }
+    return;
+  }
+  updatePredSaveBtn();
 }
 
 function clearPredictor() {
   assessMode = false;
   assessData = null;
+  _predResultIds = [];
   document.getElementById('predictorActiveBar').classList.remove('show');
   currentPage = 1;
   applyFilters();
@@ -610,6 +665,16 @@ let _slActive = false;
 function getShortlist(){ return [..._shortlistIds]; }
 function isInShortlist(id){ return _shortlistIds.has(id); }
 
+// Repaint every visible save button from _shortlistIds, plus the nav badge
+function refreshShortlistButtons(){
+  document.querySelectorAll('[id^="sl-btn-"]').forEach(btn => {
+    const id = parseInt(btn.id.replace('sl-btn-',''));
+    btn.textContent = _shortlistIds.has(id) ? '❤️' : '🤍';
+    btn.classList.toggle('saved', _shortlistIds.has(id));
+  });
+  updateSlBadge();
+}
+
 async function loadShortlistFromDB(){
   if(!currentUser || !sbClient){ _shortlistIds = new Set(); updateSlBadge(); return; }
   try{
@@ -617,13 +682,7 @@ async function loadShortlistFromDB(){
     if(error) throw error;
     _shortlistIds = new Set((data||[]).map(r => r.institution_id));
   }catch(e){ _shortlistIds = new Set(); }
-  // Refresh all save buttons + badge
-  document.querySelectorAll('[id^="sl-btn-"]').forEach(btn => {
-    const id = parseInt(btn.id.replace('sl-btn-',''));
-    btn.textContent = _shortlistIds.has(id) ? '❤️' : '🤍';
-    btn.classList.toggle('saved', _shortlistIds.has(id));
-  });
-  updateSlBadge();
+  refreshShortlistButtons();
   if(_slActive){ currentPage=1; applyFilters(); }
 }
 
@@ -1624,6 +1683,47 @@ async function loadDynamicDates(){
 // Deferred: SUPABASE const is declared further down this file — calling now would hit the TDZ
 document.addEventListener('DOMContentLoaded', loadDynamicDates);
 
+/* ── Calendar reminders ──
+   A real push notification needs a server to send it, and this site is static files
+   plus Supabase — there is nothing to push from. An .ics download puts the reminder
+   in the student's own calendar instead, where it fires whether or not they ever
+   come back. Works with Google Calendar, Apple Calendar and Outlook. */
+function _icsDate(d){ return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`; }
+
+function addEventToCalendar(dateStr, title, uni, daysBefore){
+  const d = new Date(dateStr + 'T00:00:00');
+  if(isNaN(d)) return;
+  const end = new Date(d.getTime() + 86400000);   // all-day event: DTEND is the next day
+  const lead = daysBefore == null ? 3 : daysBefore;
+  // Fold nothing, escape what iCalendar treats as syntax
+  const esc = t => String(t||'').replace(/\\/g,'\\\\').replace(/([,;])/g,'\\$1').replace(/\r?\n/g,'\\n');
+  const stamp = new Date().toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+  const summary = `${uni} — ${title}`;
+  const ics = [
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//TaleemPK//Admission Calendar//EN','CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',
+    `UID:${_icsDate(d)}-${Math.random().toString(36).slice(2,10)}@taleempk.pk`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART;VALUE=DATE:${_icsDate(d)}`,
+    `DTEND;VALUE=DATE:${_icsDate(end)}`,
+    `SUMMARY:${esc(summary)}`,
+    `DESCRIPTION:${esc(summary + ' — added from TaleemPK')}`,
+    'URL:https://taleempk.pk/',
+    'BEGIN:VALARM',
+    `TRIGGER:-P${lead}D`,
+    'ACTION:DISPLAY',
+    `DESCRIPTION:${esc(summary + ' is in ' + lead + ' days')}`,
+    'END:VALARM','END:VEVENT','END:VCALENDAR'
+  ].join('\r\n');
+
+  const url = URL.createObjectURL(new Blob([ics], {type:'text/calendar;charset=utf-8'}));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (summary.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'taleempk-event') + '.ics';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
 function renderCalendar() {
   const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const cutoff = new Date(TODAY.getTime() - 15*86400000);  // hide events older than 15 days past
@@ -1646,6 +1746,9 @@ function renderCalendar() {
         <div class="cal-desc">${e.ev} · <strong style="color:${dcolor}">${daysLabel}</strong></div>
       </div>
       <span class="cal-badge ${e.type}">${badgeMap[e.type]||'Event'}</span>
+      ${diff>=0 ? `<button class="cal-remind" title="Add to your calendar with a 3-day reminder"
+        data-date="${e.date}" data-ev="${escHTML(e.ev)}" data-uni="${escHTML(e.uni)}"
+        onclick="addEventToCalendar(this.dataset.date, this.dataset.ev, this.dataset.uni)">🔔 Remind me</button>` : ''}
     </div>`;
   }).join('');
 }
@@ -3201,6 +3304,9 @@ async function refreshAuthUI(){
     try{ await loadShortlistFromDB(); }catch(e){}
     if(typeof applyFilters === 'function') applyFilters();
   }
+  // They signed in *because* they wanted the predictor list kept — finish that save
+  if(currentUser && _predSavePending){ _predSavePending = false; savePredictorResults(); }
+  updatePredSaveBtn();
 }
 async function initAuth(){
   if(!sbClient) return;

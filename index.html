@@ -110,7 +110,7 @@
 <script defer src="/config.js"></script>
 <script defer src="/gpa-systems.js"></script>
 <script defer src="/chat-widget.js"></script>
-<link rel="stylesheet" href="/styles.css?v=5">
+<link rel="stylesheet" href="/styles.css?v=6">
 </head>
 <body>
 
@@ -164,6 +164,7 @@
       </div>
     </li>
 
+    <li><a href="/updates" onclick="closeMobileMenu()">Updates</a></li>
     <li><a href="/blog" onclick="closeMobileMenu()">Blog</a></li>
     <li><a href="#" onclick="closeMobileMenu();closeAllPages();openScholarshipsPage();return false">Scholarships</a></li>
     <li><a href="#" onclick="closeAllPages();openAboutPage();closeMobileMenu();return false">About</a></li>
@@ -264,6 +265,7 @@
 </div>
 <div class="predictor-active-bar" id="predictorActiveBar">
   <span class="predictor-active-info" style="display:inline-flex;align-items:center;gap:6px;"><span data-icon="target" data-size="14"></span><span id="predictorActiveInfo"></span></span>
+  <button class="predictor-save-btn" id="predSaveBtn" onclick="savePredictorResults()" style="display:none;">♥ Save all to my shortlist</button>
   <button class="predictor-clear-btn" onclick="clearPredictor()" style="display:inline-flex;align-items:center;gap:5px;"><span data-icon="x" data-size="12"></span> Clear Results</button>
 </div>
 
@@ -626,6 +628,7 @@
       <div class="footer-links">
         <a href="#" onclick="closeAboutPage();setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),100);return false">Universities</a>
         <a href="#" onclick="closeAboutPage();setTimeout(()=>document.getElementById('how').scrollIntoView({behavior:'smooth'}),100);return false">How It Works</a>
+        <a href="/updates">Admission Updates</a>
         <a href="/blog">Blog &amp; News</a>
         <a href="#" onclick="openScholarshipsPage();return false">Scholarships</a>
         <a href="#" onclick="openFeeCalc();return false">Fee Calculator</a>
@@ -1262,6 +1265,6 @@
 
 <script src="/app-core.js?v=2"></script>
 <script src="/uni-data.js?v=2"></script>
-<script src="/app.js?v=18"></script>
+<script src="/app.js?v=19"></script>
 </body>
 </html>

@@ -1396,6 +1396,14 @@
     padding: 5px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
     cursor: pointer; font-family: 'Sora', sans-serif;
   }
+  /* Save the whole predictor run — the filled button, so it reads as the primary action */
+  .predictor-save-btn {
+    align-items: center; gap: 5px;
+    background: var(--green); border: 1.5px solid var(--green); color: var(--navy);
+    padding: 5px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
+    cursor: pointer; font-family: 'Sora', sans-serif; white-space: nowrap;
+  }
+  .predictor-save-btn:disabled { background: none; color: #0a6632; cursor: default; opacity: 0.75; }
 
   /* Predictor Modal */
   .predictor-overlay {
@@ -1673,6 +1681,16 @@
   .cal-badge.deadline { background:#fee2e2; color:#b91c1c; }
   .cal-badge.merit    { background:#dcfce7; color:#15803d; }
   .cal-badge.open     { background:#dbeafe; color:#1d4ed8; }
+  /* Reminder button: quiet until the row is hovered, so it never competes with the date */
+  .cal-remind {
+    background:none; border:1.5px solid var(--gray-200); color:var(--gray-600);
+    border-radius:20px; padding:3px 10px; font-size:0.68rem; font-weight:700;
+    font-family:'Sora',sans-serif; cursor:pointer; white-space:nowrap;
+    opacity:0.55; transition:opacity 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .cal-event:hover .cal-remind { opacity:1; }
+  .cal-remind:hover { border-color:var(--green); color:var(--green-dark); }
+  @media(max-width:600px){ .cal-remind { opacity:1; padding:3px 8px; } }
   .cal-empty { color:var(--gray-400); text-align:center; padding:20px; font-size:0.84rem; }
   /* ───── MAP VIEW ───── */
   #mapContainer {

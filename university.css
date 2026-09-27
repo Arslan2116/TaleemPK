@@ -301,3 +301,15 @@ a.upd-title:hover{ color:var(--green,#00C853); text-decoration:underline; }
 .dt-verified{ font-size:.75rem; font-weight:700; color:var(--green,#00C853); margin-bottom:6px; }
 .dt-note{ font-size:.72rem; color:var(--gray-400,#868E96); line-height:1.5; }
 .dt-note a{ color:var(--green,#00C853); text-decoration:underline; }
+
+/* ── Head-to-head comparison links (rendered by loadComparisons in university.js) ── */
+.cmp-links{ display:flex; flex-wrap:wrap; gap:9px; }
+.cmp-link{
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--g100,#F5F7FA); border:1.5px solid transparent; border-radius:30px;
+  padding:8px 15px; font-size:.84rem; font-weight:600; color:var(--navy,#0A1628);
+  text-decoration:none; transition:border-color .18s, background .18s;
+}
+.cmp-link span{ color:var(--green-dark,#0a6632); font-weight:800; font-size:.76rem; }
+.cmp-link:hover{ border-color:var(--green,#00C853); background:#fff; }
+@media(max-width:600px){ .cmp-link{ font-size:.79rem; padding:7px 13px; } }

@@ -25,3 +25,6 @@ worker/.wrangler/
 merit-formulas.json
 match-map.json
 new-unis.json
+
+# Build artifact of scripts/gen-compare-pages.js (the pages themselves are committed)
+scripts/compare-urls.txt
