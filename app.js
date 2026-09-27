@@ -3533,19 +3533,37 @@ function setTickerSpeed(){
 }
 document.addEventListener('DOMContentLoaded', setTickerSpeed);
 
+// Ticker junk guard + priority (keep in sync with scrape.py / university.js)
+const TK_HARD = /(recruit|vacanc|\bhiring\b|\blecturer\b|\bprofessor\b|position[s]?\s*(of|for)|of\s*lecturer|appointment|tender|quotation|procurement|committee\s*meeting|\bminutes\b|dissertation|thesis\s*defen|\bviva\b|pedagogical|non[-\s]*teaching|\bpromotion\b|\b(19\d2|200\d|201\d|202[0-4])\b)/i;
+const TK_ACADEMIC = /(summer\s*vacation|winter\s*vacation|academic\s*calendar|teaching\s*faculty|semester[-\s]*(i{1,3}|iv|v|\d)|semester\s*exam|examination\s*notification|exam\s*20\d\d|date\s*sheet|time\s*table|syllabus|convocation|seminar|workshop|webinar|guest\s*lecture|\bsports\b|society|\bclub\b|roll\s*(no|number)?\s*slip|visiting\s*faculty|list\s*of\s*graduates|certificate\s*course|guidelines?\s*\/?\s*faqs?|department\b|dept\b|instructions\s*(and|for)|dissertation)/i;
+function tkJunk(t){ t=String(t||''); if(TK_HARD.test(t))return true; if(TK_ACADEMIC.test(t))return true; return t.trim().length<15; }
+function tkPriority(t){ t=String(t||'');
+  if(/deadline|last\s*date|date\s*extended|closing/i.test(t)) return 5;
+  if(/scholarship|fellowship|financial\s*aid/i.test(t)) return 4;
+  if(/admission.*open|admissions?\s*(open|fall|spring)|entry\s*test|test\s*date|\bnat\b/i.test(t)) return 3;
+  if(/merit\s*list|result/i.test(t)) return 2;
+  if(/fee/i.test(t)) return 1;
+  return 0;
+}
 (async function hydrateAnnouncements(){
   try{
     const H = { apikey: SUPABASE.key, Authorization: 'Bearer ' + SUPABASE.key };
-    // Admin-curated items first…
-    const r = await fetch(SUPABASE.url + '/rest/v1/site_announcements?select=icon,text,url&active=eq.true&order=sort_order.asc,created_at.desc&limit=12', { headers: H });
+    // Admin-pinned items first (optional manual override)…
+    const r = await fetch(SUPABASE.url + '/rest/v1/site_announcements?select=icon,text,url&active=eq.true&order=sort_order.asc,created_at.desc&limit=6', { headers: H });
     const rows = r.ok ? await r.json() : [];
-    // …then the freshest scraped updates (last 30 days) auto-appended
+    // …then AUTO-fill from the freshest scraped updates (last 45 days), junk-filtered
+    // and prioritised (deadlines & scholarships first) — no manual publishing needed.
     try{
-      const since = new Date(Date.now() - 30*86400000).toISOString();
-      const r2 = await fetch(SUPABASE.url + `/rest/v1/uni_updates?select=uni_name,title,url,kind&status=neq.dismissed&found_at=gte.${since}&order=found_at.desc&limit=8`, { headers: H });
+      const since = new Date(Date.now() - 45*86400000).toISOString();
+      const r2 = await fetch(SUPABASE.url + `/rest/v1/uni_updates?select=uni_name,title,url,kind,found_at&status=neq.dismissed&found_at=gte.${since}&order=found_at.desc&limit=120`, { headers: H });
       if(r2.ok){
         const icons = { announcement:'📢', deadline:'⏰', fee:'💰', program:'📚' };
-        (await r2.json()).forEach(x => rows.push({ icon: icons[x.kind]||'📢', text: `${x.uni_name} — ${x.title}`, url: x.url }));
+        const auto = (await r2.json())
+          .filter(x => !tkJunk(x.title))
+          .map(x => ({ ...x, _p: tkPriority(x.title) }))
+          .sort((a,b) => b._p - a._p || new Date(b.found_at) - new Date(a.found_at))
+          .slice(0, 14);
+        auto.forEach(x => rows.push({ icon: (x._p>=4?'⏰':icons[x.kind])||'📢', text: `${x.uni_name} — ${x.title}`, url: x.url }));
       }
     }catch(e){}
     if(!Array.isArray(rows) || !rows.length) return;
