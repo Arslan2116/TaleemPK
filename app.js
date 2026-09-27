@@ -3537,6 +3537,22 @@ document.addEventListener('DOMContentLoaded', setTickerSpeed);
 const TK_HARD = /(recruit|vacanc|\bhiring\b|\blecturer\b|\bprofessor\b|position[s]?\s*(of|for)|of\s*lecturer|appointment|tender|quotation|procurement|committee\s*meeting|\bminutes\b|dissertation|thesis\s*defen|\bviva\b|pedagogical|non[-\s]*teaching|\bpromotion\b|\b(19\d2|200\d|201\d|202[0-4])\b)/i;
 const TK_ACADEMIC = /(summer\s*vacation|winter\s*vacation|academic\s*calendar|teaching\s*faculty|semester[-\s]*(i{1,3}|iv|v|\d)|semester\s*exam|examination\s*notification|exam\s*20\d\d|date\s*sheet|time\s*table|syllabus|convocation|seminar|workshop|webinar|guest\s*lecture|\bsports\b|society|\bclub\b|roll\s*(no|number)?\s*slip|visiting\s*faculty|list\s*of\s*graduates|certificate\s*course|guidelines?\s*\/?\s*faqs?|department\b|dept\b|instructions\s*(and|for)|dissertation)/i;
 function tkJunk(t){ t=String(t||''); if(TK_HARD.test(t))return true; if(TK_ACADEMIC.test(t))return true; return t.trim().length<15; }
+// Prefer an explicit numeric date (the actual deadline) over ambiguous month-name text.
+function _numericDate(t){
+  let m = String(t).match(/(20\d{2})-(\d{2})-(\d{2})/);
+  if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = String(t).match(/(\d{1,2})[-/](\d{1,2})[-/](20\d{2})/);
+  if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  return null;
+}
+// Deadline-type item whose date has already passed → expired, hide it.
+function tkExpired(title){
+  const t = String(title||'');
+  if(!/deadline|last\s*date|last\s*day|apply\s*by|closing|admission[s]?\s*close|extended\s*(till|to|upto)|till\s+\d/i.test(t)) return false;
+  const d = _numericDate(t) || _parseEventDate(t);
+  if(!d) return false;
+  return new Date(d + 'T23:59:59') < new Date(Date.now() - 86400000); // >1 day past
+}
 function tkPriority(t){ t=String(t||'');
   if(/deadline|last\s*date|date\s*extended|closing/i.test(t)) return 5;
   if(/scholarship|fellowship|financial\s*aid/i.test(t)) return 4;
@@ -3559,7 +3575,7 @@ function tkPriority(t){ t=String(t||'');
       if(r2.ok){
         const icons = { announcement:'📢', deadline:'⏰', fee:'💰', program:'📚' };
         const auto = (await r2.json())
-          .filter(x => !tkJunk(x.title))
+          .filter(x => !tkJunk(x.title) && !tkExpired(x.title))
           .map(x => ({ ...x, _p: tkPriority(x.title) }))
           .sort((a,b) => b._p - a._p || new Date(b.found_at) - new Date(a.found_at))
           .slice(0, 14);

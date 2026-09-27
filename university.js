@@ -205,6 +205,39 @@ function isJunkUpdate(t){
   if(UPD_ACADEMIC.test(t)) return true;
   return false;
 }
+// Parse a date out of a title (e.g. "15 August 2026", "Aug 15, 2026", "15-08-2026")
+function updParseDate(text){
+  const MON='jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec';
+  let m = text.match(new RegExp(`(\\d{1,2})\\s*(?:st|nd|rd|th)?\\s+(${MON})[a-z]*\\.?,?\\s*(20\\d{2})?`,'i'))
+       || text.match(new RegExp(`(${MON})[a-z]*\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s*(20\\d{2})?`,'i'));
+  if(m){
+    const months={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+    const dayFirst=/^\d/.test(m[1]);
+    const day=parseInt(dayFirst?m[1]:m[2]);
+    const mon=months[(dayFirst?m[2]:m[1]).slice(0,3).toLowerCase()];
+    const year=m[3]?parseInt(m[3]):new Date().getFullYear();
+    if(day>=1&&day<=31) return new Date(year,mon,day);
+  }
+  const iso=text.match(/(20\d{2})-(\d{2})-(\d{2})/);
+  if(iso) return new Date(+iso[1],+iso[2]-1,+iso[3]);
+  return null;
+}
+// Prefer explicit numeric date (the actual deadline) over ambiguous month-name text.
+function updNumericDate(t){
+  let m = String(t).match(/(20\d{2})-(\d{2})-(\d{2})/);
+  if(m) return new Date(+m[1], +m[2]-1, +m[3]);
+  m = String(t).match(/(\d{1,2})[-/](\d{1,2})[-/](20\d{2})/);
+  if(m) return new Date(+m[3], +m[2]-1, +m[1]);
+  return null;
+}
+// Deadline-type item whose date has passed → expired
+function isExpiredUpdate(title){
+  const t=String(title||'');
+  if(!/deadline|last\s*date|last\s*day|apply\s*by|closing|admission[s]?\s*close|extended\s*(till|to|upto)|till\s+\d/i.test(t)) return false;
+  const d=updNumericDate(t) || updParseDate(t);
+  if(!d) return false;
+  return d < new Date(Date.now() - 86400000); // >1 day past
+}
 function classifyUpdate(title, kind){
   const t = String(title||'');
   if(kind === 'fee') return UPD_CATS[2];
@@ -219,7 +252,7 @@ async function loadUpdates(){
       .select('title,url,kind,found_at')
       .eq('uni_id', UNI.id).neq('status','dismissed')
       .order('found_at',{ascending:false}).limit(40);
-    let rows = (data||[]).filter(r => !isJunkUpdate(r.title));  // display-time junk guard
+    let rows = (data||[]).filter(r => !isJunkUpdate(r.title) && !isExpiredUpdate(r.title));  // hide junk + passed deadlines
     if(error || !rows.length) return;
     const fmt = d => { try{ return new Date(d).toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return ''; } };
     // group by category, preserve date order within each
