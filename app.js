@@ -1639,8 +1639,10 @@ document.addEventListener('DOMContentLoaded', loadDynamicDates);
 
 function renderCalendar() {
   const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const cutoff = new Date(TODAY.getTime() - 15*86400000);  // hide events older than 15 days past
   const events = ADMISSION_DATES.concat(DYNAMIC_DATES)
     .filter(e => _calFilter==='all' || e.type===_calFilter)
+    .filter(e => new Date(e.date+'T00:00:00') >= cutoff)     // recent-past (≤15d) stays greyed, older is removed
     .sort((a,b)=>new Date(a.date)-new Date(b.date));
   if(!events.length){ document.getElementById('calEvents').innerHTML='<div class="cal-empty">No events for this filter.</div>'; return; }
   document.getElementById('calEvents').innerHTML = events.map(e=>{
