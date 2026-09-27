@@ -293,6 +293,8 @@
 .upd-title{ font-size:.9rem; font-weight:600; color:var(--navy,#0A1628); text-decoration:none; }
 a.upd-title:hover{ color:var(--green,#00C853); text-decoration:underline; }
 .upd-date{ font-size:.72rem; color:var(--gray-400,#868E96); }
+.upd-more-btn{ margin-top:6px; background:none; border:none; color:var(--green,#00C853); font-weight:700; font-size:.78rem; cursor:pointer; padding:4px 0; font-family:inherit; }
+.upd-more-btn:hover{ text-decoration:underline; }
 
 /* ── Data trust signals (accuracy) ── */
 .data-trust{ margin-top:14px; padding-top:12px; border-top:1px solid var(--gray-200,#E9ECEF); }

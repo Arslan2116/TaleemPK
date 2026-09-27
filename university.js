@@ -216,17 +216,24 @@ async function loadUpdates(){
     }
     // render in priority order (defined cats first, then 'other')
     const order = [...UPD_CATS.map(c=>c.key), 'other'];
-    const html = order.filter(k=>groups[k]).map(k=>{
-      const g = groups[k];
-      const rows = g.items.slice(0,6).map(r=>`
+    const SHOW = 4;  // items shown per category before "show more"
+    const row = (r, g) => `
         <div class="upd-item">
           <span class="upd-icn">${g.cat.icon}</span>
           <div class="upd-body">
             ${r.url?`<a href="${esc(r.url)}" target="_blank" rel="noopener nofollow" class="upd-title">${esc(r.title)}</a>`:`<span class="upd-title">${esc(r.title)}</span>`}
             <span class="upd-date">${fmt(r.found_at)}</span>
           </div>
-        </div>`).join('');
-      return `<div class="upd-group"><div class="upd-group-head">${g.cat.icon} ${g.cat.label} <span class="upd-count">${g.items.length}</span></div>${rows}</div>`;
+        </div>`;
+    const html = order.filter(k=>groups[k]).map(k=>{
+      const g = groups[k];
+      const visible = g.items.slice(0, SHOW).map(r=>row(r,g)).join('');
+      const hidden = g.items.slice(SHOW);
+      const more = hidden.length
+        ? `<div class="upd-more-wrap" style="display:none">${hidden.map(r=>row(r,g)).join('')}</div>`
+          + `<button class="upd-more-btn" onclick="const w=this.previousElementSibling;const o=w.style.display==='none';w.style.display=o?'block':'none';this.textContent=o?'Show less':'Show ${hidden.length} more';">Show ${hidden.length} more</button>`
+        : '';
+      return `<div class="upd-group"><div class="upd-group-head">${g.cat.icon} ${g.cat.label} <span class="upd-count">${g.items.length}</span></div>${visible}${more}</div>`;
     }).join('');
     document.getElementById('updatesList').innerHTML = html;
     document.getElementById('latestUpdates').style.display='';
