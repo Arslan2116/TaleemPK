@@ -281,6 +281,11 @@
   footer a{color:var(--green);text-decoration:none;}
 
 /* ── Latest Updates (scraped) ── */
+.upd-group{ margin-bottom:18px; }
+.upd-group:last-child{ margin-bottom:0; }
+.upd-group-head{ display:flex; align-items:center; gap:6px; font-size:.82rem; font-weight:800; color:var(--navy,#0A1628); margin-bottom:6px; padding-bottom:6px; border-bottom:2px solid var(--gray-100,#F8F9FA); }
+.upd-count{ background:var(--gray-100,#F8F9FA); color:var(--gray-600,#495057); font-size:.68rem; font-weight:700; padding:1px 8px; border-radius:20px; }
+.upd-group .upd-item{ padding:8px 0; }
 .upd-item{ display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--gray-200,#E9ECEF); }
 .upd-item:last-child{ border-bottom:none; }
 .upd-icn{ font-size:1rem; margin-top:1px; }

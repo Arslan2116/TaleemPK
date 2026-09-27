@@ -182,25 +182,53 @@ function deadlineBadge(u){
   </div>`;
 }
 
-// ── Latest Updates (scraped from the university's own website) ──
-const UPD_ICON = { announcement:'📢', deadline:'⏰', fee:'💰', program:'📚' };
+// ── Latest Updates (scraped from the university's own website), grouped by category ──
+// Categories are detected from the TITLE (the scraper tags most things 'announcement',
+// so we re-classify here for the right icon + grouping). Order = student priority.
+const UPD_CATS = [
+  { key:'merit',    icon:'📊', label:'Merit Lists & Results', re:/merit\s*list|result|selected\s*candidates|selection\s*list/i },
+  { key:'deadline', icon:'⏰', label:'Deadlines & Tests',      re:/deadline|last\s*date|date\s*extended|entry\s*test|admission\s*test|test\s*date|\bnat\b|\bnts\b|roll\s*(no|number|slip)|schedule/i },
+  { key:'fee',      icon:'💰', label:'Fee Updates',            re:/fee\b|fees\b|fee\s*structure|dues|challan/i },
+  { key:'program',  icon:'📚', label:'New Programs',           re:/new\s*program|launch|introduc|now\s*offering|degree\s*program|phd\s*program|ms\s*program/i },
+  { key:'admission',icon:'🎓', label:'Admissions & Notices',   re:/admission|apply|open|notice|prospectus|induction|registration/i },
+];
+function classifyUpdate(title, kind){
+  const t = String(title||'');
+  if(kind === 'fee') return UPD_CATS[2];
+  if(kind === 'deadline') return UPD_CATS[1];
+  for(const c of UPD_CATS){ if(c.re.test(t)) return c; }
+  return { key:'other', icon:'📢', label:'Other Announcements' };
+}
 async function loadUpdates(){
   if(!UNI) return;
   try{
     const { data, error } = await sb.from('uni_updates')
       .select('title,url,kind,found_at')
       .eq('uni_id', UNI.id).neq('status','dismissed')
-      .order('found_at',{ascending:false}).limit(5);
+      .order('found_at',{ascending:false}).limit(30);
     if(error || !data || !data.length) return;
     const fmt = d => { try{ return new Date(d).toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return ''; } };
-    document.getElementById('updatesList').innerHTML = data.map(r=>`
-      <div class="upd-item">
-        <span class="upd-icn">${UPD_ICON[r.kind]||'📢'}</span>
-        <div class="upd-body">
-          ${r.url?`<a href="${esc(r.url)}" target="_blank" rel="noopener nofollow" class="upd-title">${esc(r.title)}</a>`:`<span class="upd-title">${esc(r.title)}</span>`}
-          <span class="upd-date">${fmt(r.found_at)}</span>
-        </div>
-      </div>`).join('');
+    // group by category, preserve date order within each
+    const groups = {};
+    for(const r of data){
+      const c = classifyUpdate(r.title, r.kind);
+      (groups[c.key] || (groups[c.key] = { cat:c, items:[] })).items.push(r);
+    }
+    // render in priority order (defined cats first, then 'other')
+    const order = [...UPD_CATS.map(c=>c.key), 'other'];
+    const html = order.filter(k=>groups[k]).map(k=>{
+      const g = groups[k];
+      const rows = g.items.slice(0,6).map(r=>`
+        <div class="upd-item">
+          <span class="upd-icn">${g.cat.icon}</span>
+          <div class="upd-body">
+            ${r.url?`<a href="${esc(r.url)}" target="_blank" rel="noopener nofollow" class="upd-title">${esc(r.title)}</a>`:`<span class="upd-title">${esc(r.title)}</span>`}
+            <span class="upd-date">${fmt(r.found_at)}</span>
+          </div>
+        </div>`).join('');
+      return `<div class="upd-group"><div class="upd-group-head">${g.cat.icon} ${g.cat.label} <span class="upd-count">${g.items.length}</span></div>${rows}</div>`;
+    }).join('');
+    document.getElementById('updatesList').innerHTML = html;
     document.getElementById('latestUpdates').style.display='';
   }catch(e){ /* table may not exist yet — section stays hidden */ }
 }
