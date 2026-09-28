@@ -1,0 +1,78 @@
+name: Write weekly admission guide
+
+# Writes one long-form article from real Supabase data and commits it under /blog/.
+# Needs the repository secret ANTHROPIC_API_KEY (console.anthropic.com → API keys).
+# Roughly $0.15 a run, so about $0.60 a month.
+
+on:
+  schedule:
+    - cron: '17 4 * * 2'      # Tuesdays 04:17 UTC (09:17 PKT)
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'Topic key to force (blank = next unused). List them with: python scripts/writer/topics.py'
+        required: false
+      dry_run:
+        description: 'Build the brief and stop — no API call, no cost'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: write-article          # never let two runs publish at once
+  cancel-in-progress: false
+
+jobs:
+  write:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install the Anthropic SDK
+        run: pip install --quiet 'anthropic>=1.0'
+
+      - name: Check the API key is present
+        if: ${{ !inputs.dry_run }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::ANTHROPIC_API_KEY is not set. Add it under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Write the article
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python scripts/writer/write_article.py \
+            ${{ inputs.topic && format('--topic {0}', inputs.topic) || '' }} \
+            ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      - name: Relink the blog archive and refresh the sitemap
+        if: ${{ !inputs.dry_run }}
+        run: |
+          node scripts/build-blog-archive.js
+          node scripts/update-sitemap.js
+
+      - name: Commit
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add blog/ blog.html blog-index.json sitemap.xml scripts/writer/state.json
+          git diff --cached --quiet && { echo "nothing new to commit"; exit 0; }
+          git commit -m "content: admission guide $(date -u +%Y-%m-%d)"
+          git pull --rebase origin main
+          git push
