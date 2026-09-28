@@ -110,7 +110,7 @@
 <script defer src="/config.js"></script>
 <script defer src="/gpa-systems.js"></script>
 <script defer src="/chat-widget.js"></script>
-<link rel="stylesheet" href="/styles.css?v=6">
+<link rel="stylesheet" href="/styles.css?v=7">
 </head>
 <body>
 
@@ -389,7 +389,7 @@
 <section class="hiw" id="how">
   <div class="section-header">
     <div class="section-label" data-i18n="hiw_label">Simple Process</div>
-    <div class="section-title" id="hiw-title" style="color:var(--white)">Make the Right<br>Decision in 3 Steps</div>
+    <div class="section-title" id="hiw-title" style="color:var(--white)">Make the Right<br>Decision in 4 Steps</div>
     <p class="section-sub" data-i18n="hiw_sub">Comprehensive university data for Pakistan — all in one place</p>
   </div>
   <div class="hiw-steps">
@@ -411,11 +411,15 @@
       <div class="step-title" data-i18n="step3_title">Decide</div>
       <div class="step-desc" data-i18n="step3_desc">Make a confident decision with complete information. No guessing, no confusion.</div>
     </div>
-    <div class="hiw-step fade-in" style="transition-delay:0.3s">
-      <div class="step-num" data-i18n="step4_num">COMING SOON</div>
+    <!-- The predictor is live, so this card opens it rather than promising it -->
+    <div class="hiw-step hiw-step-live fade-in" style="transition-delay:0.3s" role="button" tabindex="0"
+         onclick="closeAllPages();openPredictor()"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeAllPages();openPredictor();}">
+      <div class="step-num" data-i18n="step4_num">STEP 04</div>
       <div class="step-icon"><span data-icon="rocket" data-size="32"></span></div>
-      <div class="step-title" data-i18n="step4_title">AI Predictor</div>
-      <div class="step-desc" data-i18n="step4_desc">Enter your aggregate — AI will predict your admission chances at each university.</div>
+      <div class="step-title" data-i18n="step4_title">Merit Predictor</div>
+      <div class="step-desc" data-i18n="step4_desc">Enter your marks and see which universities you can realistically get into.</div>
+      <div class="step-cta" data-i18n="step4_cta">Try it now →</div>
     </div>
   </div>
 </section>
@@ -1276,7 +1280,7 @@
   <div class="modal" id="compareModal"></div>
 </div>
 
-<script src="/app-core.js?v=2"></script>
+<script src="/app-core.js?v=3"></script>
 <script src="/uni-data.js?v=2"></script>
 <script src="/app.js?v=19"></script>
 </body>
