@@ -60,7 +60,7 @@
       "@type": "ContactPoint",
       "contactType": "customer support",
       "email": "info@taleempk.pk",
-      "availableLanguage": ["English", "Urdu"]
+      "availableLanguage": ["English"]
     }
   }
 }
@@ -110,7 +110,7 @@
 <script defer src="/config.js"></script>
 <script defer src="/gpa-systems.js"></script>
 <script defer src="/chat-widget.js"></script>
-<link rel="stylesheet" href="/styles.css?v=7">
+<link rel="stylesheet" href="/styles.css?v=8">
 </head>
 <body>
 
@@ -156,7 +156,7 @@
         <button onclick="closeAllPages();openScholMatch();closeNavDropdown()"><span class="ndm-icon" data-icon="gift"></span> Scholarship Matcher</button>
         <button onclick="closeAllPages();toggleCalendar();closeNavDropdown()"><span class="ndm-icon" data-icon="calendar"></span> Admission Dates</button>
         <button onclick="closeAllPages();toggleMapView();closeNavDropdown()"><span class="ndm-icon" data-icon="map"></span> Map View</button>
-        <button onclick="closeAllPages();openPredictor();closeNavDropdown()"><span class="ndm-icon" data-icon="target"></span> Merit Predictor</button>
+        <button onclick="closeAllPages();openPredictor();closeNavDropdown()"><span class="ndm-icon" data-icon="target"></span> Admission Predictor</button>
         <div class="nav-dropdown-divider"></div>
         <button onclick="closeAllPages();toggleShortlistFilter();closeNavDropdown()"><span class="ndm-icon" data-icon="heart"></span> My Shortlist</button>
         <div class="nav-dropdown-divider"></div>
@@ -417,7 +417,7 @@
          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeAllPages();openPredictor();}">
       <div class="step-num" data-i18n="step4_num">STEP 04</div>
       <div class="step-icon"><span data-icon="rocket" data-size="32"></span></div>
-      <div class="step-title" data-i18n="step4_title">Merit Predictor</div>
+      <div class="step-title" data-i18n="step4_title">Admission Predictor</div>
       <div class="step-desc" data-i18n="step4_desc">Enter your marks and see which universities you can realistically get into.</div>
       <div class="step-cta" data-i18n="step4_cta">Try it now →</div>
     </div>
@@ -459,7 +459,7 @@
   <div class="about-hero">
     <button class="about-back" onclick="closeAboutPage()">← Back to Home</button>
     <h2>About <span>TaleemPK</span></h2>
-    <p>Pakistan's first comprehensive university comparison platform — helping students make informed decisions about fees, merit, and programs, all in one place.</p>
+    <p>A free, comprehensive university comparison platform for Pakistan — helping students make informed decisions about fees, merit, and programs, all in one place.</p>
   </div>
 
   <div class="about-body">
@@ -474,10 +474,10 @@
         <p>Our goal is simple: <strong>No more guessing. No more confusion.</strong></p>
       </div>
       <div class="about-mission-visual">
-        <div class="about-stat-box"><div class="num">270</div><div class="lbl">HEC Universities</div></div>
-        <div class="about-stat-box"><div class="num">260+</div><div class="lbl">Programs Covered</div></div>
+        <div class="about-stat-box"><div class="num" id="aboutStatUnis">270</div><div class="lbl">HEC Universities</div></div>
+        <div class="about-stat-box"><div class="num" id="aboutStatProgs">1,300+</div><div class="lbl">Programs Covered</div></div>
         <div class="about-stat-box"><div class="num">100%</div><div class="lbl">Free Forever</div></div>
-        <div class="about-stat-box"><div class="num">70+</div><div class="lbl">Cities Covered</div></div>
+        <div class="about-stat-box"><div class="num" id="aboutStatCities">90+</div><div class="lbl">Cities Covered</div></div>
       </div>
     </div>
 
@@ -498,7 +498,7 @@
         <div class="about-value-card">
           <div class="about-value-icon"><span data-icon="flag" data-size="28"></span></div>
           <div class="about-value-title">Pakistan-First</div>
-          <div class="about-value-desc">Built specifically for Pakistani students — local context, bilingual support, and data covering all provinces and regions.</div>
+          <div class="about-value-desc">Built specifically for Pakistani students — local context, local currency and grading, and data covering every province and region.</div>
         </div>
         <div class="about-value-card">
           <div class="about-value-icon"><span data-icon="flame" data-size="28"></span></div>
@@ -693,7 +693,7 @@
       </div>
       <div class="footer-contact-item">
         <div class="fci-icon"><i class="fab fa-whatsapp"></i></div>
-        <span>WhatsApp Support Available</span>
+        <a href="https://wa.me/923353303999" target="_blank" rel="noopener">WhatsApp support</a>
       </div>
       <div class="footer-contact-item">
         <div class="fci-icon"><i class="fas fa-clock"></i></div>
@@ -704,9 +704,9 @@
   <div class="footer-bottom">
     <div class="footer-copy">© 2026 TaleemPK — All rights reserved</div>
     <div class="footer-bottom-links">
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms of Use</a>
-      <a href="#">HEC Disclaimer</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Use</a>
+      <a href="/disclaimer">HEC Disclaimer</a>
     </div>
   </div>
 </footer>
@@ -1280,8 +1280,8 @@
   <div class="modal" id="compareModal"></div>
 </div>
 
-<script src="/app-core.js?v=3"></script>
+<script src="/app-core.js?v=4"></script>
 <script src="/uni-data.js?v=2"></script>
-<script src="/app.js?v=19"></script>
+<script src="/app.js?v=20"></script>
 </body>
 </html>

@@ -61,7 +61,7 @@ function progGroup(p){
   return 'ug';
 }
 function groupedPrograms(programs){
-  if(!programs||!programs.length) return '<span class="muted">Program list coming soon.</span>';
+  if(!programs||!programs.length) return '<span class="muted">Programme list not published yet.</span>';
   const g={ug:[],grad:[],phd:[]}; programs.forEach(p=>g[progGroup(p)].push(p));
   const PREVIEW = 8;
   const sec=(t,a,key)=>{

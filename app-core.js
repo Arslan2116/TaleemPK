@@ -242,7 +242,7 @@ const T = {
     step1_num:'STEP 01', step1_title:'Search', step1_desc:'Find universities by city, program, or fee range. 270 HEC-recognized institutions listed.',
     step2_num:'STEP 02', step2_title:'Compare', step2_desc:'Compare 2–3 universities side-by-side — fees, merit, programs, and location all at once.',
     step3_num:'STEP 03', step3_title:'Decide', step3_desc:'Make a confident decision with complete information. No guessing, no confusion.',
-    step4_num:'STEP 04', step4_title:'Merit Predictor', step4_desc:'Enter your marks and see which universities you can realistically get into.', step4_cta:'Try it now →',
+    step4_num:'STEP 04', step4_title:'Admission Predictor', step4_desc:'Enter your marks and see which universities you can realistically get into.', step4_cta:'Try it now →',
     compare_bar_title:'⚖️ Compare List:', compare_bar_btn:'Compare Now →',
     footer_tagline:"Pakistan's #1 Education Comparison Platform",
     footer_link1:'Universities', footer_link2:'Compare', footer_link3:'Admission Calendar', footer_link4:'Scholarships', footer_link5:'About',

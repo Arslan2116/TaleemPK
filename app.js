@@ -2817,7 +2817,7 @@ function openDetail(id) {
     <div class="comm-section" id="alSection-${u.id}">${buildAlumniHTML(u.id)}</div>
     <div class="comm-section" id="qaSection-${u.id}">${buildQAHTML(u.id)}</div>
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--gray-200);text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      ${u.website?`<a href="https://www.${u.website}" target="_blank" style="background:var(--green);color:var(--navy);padding:12px 28px;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.9rem;">${t('detail_website_btn')}</a>`:`<span style="color:var(--gray-400);font-size:0.85rem;">🔗 Website coming soon — check HEC portal for details</span>`}
+      ${u.website?`<a href="https://www.${u.website}" target="_blank" style="background:var(--green);color:var(--navy);padding:12px 28px;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.9rem;">${t('detail_website_btn')}</a>`:`<span style="color:var(--gray-400);font-size:0.85rem;">🔗 Website not listed — check the HEC portal for details</span>`}
       <button onclick="shareUniversity(${u.id})" style="background:#25D366;color:#fff;padding:12px 22px;border:none;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">📤 Share on WhatsApp</button>
     </div>
   `;
@@ -3382,6 +3382,13 @@ function updateHeroStats(){
     const n=c.trim(); if(n && n!=='Online' && !/\d|cities|others|campus|multiple/i.test(n)) set.add(n);
   }));
   const c = document.getElementById('statCities'); if(c) c.textContent = set.size+'+';
+  // The About page shows the same three figures — fill them from the same data so they
+  // never drift from it the way the hardcoded ones did.
+  const fmt = n => n.toLocaleString('en-PK');
+  const pairs = [['aboutStatUnis', fmt(UNIVERSITIES.length)],
+                 ['aboutStatProgs', fmt(PROGRAM_INDEX ? PROGRAM_INDEX.length : 0) + '+'],
+                 ['aboutStatCities', set.size + '+']];
+  pairs.forEach(([id, val]) => { const el = document.getElementById(id); if(el) el.textContent = val; });
 }
 
 function renderRecentlyViewed(){
