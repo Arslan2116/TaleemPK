@@ -8,12 +8,12 @@ const SITE_CONFIG = {
 
   // ── Branding ──────────────────────────────────────────────────
   site_name:      'TaleemPK',           // Site name shown in nav & footer
-  site_tagline:   "Pakistan's #1 University Comparison Platform",
+  site_tagline:   'Compare Universities in Pakistan',
   logo_url:       'logo.png',           // Logo image in the same folder. Leave empty ('') to use text logo
                                         // OR paste a full URL: 'https://yoursite.com/logo.png'
 
   // ── Contact ───────────────────────────────────────────────────
-  email:          'info@taleempk.com',
+  email:          'infotaleempk@gmail.com',
   whatsapp:       '923353303999',       // No + or spaces (e.g. 923001234567)
   city:           'Karachi, Pakistan',
   support_hours:  'Mon–Sat, 9 AM – 6 PM PKT',
@@ -32,9 +32,9 @@ const SITE_CONFIG = {
 
   // ── Footer Links ─────────────────────────────────────────────
   footer_links: {
-    privacy:    '#',   // e.g. 'https://yoursite.com/privacy'
-    terms:      '#',
-    hec:        '#',
+    privacy:    '/privacy',
+    terms:      '/terms',
+    hec:        '/disclaimer',
   }
 };
 
@@ -185,10 +185,14 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Contact info
-  const contactSpans = document.querySelectorAll('.footer-contact-item span');
-  if(contactSpans[0]) contactSpans[0].textContent = SITE_CONFIG.city;
-  if(contactSpans[1]) contactSpans[1].textContent = SITE_CONFIG.email;
-  if(contactSpans[3]) contactSpans[3].textContent = SITE_CONFIG.support_hours;
+  // Addressed by item, not by span index — the WhatsApp row is an <a>, not a <span>,
+  // and counting spans silently skipped the support hours when that changed.
+  const contactItems = document.querySelectorAll('.footer-contact-item');
+  const contactText = [SITE_CONFIG.city, SITE_CONFIG.email, null, SITE_CONFIG.support_hours];
+  contactItems.forEach((item, i) => {
+    const el = item.querySelector('span, a');
+    if(el && contactText[i]) el.textContent = contactText[i];
+  });
 
   // Footer bottom links — apply real URLs; hide any that are still placeholder ('#' / empty)
   const fl = SITE_CONFIG.footer_links;

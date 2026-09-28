@@ -17,7 +17,7 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const SITE = 'https://taleempk.pk';
-const CONTACT = 'info@taleempk.com';   // as shown in the footer today
+const CONTACT = 'infotaleempk@gmail.com';
 const WHATSAPP = '923353303999';
 const UPDATED = new Date().toISOString().slice(0, 10);
 const YEAR = new Date().getFullYear();

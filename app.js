@@ -251,7 +251,7 @@ async function submitMeritForm() {
     submitted_by: name || 'Anonymous',
     image_note: imgData ? 'Screenshot attached (base64 in image_data field)' : 'No image',
     _subject: `TaleemPK Merit Submission — ${uniName} (${prog})`,
-    _replyto: 'noreply@taleempk.com'
+    _replyto: 'infotaleempk@gmail.com'
   };
 
   try {
