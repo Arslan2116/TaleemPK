@@ -86,7 +86,73 @@ function setMeta(html, matcher, value) {
   return re.test(html) ? html.replace(re, `$1${value}$2`) : html;
 }
 
-let fixedWrong = 0, shortened = 0, touched = 0, missing = [];
+// ── Structured data ──
+// The same prefix-matching bug put another university's JSON-LD on 56 pages:
+// /university/air-university carried Al-Khair University's name, city (Mirpur),
+// founding year and FAQ answers. Google reads this for entity understanding, so
+// all three blocks are rebuilt from the seed record too.
+function buildLD(u, slugKey) {
+  const url  = `https://taleempk.pk/university/${slugKey}`;
+  const full = (u.full || u.name || '').trim();
+  const c    = city1(u);
+  const progs = (u.programs || []).slice(0, 10);
+  const site = (u.website || '').replace(/^https?:\/\//, '');
+
+  const org = {
+    "@context": "https://schema.org",
+    "@type": "CollegeOrUniversity",
+    "name": full,
+    "alternateName": u.name,
+    "url": url,
+    "description": `${full}${c ? ` (${c})` : ''} — HEC-recognized university in Pakistan.`,
+    ...(u.established ? { "foundingDate": String(u.established) } : {}),
+    ...(site ? { "sameAs": [`https://${site}`] } : {}),
+    ...(c ? { "address": { "@type": "PostalAddress", "addressCountry": "PK",
+                           "addressLocality": u.city, "addressRegion": u.province || '' } } : {}),
+    ...(progs.length ? { "hasOfferCatalog": {
+      "@type": "OfferCatalog", "name": "Programs offered",
+      "numberOfItems": (u.programs || []).length,
+      "itemListElement": progs.map(p => ({ "@type": "Offer", "itemOffered": { "@type": "Course", "name": p } }))
+    } } : {}),
+  };
+
+  const crumb = {
+    "@context": "https://schema.org", "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://taleempk.pk/" },
+      { "@type": "ListItem", "position": 2, "name": u.name, "item": url },
+    ]
+  };
+
+  const qa = [
+    [`Is ${full} recognized by HEC?`,
+     `Yes. ${full} is recognized by the Higher Education Commission (HEC) of Pakistan`
+     + `${u.established ? `, established in ${u.established}` : ''}${c ? ` in ${u.city}` : ''}.`],
+    u.fee && !NO_FEE.test(u.fee) ? [`What is the fee structure of ${full}?`,
+     `The fee at ${full} is approximately ${u.fee}. See the full fee breakdown on TaleemPK.`] : null,
+    u.merit ? [`What is the merit for admission at ${full}?`,
+     `Admission at ${full}: ${u.merit} Check TaleemPK for the latest merit trends.`] : null,
+    u.scholarships ? [`Does ${full} offer scholarships?`, `Yes. ${u.scholarships}`] : null,
+    progs.length ? [`What programs are offered at ${full}?`,
+     `${full} offers ${(u.programs || []).length} programs including ${progs.slice(0, 5).join(', ')} and more.`] : null,
+  ].filter(Boolean);
+
+  const faq = {
+    "@context": "https://schema.org", "@type": "FAQPage",
+    "mainEntity": qa.map(([q, aTxt]) => ({ "@type": "Question", "name": q,
+      "acceptedAnswer": { "@type": "Answer", "text": aTxt } }))
+  };
+  return { org, crumb, faq };
+}
+
+// Replace the ld+json block whose @type matches, leaving the others alone
+function setLD(html, type, obj) {
+  const re = new RegExp(`<script type="application/ld\\+json">\\s*\\{[^<]*?"@type":\\s*"${type}"[\\s\\S]*?</script>`);
+  const tag = `<script type="application/ld+json">${JSON.stringify(obj)}</script>`;
+  return re.test(html) ? html.replace(re, tag) : html;
+}
+
+let fixedWrong = 0, shortened = 0, touched = 0, missing = [], fixedLD = 0;
 const dir = path.join(ROOT, 'university');
 for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.html'))) {
   const key = file.replace(/\.html$/, '');
@@ -110,9 +176,19 @@ for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.html'))) {
   html = setMeta(html, 'property="og:title"',       T);
   html = setMeta(html, 'name="twitter:title"',      T);
 
+  const oldLD = (html.match(/"@type": ?"CollegeOrUniversity"[\s\S]{0,120}?"name": ?"([^"]+)"/) || [, ''])[1];
+  const { org, crumb, faq } = buildLD(u, key);
+  html = setLD(html, 'CollegeOrUniversity', org);
+  html = setLD(html, 'BreadcrumbList', crumb);
+  html = setLD(html, 'FAQPage', faq);
+  const ldLead = oldLD.replace(/&amp;/g, '&').toLowerCase();
+  const mineLD = [(u.full || '').toLowerCase(), (u.name || '').toLowerCase()];
+  if (ldLead && !mineLD.some(m => m && (ldLead === m || ldLead.includes(m) || m.includes(ldLead)))) fixedLD++;
+
   if (html !== before) {
     touched++;
-    if (oldTitle.length > TITLE_MAX) shortened++;
+    // measure the decoded title — "&amp;" is one character to Google, not five
+    if (oldTitle.replace(/&amp;/g, '&').length > TITLE_MAX) shortened++;
     // Did the old description name a different university?
     const lead = oldDesc.split(' (')[0].replace(/&amp;/g, '&').trim().toLowerCase();
     const mine = [(u.full || '').toLowerCase(), (u.name || '').toLowerCase()];
@@ -123,4 +199,5 @@ for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.html'))) {
 console.log(`${DRY ? 'would update' : 'updated'} ${touched} university pages`);
 console.log(`  wrong university in the description : ${fixedWrong}`);
 console.log(`  titles that were over ${TITLE_MAX} chars      : ${shortened}`);
+console.log(`  wrong university in the JSON-LD    : ${fixedLD}`);
 if (missing.length) console.log(`  no seed record (left alone)        : ${missing.length} — ${missing.slice(0, 6).join(', ')}`);

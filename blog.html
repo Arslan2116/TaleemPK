@@ -95,6 +95,17 @@
   @media(max-width:600px){
     .article-header,.article-body{padding:24px 20px;}
   }
+  /* Static archive — written by scripts/build-blog-archive.js, outside the
+     JS-rendered #articleContent so the article links exist in the markup. */
+  .blog-archive{max-width:860px;margin:0 auto 56px;padding:0 5%;}
+  .blog-archive h2{font-size:1.05rem;font-weight:800;margin-bottom:14px;color:var(--navy);}
+  .blog-archive ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--gray-200);}
+  .blog-archive li{display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+    padding:11px 2px;border-bottom:1px solid var(--gray-200);}
+  .blog-archive a{font-size:.92rem;font-weight:600;color:var(--navy);text-decoration:none;}
+  .blog-archive a:hover{color:var(--green-dark);text-decoration:underline;}
+  .blog-archive time{font-size:.78rem;color:var(--gray-400);white-space:nowrap;}
+  @media(max-width:600px){ .blog-archive li{flex-direction:column;gap:2px;} }
 </style>
 </head>
 <body>
@@ -116,6 +127,27 @@
   </div>
 </div>
 
+<!-- blog-archive:begin -->
+<section class="blog-archive">
+  <h2>All articles</h2>
+  <ul>
+    <li><a href="/blog/admission-updates-2026-09-16">University Admission Updates — 16 September 2026</a><time datetime="2026-09-16">16 Sept 2026</time></li>
+    <li><a href="/blog/admission-updates-2026-09-01">University Admission Updates — 01 September 2026</a><time datetime="2026-09-01">1 Sept 2026</time></li>
+    <li><a href="/blog/admission-updates-2026-08-16">University Admission Updates — 16 August 2026</a><time datetime="2026-08-16">16 Aug 2026</time></li>
+    <li><a href="/blog/admission-updates-2026-08-01">University Admission Updates — 01 August 2026</a><time datetime="2026-08-01">1 Aug 2026</time></li>
+    <li><a href="/blog/admission-updates-2026-07-16">University Admission Updates — 16 July 2026</a><time datetime="2026-07-16">16 Jul 2026</time></li>
+    <li><a href="/blog/admission-updates-2026-07-11">University Admission Updates — 11 July 2026</a><time datetime="2026-07-11">11 Jul 2026</time></li>
+    <li><a href="/blog/admission-updates-2026-07-06">University Admission Updates — 06 July 2026</a><time datetime="2026-07-06">6 Jul 2026</time></li>
+    <li><a href="/blog/comsats-university-admission-2026-guide">COMSATS University Admission 2026: Fee Structure, Merit Formula, NTS NAT &amp;amp; All 7 Campuses</a><time datetime="2026-07-04">4 Jul 2026</time></li>
+    <li><a href="/blog/admission-updates-2026-07-03">University Admission Updates — 03 July 2026</a><time datetime="2026-07-03">3 Jul 2026</time></li>
+    <li><a href="/blog/lums-dr-zaeem-jafri-memorial-scholarship">LUMS Announces Dr. Zaeem Jafri Memorial Scholarship Fund — What It Means for NOP Students</a><time datetime="2026-07-03">3 Jul 2026</time></li>
+    <li><a href="/blog/entry-test-preparation-ecat-mdcat">Entry Test Preparation: A Smart Study Plan for ECAT &amp;amp; MDCAT</a><time datetime="2026-05-30">30 May 2026</time></li>
+    <li><a href="/blog/university-aggregate-merit-pakistan">How to Calculate University Aggregate (Merit) in Pakistan</a><time datetime="2026-05-28">28 May 2026</time></li>
+    <li><a href="/blog/scholarships-pakistan-2026">Top Scholarships for Pakistani University Students in 2026</a><time datetime="2026-05-20">20 May 2026</time></li>
+    <li><a href="/blog/public-vs-private-universities-pakistan">Public vs Private Universities in Pakistan: Which Is Right for You?</a><time datetime="2026-05-10">10 May 2026</time></li>
+  </ul>
+</section>
+<!-- blog-archive:end -->
 <footer>© <span id="yr"></span> TaleemPK · <a href="/">Compare Universities in Pakistan</a></footer>
 
 <script>

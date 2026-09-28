@@ -251,24 +251,34 @@ for (const [key, { a: A, b: B }] of pairs) {
 // a client-side render would leave them to Google's second crawl wave, which is a far
 // weaker signal than markup that is in the document from the start. They sit outside
 // #content because university.js overwrites that element when it renders.
+// Built from the files that are actually on disk, not from the pair list: a pair whose
+// hand-written page exists under the reverse spelling is skipped when writing, and
+// linking it by the generated spelling produced a 404 (/air-university-vs-bahria-
+// university, whose real page is bahria-university-vs-air-university).
 const index = {};
-const everyPair = [...pairs.entries()];
-fs.readdirSync(ROOT).filter(f => /-vs-.*\.html$/.test(f)).forEach(f => {
+const bySlugName = {};
+UNIVERSITIES.forEach(u => { bySlugName[slug(u.name)] = u; });
+
+for (const f of fs.readdirSync(ROOT).filter(f => /-vs-.*\.html$/.test(f))) {
   const key = f.replace(/\.html$/, '');
-  if (!everyPair.some(([k]) => k === key)) {
-    const m = key.match(/^(.+)-vs-(.+)$/);           // hand-written page: keep it linked too
-    if (m) {
-      const A = UNIVERSITIES.find(u => slug(u.name) === m[1]);
-      const B = UNIVERSITIES.find(u => slug(u.name) === m[2]);
-      if (A && B) everyPair.push([key, { a: A, b: B }]);
-    }
+  // A slug may itself contain "vs", so try every split and keep the one where both
+  // halves are real universities.
+  let A = null, B = null;
+  for (let i = key.indexOf('-vs-'); i !== -1; i = key.indexOf('-vs-', i + 1)) {
+    const x = bySlugName[key.slice(0, i)], y = bySlugName[key.slice(i + 4)];
+    if (x && y) { A = x; B = y; break; }
   }
-});
-for (const [key, { a: A, b: B }] of everyPair) {
-  (index[slug(A.name)] ||= []).push({ u: '/' + key, n: B.name });
-  (index[slug(B.name)] ||= []).push({ u: '/' + key, n: A.name });
+  if (!A || !B) continue;
+  index[slug(A.name)] ||= []; index[slug(A.name)].push({ u: '/' + key, n: B.name });
+  index[slug(B.name)] ||= []; index[slug(B.name)].push({ u: '/' + key, n: A.name });
 }
 Object.values(index).forEach(list => list.sort((x, y) => x.n.localeCompare(y.n)));
+
+// Nothing may link to a page that is not there
+for (const list of Object.values(index))
+  for (const c of list)
+    if (!fs.existsSync(path.join(ROOT, c.u.slice(1) + '.html')))
+      throw new Error('comparison link points at a missing page: ' + c.u);
 
 // Write the block into each university page (replacing the previous one, if any)
 const BEGIN = '<!-- compare-links:begin -->', END = '<!-- compare-links:end -->';
