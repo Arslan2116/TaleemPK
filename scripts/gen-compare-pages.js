@@ -128,9 +128,23 @@ function row(label, x, y) {
 
 function page(key, A, B) {
   const url   = `https://taleempk.pk/${key}`;
-  const title = `${A.name} vs ${B.name} — Fees, Merit & Comparison ${new Date().getFullYear()} | TaleemPK`;
-  const desc  = `${A.name} vs ${B.name}: compare fees, merit, programs, and admissions side by side. `
-              + `${A.full} vs ${B.full} — which is better for you?`;
+  // Google cuts titles at roughly 60 characters, so the site name goes and the tail
+  // shrinks until the two university names — the whole query — survive the cut.
+  const Y = new Date().getFullYear();
+  const title = [
+    `${A.name} vs ${B.name} — Fees, Merit & Comparison ${Y}`,
+    `${A.name} vs ${B.name} — Fees & Merit ${Y}`,
+    `${A.name} vs ${B.name} — Comparison ${Y}`,
+    `${A.name} vs ${B.name} ${Y}`,
+    `${A.name} vs ${B.name}`,
+  ].find(t => t.length <= 60) || `${A.name} vs ${B.name}`;
+  // Google shows about 155 characters; the full names are what pushed it past that,
+  // so they are only kept while they fit.
+  const desc = [
+    `${A.name} vs ${B.name}: compare fees, merit, programs and admissions side by side. ${A.full} vs ${B.full} — which suits you?`,
+    `${A.name} vs ${B.name}: fees, merit, entry test and programs compared side by side. ${A.full} vs ${B.full}.`,
+    `${A.name} vs ${B.name}: compare fees, merit, entry test and programs side by side — and see which one suits you.`,
+  ].find(d => d.length <= 155) || `${A.name} vs ${B.name}: fees, merit and programs compared side by side.`;
   const sector = u => u.type === 'public' ? 'Public' : 'Private';
 
   const faqs = [
@@ -233,8 +247,10 @@ for (const [key, { a: A, b: B }] of pairs) {
 }
 // ── Internal links ──
 // Without this the comparison pages are orphans: in the sitemap, linked from nowhere.
-// university.js reads this index and renders a "Compare with" block on each profile,
-// which is the page a visitor is on when the comparison is actually useful.
+// The links are written straight into each /university/<slug>.html as real <a> tags —
+// a client-side render would leave them to Google's second crawl wave, which is a far
+// weaker signal than markup that is in the document from the start. They sit outside
+// #content because university.js overwrites that element when it renders.
 const index = {};
 const everyPair = [...pairs.entries()];
 fs.readdirSync(ROOT).filter(f => /-vs-.*\.html$/.test(f)).forEach(f => {
@@ -254,10 +270,33 @@ for (const [key, { a: A, b: B }] of everyPair) {
 }
 Object.values(index).forEach(list => list.sort((x, y) => x.n.localeCompare(y.n)));
 
+// Write the block into each university page (replacing the previous one, if any)
+const BEGIN = '<!-- compare-links:begin -->', END = '<!-- compare-links:end -->';
+let linked = 0;
+if (!DRY) {
+  for (const [key, list] of Object.entries(index)) {
+    const file = path.join(ROOT, 'university', key + '.html');
+    if (!fs.existsSync(file)) continue;
+    const u = UNIVERSITIES.find(x => slug(x.name) === key);
+    const block = `${BEGIN}
+<section class="cmp-static">
+  <h2>Compare ${esc(u.name)} with other universities</h2>
+  <div class="cmp-links">${list.map(c =>
+    `<a class="cmp-link" href="${esc(c.u)}">${esc(u.name)} <span>vs</span> ${esc(c.n)}</a>`).join('')}</div>
+</section>
+${END}`;
+    let html = fs.readFileSync(file, 'utf8');
+    const re = new RegExp(BEGIN.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&') + '[\\s\\S]*?' + END.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&'));
+    html = re.test(html) ? html.replace(re, block)
+                         : html.replace(/\n<footer>/, `\n${block}\n<footer>`);
+    fs.writeFileSync(file, html);
+    linked++;
+  }
+}
+
 console.log(`${DRY ? 'would write' : 'wrote'} ${written} pages · skipped ${skipped} hand-written · ${usable.length}/${UNIVERSITIES.length} universities had enough data`);
 if (DRY) { urls.slice(0, 20).forEach(u => console.log('  ' + u)); }
 else {
-  fs.writeFileSync(path.join(ROOT, 'compare-index.json'), JSON.stringify(index));
   fs.writeFileSync(path.join(__dirname, 'compare-urls.txt'), urls.join('\n') + '\n');
-  console.log(`compare-index.json: ${Object.keys(index).length} universities linked`);
+  console.log(`linked from ${linked} university pages (static <a> tags)`);
 }

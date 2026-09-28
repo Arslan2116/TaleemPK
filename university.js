@@ -229,28 +229,9 @@ async function loadUpdates(){
   }catch(e){ /* table may not exist yet — section stays hidden */ }
 }
 
-// ── Head-to-head comparison pages ──
-// compare-index.json is written by scripts/gen-compare-pages.js and maps each
-// university's slug to the comparison pages it appears on. Without this block those
-// pages sit in the sitemap with nothing linking to them.
-async function loadComparisons(){
-  if(!UNI) return;
-  const box = document.getElementById('comparisons');
-  if(!box) return;
-  let list;
-  try{
-    const r = await fetch('/compare-index.json', {cache:'no-cache'});
-    if(!r.ok) throw new Error('no index');
-    list = (await r.json())[toSlug(UNI.name)];
-  }catch(e){ box.style.display='none'; return; }
-  if(!list || !list.length){ box.style.display='none'; return; }
-  box.innerHTML = `
-    <div class="sec-head"><div class="icn">⚖️</div><h2>Compare ${esc(UNI.name)} with</h2></div>
-    <div class="cmp-links">${list.map(c =>
-      `<a class="cmp-link" href="${esc(c.u)}">${esc(UNI.name)} <span>vs</span> ${esc(c.n)}</a>`
-    ).join('')}</div>`;
-}
-
+// The head-to-head comparison links are written into each /university/<slug>.html
+// as static <a> tags by scripts/gen-compare-pages.js — real markup beats a
+// client-side render for crawling, so there is nothing to do here at runtime.
 // ── Similar Universities (same type & overlapping tags/city) ──
 async function loadSimilar(){
   if(!UNI) return;
@@ -312,7 +293,6 @@ async function load(){
   loadReviews(); loadQA();
   loadUpdates();
   loadSimilar();
-  loadComparisons();
   // Mobile sticky action bar
   if(window.matchMedia('(max-width:780px)').matches){
     const ms = document.getElementById('mobileSticky');
@@ -656,7 +636,6 @@ function render(){
         <div id="qa"><div class="muted">Loading…</div></div>
       </div>
 
-      <div class="sec" id="comparisons"></div>
       <div class="sec" id="similar"></div>
     </div>
 

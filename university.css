@@ -302,7 +302,11 @@ a.upd-title:hover{ color:var(--green,#00C853); text-decoration:underline; }
 .dt-note{ font-size:.72rem; color:var(--gray-400,#868E96); line-height:1.5; }
 .dt-note a{ color:var(--green,#00C853); text-decoration:underline; }
 
-/* ── Head-to-head comparison links (rendered by loadComparisons in university.js) ── */
+/* ── Head-to-head comparison links ──
+   Written into the page as static markup by scripts/gen-compare-pages.js, so this
+   section sits outside #content (which university.js overwrites when it renders). */
+.cmp-static{ max-width:1080px; margin:0 auto 40px; padding:0 5%; }
+.cmp-static h2{ font-size:1.05rem; font-weight:800; margin-bottom:14px; color:var(--navy,#0A1628); }
 .cmp-links{ display:flex; flex-wrap:wrap; gap:9px; }
 .cmp-link{
   display:inline-flex; align-items:center; gap:6px;
