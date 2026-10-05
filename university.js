@@ -265,14 +265,34 @@ async function loadSimilar(){
     }).join('')}</div>`;
 }
 
+/* ── Failing to load must not erase the page ──
+   These pages are pre-rendered with the university's real content (see
+   scripts/prerender-university-pages.js). Overwriting that with "University not
+   found" whenever Supabase was slow, rate-limited or unreachable is how 55 of them
+   ended up classified as Soft 404 in Search Console: Googlebot rendered the page,
+   the fetch did not come back, and the page told it there was nothing here.
+
+   So on any failure the pre-rendered content stays exactly where it is. The message
+   is only written on the bare /university template, which has nothing to show. */
+function hasPrerender(){
+  const c = document.getElementById('content');
+  return !!c && c.innerHTML.indexOf('prerender:begin') !== -1;
+}
+function loadFailed(why){
+  console.warn('university load failed:', why);
+  if(hasPrerender()) return;          // keep the static page — it is a real page
+  $('content').innerHTML =
+    '<div class="loading">University not found. <a href="/">Go back</a></div>';
+}
+
 async function load(){
   let id = getId();
-  if(!id){ $('content').innerHTML='<div class="loading">University not found. <a href="/">Go back</a></div>'; return; }
+  if(!id){ loadFailed('no id in the URL'); return; }
   // Slug-based lookup
   if(typeof id === 'string' && isNaN(id)){
     await preloadUnis();
     const match = ALL_UNIS_CACHE.find(u => toSlug(u.name)===id || toSlug(u.full_name||'')===id);
-    if(!match){ $('content').innerHTML='<div class="loading">University not found. <a href="/">Go back</a></div>'; return; }
+    if(!match){ loadFailed('slug not in the cache'); return; }
     id = match.id;
   }
   let { data, error } = await sb.from('institutions')
@@ -284,7 +304,7 @@ async function load(){
       .select('id,name,full_name,city,province,sector,type,icon,rank,fee,fee_num,fee_year,fee_note,merit,entry,programs,seats,established,website,logo_url,description,highlights,scholarships,hostel,tags,data_updated,fee_details(label,value,sort_order)')
       .eq('id',id).single());
   }
-  if(error || !data){ $('content').innerHTML='<div class="loading">University not found. <a href="/">Go back</a></div>'; return; }
+  if(error || !data){ loadFailed(error || 'no row returned'); return; }
   UNI = data;
   render();
   setSEO();
@@ -749,4 +769,10 @@ function refreshAuth(){ $('authBtn').textContent = currentUser ? ('👤 '+userNa
 async function initAuth(){ const { data } = await sb.auth.getSession(); currentUser=data.session?data.session.user:null; refreshAuth(); }
 
 initAuth();
-load();
+// load() is async, so anything it throws comes back as a rejected promise. Let that
+// reach loadFailed rather than an unhandled rejection, or a Supabase outage takes the
+// page down for a crawler that would otherwise have read the pre-rendered content.
+try {
+  const _p = load();
+  if (_p && typeof _p.catch === 'function') _p.catch(e => loadFailed(e));
+} catch (e) { loadFailed(e); }
