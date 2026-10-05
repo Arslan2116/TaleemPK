@@ -317,3 +317,11 @@ a.upd-title:hover{ color:var(--green,#00C853); text-decoration:underline; }
 .cmp-link span{ color:var(--green-dark,#0a6632); font-weight:800; font-size:.76rem; }
 .cmp-link:hover{ border-color:var(--green,#00C853); background:#fff; }
 @media(max-width:600px){ .cmp-link{ font-size:.79rem; padding:7px 13px; } }
+
+/* ── Pre-rendered fee breakdown (scripts/prerender-university-pages.js) ── */
+.pr-table{width:100%;border-collapse:collapse;margin:12px 0 4px;font-size:.88rem;}
+.pr-table th{text-align:left;padding:9px 11px;font-weight:600;color:var(--g600,#5A6474);
+  width:58%;vertical-align:top;border-top:1px solid var(--g200,#E8ECF2);}
+.pr-table td{padding:9px 11px;vertical-align:top;border-top:1px solid var(--g200,#E8ECF2);font-weight:600;}
+.pr-table tr:first-child th,.pr-table tr:first-child td{border-top:none;}
+@media(max-width:600px){.pr-table{font-size:.8rem;} .pr-table th,.pr-table td{padding:7px 8px;}}

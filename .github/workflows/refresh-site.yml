@@ -62,6 +62,9 @@ jobs:
       - name: Regenerate comparison pages
         run: node scripts/gen-compare-pages.js
 
+      - name: Re-render the university pages from the data
+        run: node scripts/prerender-university-pages.js
+
       - name: Rebuild the blog archive and the social card
         run: |
           node scripts/build-blog-archive.js
