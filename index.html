@@ -142,7 +142,9 @@
   </a>
   <ul class="nav-links">
     <li><a href="#universities" onclick="closeMobileMenu();closeAllPages();setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60);return false">Universities</a></li>
-    <li><a href="#" onclick="closeMobileMenu();closeAllPages();(compareList.length>=2?openCompareModal():setTimeout(()=>document.getElementById('universities').scrollIntoView({behavior:'smooth'}),60));return false">Compare</a></li>
+    <!-- A real link to /compare, so it is crawlable and one click from every page.
+         If the visitor has already picked two universities, the modal is quicker. -->
+    <li><a href="/compare" onclick="closeMobileMenu();if(typeof compareList!=='undefined'&&compareList.length>=2){closeAllPages();openCompareModal();return false;}">Compare</a></li>
 
     <!-- Tools dropdown -->
     <li class="nav-dropdown" id="navToolsDropdown">
@@ -1281,7 +1283,7 @@
   <div class="modal" id="compareModal"></div>
 </div>
 
-<script src="/app-core.js?v=6"></script>
+<script src="/app-core.js?v=7"></script>
 <script src="/uni-data.js?v=2"></script>
 <script src="/app.js?v=22"></script>
 </body>

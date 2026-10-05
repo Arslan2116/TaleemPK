@@ -59,6 +59,59 @@ for (const p of pairs) {
   put(c && c === city1(p.b) ? `Universities in ${c}` : 'Other comparisons', p);
 }
 
+// Only universities that actually have a page, so the picker cannot offer a dead end
+const pickable = UNIVERSITIES
+  .filter(u => fs.existsSync(path.join(ROOT, 'university', slug(u.name) + '.html')))
+  .map(u => ({ i: u.id, n: u.name, f: u.full || u.name, s: slug(u.name) }))
+  .sort((x, y) => x.n.localeCompare(y.n));
+const pairKeys = pairs.map(p => p.key);
+
+const PICKER = `
+  <section class="picker">
+    <h2>Compare any two universities</h2>
+    <p class="picker-sub">Not in the list below? Pick them yourself — start typing a name.</p>
+    <div class="picker-row">
+      <input list="uni-list" id="pickA" placeholder="First university" autocomplete="off" aria-label="First university">
+      <span class="picker-vs">vs</span>
+      <input list="uni-list" id="pickB" placeholder="Second university" autocomplete="off" aria-label="Second university">
+      <button id="pickGo" type="button">Compare →</button>
+    </div>
+    <p class="picker-msg" id="pickMsg" role="status"></p>
+    <datalist id="uni-list">${pickable.map(u =>
+      `<option value="${esc(u.n)}">${esc(u.f !== u.n ? u.f : '')}</option>`).join('')}</datalist>
+  </section>`;
+
+const PICKER_JS = `
+<script>
+// Both lists come from the same build as the pages themselves, so the picker can only
+// offer universities that exist and can tell whether a pair already has its own page.
+const UNIS = ${JSON.stringify(pickable)};
+const PAIRS = new Set(${JSON.stringify(pairKeys)});
+const byName = new Map(UNIS.map(u => [u.n.toLowerCase(), u]));
+function resolve(v){
+  v = (v || '').trim().toLowerCase();
+  if (!v) return null;
+  return byName.get(v) || UNIS.find(u => u.n.toLowerCase() === v || u.f.toLowerCase() === v)
+      || UNIS.find(u => u.n.toLowerCase().startsWith(v) || u.f.toLowerCase().startsWith(v)) || null;
+}
+function go(){
+  const msg = document.getElementById('pickMsg');
+  const a = resolve(document.getElementById('pickA').value);
+  const b = resolve(document.getElementById('pickB').value);
+  if (!a || !b) { msg.textContent = 'Pick two universities from the list.'; return; }
+  if (a.i === b.i) { msg.textContent = 'Pick two different universities.'; return; }
+  msg.textContent = '';
+  // Prefer the dedicated page when one exists, either way round
+  if (PAIRS.has(a.s + '-vs-' + b.s)) { location.href = '/' + a.s + '-vs-' + b.s; return; }
+  if (PAIRS.has(b.s + '-vs-' + a.s)) { location.href = '/' + b.s + '-vs-' + a.s; return; }
+  // Otherwise the homepage opens the full side-by-side from the ids
+  location.href = '/?compare=' + a.i + ',' + b.i;
+}
+document.getElementById('pickGo').addEventListener('click', go);
+['pickA','pickB'].forEach(id => document.getElementById(id)
+  .addEventListener('keydown', e => { if (e.key === 'Enter') go(); }));
+<\/script>`;
+
 const sections = [...groups.entries()]
   .sort((x, y) => y[1].length - x[1].length)
   .map(([title, list]) => `
@@ -117,6 +170,19 @@ const page = `<!DOCTYPE html>
   h1{font-size:clamp(1.5rem,4vw,2.1rem);font-weight:800;}
   .intro{color:rgba(255,255,255,.8);margin-top:12px;font-size:.95rem;max-width:640px;}
   main{max-width:980px;margin:0 auto;padding:30px 5% 70px;}
+  .picker{background:var(--g100);border-radius:14px;padding:20px 22px;margin-bottom:34px;}
+  .picker h2{font-size:1.05rem;font-weight:800;margin-bottom:4px;border:none;padding:0;}
+  .picker-sub{color:var(--g600);font-size:.87rem;margin-bottom:14px;}
+  .picker-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+  .picker-row input{flex:1 1 210px;min-width:0;padding:11px 13px;border:1.5px solid var(--g200);
+    border-radius:10px;font-family:inherit;font-size:.9rem;background:#fff;color:var(--navy);}
+  .picker-row input:focus{outline:none;border-color:var(--green);}
+  .picker-vs{font-weight:800;color:var(--green-dark);font-size:.82rem;}
+  .picker-row button{background:var(--green);color:var(--navy);border:none;border-radius:10px;
+    padding:11px 22px;font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;white-space:nowrap;}
+  .picker-row button:hover{filter:brightness(1.05);}
+  .picker-msg{color:#b91c1c;font-size:.84rem;margin-top:9px;min-height:1.2em;}
+  @media(max-width:560px){.picker-vs{display:none;} .picker-row button{width:100%;}}
   .cmp-group{margin-bottom:34px;}
   .cmp-group h2{font-size:1.05rem;font-weight:800;margin-bottom:13px;
     padding-bottom:9px;border-bottom:1px solid var(--g200);}
@@ -145,6 +211,7 @@ const page = `<!DOCTYPE html>
   programmes for two universities next to each other, so you can see what actually separates them.</p>
 </div></div>
 <main>
+${PICKER}
 ${sections}
   <div class="cta">
     <h2>Not sure which two to compare?</h2>
@@ -152,6 +219,7 @@ ${sections}
     <a href="/?action=predictor">Try the Admission Predictor →</a>
   </div>
 </main>
+${PICKER_JS}
 <footer>© ${YEAR} TaleemPK · <a href="/">Compare Universities in Pakistan</a> ·
   <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/disclaimer">Disclaimer</a></footer>
 </body>
