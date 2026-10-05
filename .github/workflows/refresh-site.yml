@@ -65,6 +65,11 @@ jobs:
       - name: Re-render the university pages from the data
         run: node scripts/prerender-university-pages.js
 
+      - name: Keep the comparison pages two clicks from the homepage
+        run: |
+          node scripts/link-comparisons-from-landing.js
+          node scripts/build-compare-hub.js
+
       - name: Rebuild the blog archive and the social card
         run: |
           node scripts/build-blog-archive.js

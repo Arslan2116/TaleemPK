@@ -6,7 +6,7 @@
  *  - Supabase + Gemini API: network only (never cache user data)
  *  - Bump CACHE_VERSION on every code release to evict old caches
  */
-const CACHE_VERSION = 'tpk-v34-20261005';
+const CACHE_VERSION = 'tpk-v35-20261005';
 const RUNTIME_CACHE = 'tpk-runtime-' + CACHE_VERSION;
 const STATIC_CACHE  = 'tpk-static-'  + CACHE_VERSION;
 
@@ -22,7 +22,7 @@ const PRECACHE_URLS = [
   // split-out core assets (post perf refactor)
   '/styles.css?v=8',
   '/uni-data.js?v=2',
-  '/app-core.js?v=5',
+  '/app-core.js?v=6',
   '/app.js?v=22',
   '/university.css?v=10',
   '/university.js?v=11',
