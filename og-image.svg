@@ -25,13 +25,13 @@
   <!-- Brand wordmark -->
   <g transform="translate(260,240)" font-family="Sora, sans-serif" font-weight="800">
     <text x="0" y="0" font-size="64" fill="#fff">Taleem<tspan fill="#00C853">PK</tspan></text>
-    <text x="0" y="42" font-size="22" font-weight="600" fill="rgba(255,255,255,0.65)">Pakistan's #1 University Comparison Platform</text>
+    <text x="0" y="42" font-size="22" font-weight="600" fill="rgba(255,255,255,0.65)">Compare Universities in Pakistan</text>
   </g>
   <!-- Hero headline -->
   <g transform="translate(100,400)" font-family="Sora, sans-serif" fill="#fff">
-    <text font-size="56" font-weight="800">Compare 218 Universities</text>
+    <text font-size="56" font-weight="800">Compare 270 Universities</text>
     <text y="68" font-size="56" font-weight="800">Fees · Merit · <tspan fill="#00C853">Programs</tspan></text>
   </g>
   <!-- Footer URL -->
-  <text x="100" y="585" font-family="Sora, sans-serif" font-size="20" fill="rgba(255,255,255,0.5)">taleempk.com  •  Free • HEC-recognized data</text>
+  <text x="100" y="585" font-family="Sora, sans-serif" font-size="20" fill="rgba(255,255,255,0.5)">taleempk.pk  •  Free • HEC-recognized data</text>
 </svg>

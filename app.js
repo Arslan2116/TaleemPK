@@ -459,6 +459,16 @@ function getMatchLabel(surplus) {
   return               { cls:'match-reach',   label:'📚 Reach' };
 }
 
+/* ── Analytics ──
+   GA4 showed 0 key events because nothing on the site ever sent one: there was no
+   way to tell a visit that led somewhere from a visit that bounced. These four cover
+   the things worth knowing — someone ran the predictor, kept the result, compared
+   universities, or left for a university's own site.
+   gtag is often blocked, so never assume it is there. */
+function track(name, params){
+  try { if(typeof gtag === 'function') gtag('event', name, params || {}); } catch(e){}
+}
+
 function runPredictor() {
   const pct      = parseInt(document.getElementById('predPct').value);
   const study    = document.querySelector('.pred-opt.selected')?.dataset.study || 'engineering';
@@ -537,6 +547,14 @@ function runPredictor() {
   _predResultIds = results.map(u=>u.id);
   updatePredSaveBtn();
 
+  track('predictor_run', {
+    aggregate: pct,
+    study_group: study,
+    field: field || 'any',
+    province: province || 'any',
+    results: results.length,
+  });
+
   document.getElementById('universities').scrollIntoView({behavior:'smooth'});
 }
 
@@ -572,6 +590,7 @@ async function savePredictorResults(){
     if(error) throw error;
     todo.forEach(id => _shortlistIds.add(id));
     refreshShortlistButtons();
+    track('shortlist_save', { count: todo.length, source: 'predictor' });
   }catch(e){
     if(btn){ btn.textContent = 'Could not save — try again'; btn.disabled = false; }
     return;
@@ -2817,7 +2836,7 @@ function openDetail(id) {
     <div class="comm-section" id="alSection-${u.id}">${buildAlumniHTML(u.id)}</div>
     <div class="comm-section" id="qaSection-${u.id}">${buildQAHTML(u.id)}</div>
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--gray-200);text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      ${u.website?`<a href="https://www.${u.website}" target="_blank" style="background:var(--green);color:var(--navy);padding:12px 28px;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.9rem;">${t('detail_website_btn')}</a>`:`<span style="color:var(--gray-400);font-size:0.85rem;">🔗 Website not listed — check the HEC portal for details</span>`}
+      ${u.website?`<a href="https://www.${u.website}" target="_blank" data-uni="${escHTML(u.name)}" onclick="track('university_outbound',{university:this.dataset.uni,id:${u.id}})" style="background:var(--green);color:var(--navy);padding:12px 28px;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.9rem;">${t('detail_website_btn')}</a>`:`<span style="color:var(--gray-400);font-size:0.85rem;">🔗 Website not listed — check the HEC portal for details</span>`}
       <button onclick="shareUniversity(${u.id})" style="background:#25D366;color:#fff;padding:12px 22px;border:none;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">📤 Share on WhatsApp</button>
     </div>
   `;
@@ -2871,6 +2890,8 @@ function _seatsNum(s){
 function openCompareModal() {
   if(compareList.length < 2) { alert(t('alert_min')); return; }
   const list = compareList;
+  track('compare_view', { count: list.length,
+    universities: list.map(u => u.name).join(' vs ') });
   const modal = document.getElementById('compareModal');
 
   // Compute winners per metric

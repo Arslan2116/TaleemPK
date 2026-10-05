@@ -1,0 +1,81 @@
+name: Refresh generated pages
+
+# Keeps the generated parts of the site current without anyone remembering to.
+# The thing it exists for is the turn of the year: about 4,200 places on this site
+# name the admission cycle year, and in January a site whose titles all say last
+# year loses to one that says this year. Everything here is idempotent, so a month
+# where nothing changed produces no commit.
+
+on:
+  schedule:
+    - cron: '41 2 3 * *'      # 3rd of each month, 02:41 UTC — early enough in January
+  workflow_dispatch:
+    inputs:
+      year:
+        description: 'Force a cycle year (blank = current year)'
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-site
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install the image toolchain
+        run: pip install --quiet pillow cairosvg
+
+      - name: Install the Sora font
+        # Without it the og card renders in the system sans — the script warns, but
+        # better to just have the font.
+        run: |
+          mkdir -p ~/.fonts
+          curl -sfL -o /tmp/sora.zip "https://fonts.google.com/download?family=Sora" || true
+          if [ -s /tmp/sora.zip ]; then
+            unzip -oq /tmp/sora.zip -d ~/.fonts || true
+            fc-cache -f >/dev/null 2>&1 || true
+          else
+            echo "::warning::could not fetch Sora — the og card will use the fallback font"
+          fi
+
+      - name: Roll the cycle year on the hand-written pages
+        run: node scripts/roll-year.js ${{ inputs.year && format('--year {0}', inputs.year) || '' }}
+
+      - name: Regenerate university page metadata
+        run: node scripts/fix-page-meta.js
+
+      - name: Regenerate comparison pages
+        run: node scripts/gen-compare-pages.js
+
+      - name: Rebuild the blog archive and the social card
+        run: |
+          node scripts/build-blog-archive.js
+          python scripts/build-og-image.py
+
+      - name: Refresh the sitemap
+        run: node scripts/update-sitemap.js
+
+      - name: Commit if anything changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && { echo "nothing changed this month"; exit 0; }
+          git commit -m "chore: refresh generated pages $(date -u +%Y-%m)"
+          git pull --rebase origin main
+          git push
